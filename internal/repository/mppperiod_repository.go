@@ -13,6 +13,9 @@ import (
 type IMPPPeriodRepository interface {
 	FindAllPaginated(page int, pageSize int, search string) (*[]entity.MPPPeriod, int64, error)
 	FindById(id uuid.UUID) (*entity.MPPPeriod, error)
+	Create(mppPeriod *entity.MPPPeriod) (*entity.MPPPeriod, error)
+	Update(mppPeriod *entity.MPPPeriod) (*entity.MPPPeriod, error)
+	Delete(id uuid.UUID) error
 }
 
 type MPPPeriodRepository struct {
@@ -64,4 +67,67 @@ func (r *MPPPeriodRepository) FindById(id uuid.UUID) (*entity.MPPPeriod, error) 
 func MPPPeriodRepositoryFactory(log *logrus.Logger) IMPPPeriodRepository {
 	db := config.NewDatabase()
 	return NewMPPPeriodRepository(log, db)
+}
+
+func (r *MPPPeriodRepository) Create(mppPeriod *entity.MPPPeriod) (*entity.MPPPeriod, error) {
+	tx := r.DB.Begin()
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPPeriodRepository.Create] " + tx.Error.Error())
+		return nil, errors.New("[MPPPeriodRepository.Create] " + tx.Error.Error())
+	}
+
+	if err := tx.Create(mppPeriod).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPPeriodRepository.Create] " + err.Error())
+		return nil, errors.New("[MPPPeriodRepository.Create] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		r.Log.Errorf("[MPPPeriodRepository.Create] " + err.Error())
+		return nil, errors.New("[MPPPeriodRepository.Create] " + err.Error())
+	}
+
+	return mppPeriod, nil
+}
+
+func (r *MPPPeriodRepository) Update(mppPeriod *entity.MPPPeriod) (*entity.MPPPeriod, error) {
+	tx := r.DB.Begin()
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPPeriodRepository.Update] " + tx.Error.Error())
+		return nil, errors.New("[MPPPeriodRepository.Update] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(mppPeriod).Where("id = ?", mppPeriod.ID).Updates(mppPeriod).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPPeriodRepository.Update] " + err.Error())
+		return nil, errors.New("[MPPPeriodRepository.Update] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		r.Log.Errorf("[MPPPeriodRepository.Update] " + err.Error())
+		return nil, errors.New("[MPPPeriodRepository.Update] " + err.Error())
+	}
+
+	return mppPeriod, nil
+}
+
+func (r *MPPPeriodRepository) Delete(id uuid.UUID) error {
+	tx := r.DB.Begin()
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPPeriodRepository.Delete] " + tx.Error.Error())
+		return errors.New("[MPPPeriodRepository.Delete] " + tx.Error.Error())
+	}
+
+	if err := tx.Where("id = ?", id).Delete(&entity.MPPPeriod{}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPPeriodRepository.Delete] " + err.Error())
+		return errors.New("[MPPPeriodRepository.Delete] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		r.Log.Errorf("[MPPPeriodRepository.Delete] " + err.Error())
+		return errors.New("[MPPPeriodRepository.Delete] " + err.Error())
+	}
+
+	return nil
 }

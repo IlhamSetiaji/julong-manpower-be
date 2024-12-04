@@ -7,11 +7,11 @@ import (
 )
 
 type JobMajor struct {
-	gorm.Model
-	Title     string    `json:"title" gorm:"type:varchar(255);not null"`
-	StartDate time.Time `json:"start_date" gorm:"type:date;not null"`
-	EndDate   time.Time `json:"end_date" gorm:"type:date;not null"`
-	Status    string    `json:"status" gorm:"type:enum('open', 'close', 'complete');default:'open'"`
+	gorm.Model `json:"-"`
+	Title      string    `json:"title" gorm:"type:varchar(255);not null"`
+	StartDate  time.Time `json:"start_date" gorm:"type:date;not null"`
+	EndDate    time.Time `json:"end_date" gorm:"type:date;not null"`
+	Status     string    `json:"status" gorm:"type:enum('open', 'close', 'complete');default:'open'"`
 
 	JobMajors []JobMajor `json:"job_majors" gorm:"foreignKey:JobMajorID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

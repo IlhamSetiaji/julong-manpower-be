@@ -8,7 +8,7 @@ import (
 )
 
 type MPRequestHeader struct {
-	gorm.Model
+	gorm.Model             `json:"-"`
 	ID                     uuid.UUID  `json:"id" gorm:"type:char(32);primaryKey;"`
 	OrganizationID         *uuid.UUID `json:"organization_id" gorm:"type:char(32);not null;"`
 	OrganizationLocationID *uuid.UUID `json:"organization_location_id" gorm:"type:char(32);not null"`

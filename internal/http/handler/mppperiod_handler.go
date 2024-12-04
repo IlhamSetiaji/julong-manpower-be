@@ -16,6 +16,9 @@ import (
 type IMPPPeriodHander interface {
 	FindAllPaginated(ctx *gin.Context)
 	FindById(ctx *gin.Context)
+	Create(ctx *gin.Context)
+	Update(ctx *gin.Context)
+	Delete(ctx *gin.Context)
 }
 
 type MPPPeriodHandler struct {
@@ -74,4 +77,70 @@ func (h *MPPPeriodHandler) FindById(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+}
+
+func (h *MPPPeriodHandler) Create(ctx *gin.Context) {
+	var req request.CreateMPPPeriodRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Create] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	if err := h.Validate.Struct(req); err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Create] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	resp, err := h.UseCase.Create(req)
+	if err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Create] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusCreated, "success", resp)
+}
+
+func (h *MPPPeriodHandler) Update(ctx *gin.Context) {
+	var req request.UpdateMPPPeriodRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Update] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	if err := h.Validate.Struct(req); err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Update] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	resp, err := h.UseCase.Update(req)
+	if err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Update] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+}
+
+func (h *MPPPeriodHandler) Delete(ctx *gin.Context) {
+	var req request.DeleteMPPPeriodRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Delete] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	err := h.UseCase.Delete(req)
+	if err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.Delete] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "success", nil)
 }

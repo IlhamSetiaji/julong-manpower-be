@@ -16,7 +16,7 @@ const (
 )
 
 type MPPlanningHeader struct {
-	gorm.Model
+	gorm.Model        `json:"-"`
 	ID                uuid.UUID       `json:"id" gorm:"type:char(32);primaryKey;"`
 	MPPPeriodID       uuid.UUID       `json:"mpp_period_id" gorm:"type:char(32);"`
 	OrganizationID    *uuid.UUID      `json:"organization_id" gorm:"type:char(32);not null;"`

@@ -8,10 +8,10 @@ import (
 )
 
 type JobPlafon struct {
-	gorm.Model
-	ID     uuid.UUID  `json:"id" gorm:"type:char(32);primaryKey;"`
-	JobID  *uuid.UUID `json:"job_id" gorm:"type:char(32);not null"`
-	Plafon int        `json:"plafon" gorm:"type:int;default:0"`
+	gorm.Model `json:"-"`
+	ID         uuid.UUID  `json:"id" gorm:"type:char(32);primaryKey;"`
+	JobID      *uuid.UUID `json:"job_id" gorm:"type:char(32);not null"`
+	Plafon     int        `json:"plafon" gorm:"type:int;default:0"`
 }
 
 func (m *JobPlafon) BeforeCreate() (err error) {

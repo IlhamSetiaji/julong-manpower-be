@@ -1,6 +1,11 @@
 package request
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/google/uuid"
+)
 
 type FindAllPaginatedMPPPeriodRequest struct {
 	Page     int    `json:"page"`
@@ -9,5 +14,24 @@ type FindAllPaginatedMPPPeriodRequest struct {
 }
 
 type FindByIdMPPPeriodRequest struct {
+	ID uuid.UUID `json:"id"`
+}
+
+type CreateMPPPeriodRequest struct {
+	Title     string                 `json:"title" validate:"required"`
+	StartDate time.Time              `json:"start_date" validate:"required"`
+	EndDate   time.Time              `json:"end_date" validate:"required"`
+	Status    entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
+}
+
+type UpdateMPPPeriodRequest struct {
+	ID        uuid.UUID              `json:"id" validate:"required"`
+	Title     string                 `json:"title" validate:"required"`
+	StartDate time.Time              `json:"start_date" validate:"required"`
+	EndDate   time.Time              `json:"end_date" validate:"required"`
+	Status    entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
+}
+
+type DeleteMPPPeriodRequest struct {
 	ID uuid.UUID `json:"id"`
 }

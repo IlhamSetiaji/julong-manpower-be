@@ -6,7 +6,7 @@ import (
 )
 
 type RequestType struct {
-	gorm.Model
+	gorm.Model    `json:"-"`
 	ID            uuid.UUID `json:"id" gorm:"type:char(32);primaryKey;"`
 	Name          string    `json:"name" gorm:"type:varchar(255);not null"`
 	IsReplacement bool      `json:"is_replacement" gorm:"type:boolean;default:false"`

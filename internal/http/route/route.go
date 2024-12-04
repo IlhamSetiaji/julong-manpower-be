@@ -22,6 +22,9 @@ func (c *RouteConfig) SetupMPPPeriodRoutes() {
 	{
 		mppPeriod.GET("/", c.MPPPeriodHandler.FindAllPaginated)
 		mppPeriod.GET("/:id", c.MPPPeriodHandler.FindById)
+		mppPeriod.POST("/", c.MPPPeriodHandler.Create)
+		mppPeriod.PUT("/:id", c.MPPPeriodHandler.Update)
+		mppPeriod.DELETE("/:id", c.MPPPeriodHandler.Delete)
 	}
 }
 

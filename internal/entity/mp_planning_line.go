@@ -8,7 +8,7 @@ import (
 )
 
 type MPPlanningLine struct {
-	gorm.Model
+	gorm.Model             `json:"-"`
 	ID                     uuid.UUID  `json:"id" gorm:"type:char(32);primaryKey;"`
 	MPPlanningHeaderID     uuid.UUID  `json:"mp_planning_header_id" gorm:"type:char(32);"`
 	OrganizationLocationID *uuid.UUID `json:"organization_location_id" gorm:"type:char(32);not null"`

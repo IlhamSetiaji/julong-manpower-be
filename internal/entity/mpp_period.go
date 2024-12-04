@@ -16,12 +16,12 @@ const (
 )
 
 type MPPPeriod struct {
-	gorm.Model
-	ID        uuid.UUID       `json:"id" gorm:"type:char(32);primaryKey;"`
-	Title     string          `json:"title"`
-	StartDate time.Time       `json:"start_date" gorm:"type:date"`
-	EndDate   time.Time       `json:"end_date" gorm:"type:date"`
-	Status    MPPPeriodStatus `json:"status" gorm:"default:'open'"`
+	gorm.Model `json:"-"`
+	ID         uuid.UUID       `json:"id" gorm:"type:char(32);primaryKey;"`
+	Title      string          `json:"title"`
+	StartDate  time.Time       `json:"start_date" gorm:"type:date"`
+	EndDate    time.Time       `json:"end_date" gorm:"type:date"`
+	Status     MPPPeriodStatus `json:"status" gorm:"default:'open'"`
 
 	MPPlanningHeaders []MPPlanningHeader `json:"mp_planning_headers" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
