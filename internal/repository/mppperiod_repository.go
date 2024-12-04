@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -16,6 +17,7 @@ type IMPPPeriodRepository interface {
 	Create(mppPeriod *entity.MPPPeriod) (*entity.MPPPeriod, error)
 	Update(mppPeriod *entity.MPPPeriod) (*entity.MPPPeriod, error)
 	Delete(id uuid.UUID) error
+	FindByCurrentDateAndStatus(status entity.MPPPeriodStatus) (*entity.MPPPeriod, error)
 }
 
 type MPPPeriodRepository struct {
@@ -130,4 +132,22 @@ func (r *MPPPeriodRepository) Delete(id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func (r *MPPPeriodRepository) FindByCurrentDateAndStatus(status entity.MPPPeriodStatus) (*entity.MPPPeriod, error) {
+	var mppPeriod entity.MPPPeriod
+
+	err := r.DB.Where("status = ? AND start_date <= ? AND end_date >= ?", status, time.Now().Format("2006-01-02"), time.Now().Format("2006-01-02")).First(&mppPeriod).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warn("[MPPPeriodRepository.FindByCurrentDateAndStatus] User not found")
+			return nil, nil
+		} else {
+			r.Log.Error("[MPPPeriodRepository.FindByCurrentDateAndStatus] " + err.Error())
+			return nil, errors.New("[UserRepository.FindByEmail] " + err.Error())
+		}
+	}
+
+	return &mppPeriod, nil
 }

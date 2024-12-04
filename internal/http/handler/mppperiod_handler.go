@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
@@ -9,6 +10,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -44,11 +46,25 @@ func MPPPeriodHandlerFactory(log *logrus.Logger, viper *viper.Viper) IMPPPeriodH
 }
 
 func (h *MPPPeriodHandler) FindAllPaginated(ctx *gin.Context) {
-	var req request.FindAllPaginatedMPPPeriodRequest
-	if err := ctx.ShouldBindQuery(&req); err != nil {
-		h.Log.Errorf("[MPPPeriodHandler.FindAllPaginated] " + err.Error())
-		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
-		return
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(ctx.Query("pageSize"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	search := ctx.Query("search")
+	if search == "" {
+		search = ""
+	}
+
+	req := request.FindAllPaginatedMPPPeriodRequest{
+		Page:     page,
+		PageSize: pageSize,
+		Search:   search,
 	}
 
 	resp, err := h.UseCase.FindAllPaginated(req)
@@ -62,11 +78,10 @@ func (h *MPPPeriodHandler) FindAllPaginated(ctx *gin.Context) {
 }
 
 func (h *MPPPeriodHandler) FindById(ctx *gin.Context) {
-	var req request.FindByIdMPPPeriodRequest
-	if err := ctx.ShouldBindUri(&req); err != nil {
-		h.Log.Errorf("[MPPPeriodHandler.FindById] " + err.Error())
-		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
-		return
+	id := ctx.Param("id")
+
+	req := request.FindByIdMPPPeriodRequest{
+		ID: uuid.MustParse(id),
 	}
 
 	resp, err := h.UseCase.FindById(req)
@@ -76,7 +91,7 @@ func (h *MPPPeriodHandler) FindById(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusOK, "success", resp.MPPPeriod)
 }
 
 func (h *MPPPeriodHandler) Create(ctx *gin.Context) {
@@ -128,11 +143,10 @@ func (h *MPPPeriodHandler) Update(ctx *gin.Context) {
 }
 
 func (h *MPPPeriodHandler) Delete(ctx *gin.Context) {
-	var req request.DeleteMPPPeriodRequest
-	if err := ctx.ShouldBindUri(&req); err != nil {
-		h.Log.Errorf("[MPPPeriodHandler.Delete] " + err.Error())
-		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
-		return
+	id := ctx.Param("id")
+
+	req := request.DeleteMPPPeriodRequest{
+		ID: uuid.MustParse(id),
 	}
 
 	err := h.UseCase.Delete(req)

@@ -9,11 +9,11 @@ import (
 
 type MPPlanningLine struct {
 	gorm.Model             `json:"-"`
-	ID                     uuid.UUID  `json:"id" gorm:"type:char(32);primaryKey;"`
-	MPPlanningHeaderID     uuid.UUID  `json:"mp_planning_header_id" gorm:"type:char(32);"`
-	OrganizationLocationID *uuid.UUID `json:"organization_location_id" gorm:"type:char(32);not null"`
-	JobLevelID             *uuid.UUID `json:"job_level_id" gorm:"type:char(32);not null"`
-	JobID                  *uuid.UUID `json:"job_id" gorm:"type:char(32);not null"`
+	ID                     uuid.UUID  `json:"id" gorm:"type:char(36);primaryKey;"`
+	MPPlanningHeaderID     uuid.UUID  `json:"mp_planning_header_id" gorm:"type:char(36);"`
+	OrganizationLocationID *uuid.UUID `json:"organization_location_id" gorm:"type:char(36);not null"`
+	JobLevelID             *uuid.UUID `json:"job_level_id" gorm:"type:char(36);not null"`
+	JobID                  *uuid.UUID `json:"job_id" gorm:"type:char(36);not null"`
 	Existing               int        `json:"existing" gorm:"type:int;default:0"`
 	Recruit                int        `json:"recruit" gorm:"type:int;default:0"`
 	SuggestedRecruit       int        `json:"suggested_recruit" gorm:"type:int;default:0"`

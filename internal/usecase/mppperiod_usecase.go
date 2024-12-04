@@ -1,6 +1,9 @@
 package usecase
 
 import (
+	"errors"
+	"time"
+
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
@@ -54,10 +57,33 @@ func (uc *MPPPeriodUseCase) FindById(req request.FindByIdMPPPeriodRequest) (*res
 }
 
 func (uc *MPPPeriodUseCase) Create(req request.CreateMPPPeriodRequest) (*response.CreateMPPPeriodResponse, error) {
+	startDate, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	endDate, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	if periodExist != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + "MPP Period already exist")
+		return nil, errors.New("MPP Period already exist")
+	}
+
 	mppPeriodEntity := &entity.MPPPeriod{
 		Title:     req.Title,
-		StartDate: req.StartDate,
-		EndDate:   req.EndDate,
+		StartDate: startDate,
+		EndDate:   endDate,
 		Status:    req.Status,
 	}
 
@@ -77,11 +103,23 @@ func (uc *MPPPeriodUseCase) Create(req request.CreateMPPPeriodRequest) (*respons
 }
 
 func (uc *MPPPeriodUseCase) Update(req request.UpdateMPPPeriodRequest) (*response.UpdateMPPPeriodResponse, error) {
+	startDate, err := time.Parse("2006-01-02", req.StartDate)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	endDate, err := time.Parse("2006-01-02", req.EndDate)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
 	mppPeriodEntity := &entity.MPPPeriod{
 		ID:        req.ID,
 		Title:     req.Title,
-		StartDate: req.StartDate,
-		EndDate:   req.EndDate,
+		StartDate: startDate,
+		EndDate:   endDate,
 		Status:    req.Status,
 	}
 

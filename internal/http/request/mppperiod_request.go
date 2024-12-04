@@ -1,8 +1,6 @@
 package request
 
 import (
-	"time"
-
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/google/uuid"
 )
@@ -19,16 +17,16 @@ type FindByIdMPPPeriodRequest struct {
 
 type CreateMPPPeriodRequest struct {
 	Title     string                 `json:"title" validate:"required"`
-	StartDate time.Time              `json:"start_date" validate:"required"`
-	EndDate   time.Time              `json:"end_date" validate:"required"`
+	StartDate string                 `json:"start_date" validate:"required,datetime=2006-01-02"`
+	EndDate   string                 `json:"end_date" validate:"required,datetime=2006-01-02"`
 	Status    entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
 }
 
 type UpdateMPPPeriodRequest struct {
 	ID        uuid.UUID              `json:"id" validate:"required"`
 	Title     string                 `json:"title" validate:"required"`
-	StartDate time.Time              `json:"start_date" validate:"required"`
-	EndDate   time.Time              `json:"end_date" validate:"required"`
+	StartDate string                 `json:"start_date" validate:"required,datetime=2006-01-02"`
+	EndDate   string                 `json:"end_date" validate:"required,datetime=2006-01-02"`
 	Status    entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
 }
 

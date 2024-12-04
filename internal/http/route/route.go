@@ -12,20 +12,22 @@ type RouteConfig struct {
 }
 
 func (c *RouteConfig) SetupRoutes() {
-	c.App.Group("/api")
-	{
-		c.SetupMPPPeriodRoutes()
-	}
+	c.App.GET("/", func(ctx *gin.Context) {
+		ctx.JSON(200, gin.H{
+			"message": "Welcome to Julong Manpower",
+		})
+	})
+	c.SetupMPPPeriodRoutes()
 }
 
 func (c *RouteConfig) SetupMPPPeriodRoutes() {
-	mppPeriod := c.App.Group("/mpp-period")
+	mppPeriod := c.App.Group("/api/mpp-periods")
 	{
 		mppPeriod.Use(c.AuthMiddleware)
 		mppPeriod.GET("/", c.MPPPeriodHandler.FindAllPaginated)
 		mppPeriod.GET("/:id", c.MPPPeriodHandler.FindById)
 		mppPeriod.POST("/", c.MPPPeriodHandler.Create)
-		mppPeriod.PUT("/:id", c.MPPPeriodHandler.Update)
+		mppPeriod.PUT("/", c.MPPPeriodHandler.Update)
 		mppPeriod.DELETE("/:id", c.MPPPeriodHandler.Delete)
 	}
 }

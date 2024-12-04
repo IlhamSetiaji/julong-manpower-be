@@ -3,11 +3,13 @@ package entity
 import (
 	"time"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
 type JobMajor struct {
 	gorm.Model `json:"-"`
+	ID         uuid.UUID `json:"id" gorm:"type:char(36);primaryKey;"`
 	Title      string    `json:"title" gorm:"type:varchar(255);not null"`
 	StartDate  time.Time `json:"start_date" gorm:"type:date;not null"`
 	EndDate    time.Time `json:"end_date" gorm:"type:date;not null"`
