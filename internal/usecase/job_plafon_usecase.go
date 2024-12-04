@@ -13,7 +13,7 @@ import (
 )
 
 type IJobPlafonUseCase interface {
-	FindAllPaginated(request *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, int64, error)
+	FindAllPaginated(request *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, error)
 	FindById(request *request.FindByIdJobPlafonRequest) (*response.FindByIdJobPlafonResponse, error)
 	Create(request *request.CreateJobPlafonRequest) (*response.CreateJobPlafonResponse, error)
 	Update(request *request.UpdateJobPlafonRequest) (*response.UpdateJobPlafonResponse, error)
@@ -34,17 +34,17 @@ func NewJobPlafonUseCase(log *logrus.Logger, repo repository.IJobPlafonRepositor
 	}
 }
 
-func (uc *JobPlafonUseCase) FindAllPaginated(request *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, int64, error) {
+func (uc *JobPlafonUseCase) FindAllPaginated(request *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, error) {
 	jobPlafons, total, err := uc.JobPlafonRepository.FindAllPaginated(request.Page, request.PageSize, request.Search)
 	if err != nil {
 		uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated] " + err.Error())
-		return nil, 0, err
+		return nil, err
 	}
 
 	return &response.FindAllPaginatedJobPlafonResponse{
 		JobPlafons: jobPlafons,
 		Total:      total,
-	}, total, nil
+	}, nil
 }
 
 func (uc *JobPlafonUseCase) FindById(request *request.FindByIdJobPlafonRequest) (*response.FindByIdJobPlafonResponse, error) {
@@ -129,4 +129,10 @@ func (uc *JobPlafonUseCase) Delete(request *request.DeleteJobPlafonRequest) erro
 	}
 
 	return nil
+}
+
+func JobPlafonUseCaseFactory(log *logrus.Logger) IJobPlafonUseCase {
+	repo := repository.JobPlafonRepositoryFactory(log)
+	message := messaging.JobPlafonMessageFactory(log)
+	return NewJobPlafonUseCase(log, repo, message)
 }

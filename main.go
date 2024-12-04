@@ -51,12 +51,13 @@ func main() {
 
 	// factory handlers
 	mppPeriodHandler := handler.MPPPeriodHandlerFactory(log, viper)
+	jobPlafonHandler := handler.JobPlafonHandlerFactory(log, viper)
 
 	// facroty middleware
 	authMiddleware := middleware.NewAuth(viper)
 
 	// setup routes
-	routeConfig := route.NewRouteConfig(app, mppPeriodHandler, authMiddleware)
+	routeConfig := route.NewRouteConfig(app, mppPeriodHandler, authMiddleware, jobPlafonHandler)
 	routeConfig.SetupRoutes()
 
 	// run server

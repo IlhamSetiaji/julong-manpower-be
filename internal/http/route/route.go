@@ -8,6 +8,7 @@ import (
 type RouteConfig struct {
 	App              *gin.Engine
 	MPPPeriodHandler handler.IMPPPeriodHander
+	JobPlafonHandler handler.IJobPlafonHandler
 	AuthMiddleware   gin.HandlerFunc
 }
 
@@ -32,10 +33,11 @@ func (c *RouteConfig) SetupMPPPeriodRoutes() {
 	}
 }
 
-func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc) *RouteConfig {
+func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc, jobHandler handler.IJobPlafonHandler) *RouteConfig {
 	return &RouteConfig{
 		App:              app,
 		MPPPeriodHandler: mppPeriodHandler,
 		AuthMiddleware:   authMiddleware,
+		JobPlafonHandler: jobHandler,
 	}
 }

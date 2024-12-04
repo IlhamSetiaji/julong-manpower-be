@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -86,4 +87,9 @@ func (r *JobPlafonRepository) Delete(id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func JobPlafonRepositoryFactory(log *logrus.Logger) IJobPlafonRepository {
+	db := config.NewDatabase()
+	return NewJobPlafonRepository(log, db)
 }
