@@ -7,6 +7,7 @@ import (
 	"github.com/IlhamSetiaji/go-rabbitmq-utils/rabbitmq"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/handler"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/route"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
@@ -51,8 +52,11 @@ func main() {
 	// factory handlers
 	mppPeriodHandler := handler.MPPPeriodHandlerFactory(log, viper)
 
+	// facroty middleware
+	authMiddleware := middleware.NewAuth(viper)
+
 	// setup routes
-	routeConfig := route.NewRouteConfig(app, mppPeriodHandler)
+	routeConfig := route.NewRouteConfig(app, mppPeriodHandler, authMiddleware)
 	routeConfig.SetupRoutes()
 
 	// run server

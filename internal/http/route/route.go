@@ -8,6 +8,7 @@ import (
 type RouteConfig struct {
 	App              *gin.Engine
 	MPPPeriodHandler handler.IMPPPeriodHander
+	AuthMiddleware   gin.HandlerFunc
 }
 
 func (c *RouteConfig) SetupRoutes() {
@@ -20,6 +21,7 @@ func (c *RouteConfig) SetupRoutes() {
 func (c *RouteConfig) SetupMPPPeriodRoutes() {
 	mppPeriod := c.App.Group("/mpp-period")
 	{
+		mppPeriod.Use(c.AuthMiddleware)
 		mppPeriod.GET("/", c.MPPPeriodHandler.FindAllPaginated)
 		mppPeriod.GET("/:id", c.MPPPeriodHandler.FindById)
 		mppPeriod.POST("/", c.MPPPeriodHandler.Create)
@@ -28,9 +30,10 @@ func (c *RouteConfig) SetupMPPPeriodRoutes() {
 	}
 }
 
-func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander) *RouteConfig {
+func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc) *RouteConfig {
 	return &RouteConfig{
 		App:              app,
 		MPPPeriodHandler: mppPeriodHandler,
+		AuthMiddleware:   authMiddleware,
 	}
 }
