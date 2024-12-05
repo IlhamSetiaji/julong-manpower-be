@@ -20,8 +20,13 @@ type MPPlanningLine struct {
 	Promotion              int        `json:"promotion" gorm:"type:int;default:0"`
 	Total                  int        `json:"total" gorm:"type:int;default:0"`
 	RemainingBalance       int        `json:"remaining_balance" gorm:"type:int;default:0"`
+	RecruitPH              int        `json:"recruit_ph" gorm:"type:int;default:0"`
+	RecruitMT              int        `json:"recruit_mt" gorm:"type:int;default:0"`
 
 	MPPlanningHeader MPPlanningHeader `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`
+	JobLevelName             string `json:"job_level_name" gorm:"-"`
+	JobName                  string `json:"job_name" gorm:"-"`
 }
 
 func (m *MPPlanningLine) BeforeCreate(tx *gorm.DB) (err error) {

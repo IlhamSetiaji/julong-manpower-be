@@ -4,6 +4,14 @@ type CheckJobExistMessageRequest struct {
 	ID string `json:"id"`
 }
 
+type SendFindJobByIDMessageRequest struct {
+	ID string `json:"id"`
+}
+
+type SendFindJobLevelByIDMessageRequest struct {
+	ID string `json:"id"`
+}
+
 type FindAllPaginatedJobPlafonRequest struct {
 	Page     int    `json:"page"`
 	PageSize int    `json:"page_size"`

@@ -37,6 +37,13 @@ const (
 	EducationEnumS3  EducationEnum = "s3"
 )
 
+type MPRequestTypeEnum string
+
+const (
+	MPRequestTypeEnumOnBudget  MPRequestTypeEnum = "ON_BUDGET"
+	MPRequestTypeEnumOffBudget MPRequestTypeEnum = "OFF_BUDGET"
+)
+
 type MPRequestHeader struct {
 	gorm.Model             `json:"-"`
 	ID                     uuid.UUID         `json:"id" gorm:"type:char(36);primaryKey;"`
@@ -67,10 +74,13 @@ type MPRequestHeader struct {
 	VpGmDirector           string            `json:"vp_gm_director" gorm:"type:text;default:null"`
 	CEO                    string            `json:"ceo" gorm:"type:text;default:null"`
 	HrdHoUnit              *uuid.UUID        `json:"hrd_ho_unit" gorm:"type:char(36);not null"`
+	MPPlanningHeaderID     *uuid.UUID        `json:"mp_planning_header_id" gorm:"type:char(36);not null"`
 	Status                 MPRequestStatus   `json:"status" gorm:"default:'DRAFT'"`
+	MPRequestType          MPRequestTypeEnum `json:"mp_request_type" gorm:"default:'ON_BUDGET'"`
 
-	RequestCategory RequestCategory `json:"request_category" gorm:"foreignKey:RequestCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	RequestMajors   []RequestMajor  `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	RequestCategory  RequestCategory  `json:"request_category" gorm:"foreignKey:RequestCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	RequestMajors    []RequestMajor   `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPlanningHeader MPPlanningHeader `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (m *MPRequestHeader) BeforeCreate(tx *gorm.DB) (err error) {
