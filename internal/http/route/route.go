@@ -8,6 +8,7 @@ import (
 type RouteConfig struct {
 	App              *gin.Engine
 	MPPPeriodHandler handler.IMPPPeriodHander
+	JobPlafonHandler handler.IJobPlafonHandler
 	AuthMiddleware   gin.HandlerFunc
 }
 
@@ -18,6 +19,7 @@ func (c *RouteConfig) SetupRoutes() {
 		})
 	})
 	c.SetupMPPPeriodRoutes()
+	c.SetupJobPlafonRoutes()
 }
 
 func (c *RouteConfig) SetupMPPPeriodRoutes() {
@@ -32,10 +34,24 @@ func (c *RouteConfig) SetupMPPPeriodRoutes() {
 	}
 }
 
-func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc) *RouteConfig {
+func (c *RouteConfig) SetupJobPlafonRoutes() {
+	jobPlafon := c.App.Group("/api/job-plafons")
+	{
+		jobPlafon.Use(c.AuthMiddleware)
+		jobPlafon.GET("/", c.JobPlafonHandler.FindAllPaginated)
+		jobPlafon.GET("/:id", c.JobPlafonHandler.FindById)
+		jobPlafon.GET("/job/:job_id", c.JobPlafonHandler.FindByJobId)
+		jobPlafon.POST("/", c.JobPlafonHandler.Create)
+		jobPlafon.PUT("/", c.JobPlafonHandler.Update)
+		jobPlafon.DELETE("/:id", c.JobPlafonHandler.Delete)
+	}
+}
+
+func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc, jobHandler handler.IJobPlafonHandler) *RouteConfig {
 	return &RouteConfig{
 		App:              app,
 		MPPPeriodHandler: mppPeriodHandler,
 		AuthMiddleware:   authMiddleware,
+		JobPlafonHandler: jobHandler,
 	}
 }

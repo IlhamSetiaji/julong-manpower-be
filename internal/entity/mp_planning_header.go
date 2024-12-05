@@ -10,8 +10,9 @@ import (
 type MPPlaningStatus string
 
 const (
-	MPPlaningStatusOpen     MPPlaningStatus = "OPEN"
-	MPPlaningStatusClose    MPPlaningStatus = "CLOSE"
+	MPPlaningStatusDraft    MPPlaningStatus = "DRAFT"
+	MPPlaningStatusReject   MPPlaningStatus = "REJECT"
+	MPPlaningStatusSubmit   MPPlaningStatus = "SUBMIT"
 	MPPlaningStatusComplete MPPlaningStatus = "COMPLETE"
 )
 
@@ -26,13 +27,15 @@ type MPPlanningHeader struct {
 	Notes             string          `json:"notes" gorm:"type:text;"`
 	TotalRecruit      float64         `json:"total_recruit" gorm:"type:decimal(18,2);default:0"`
 	TotalPromote      float64         `json:"total_promote" gorm:"type:decimal(18,2);default:0"`
-	Status            MPPlaningStatus `json:"status" gorm:"default:'open'"`
-	RecommendedBy     *uuid.UUID      `json:"recommended_by" gorm:"type:char(36);"`
-	ApprovedBy        *uuid.UUID      `json:"approved_by" gorm:"type:char(36);"`
-	RequestorID       *uuid.UUID      `json:"requestor_id" gorm:"type:char(36);"`
+	Status            MPPlaningStatus `json:"status" gorm:"default:'DRAFT'"`
+	RecommendedBy     string          `json:"recommended_by" gorm:"type:text;"`   // free text
+	ApprovedBy        string          `json:"approved_by" gorm:"type:text;"`      // free text
+	RequestorID       *uuid.UUID      `json:"requestor_id" gorm:"type:char(36);"` // user_id
+	NotesAttach       string          `json:"notes_attach" gorm:"type:text;"`
 
-	MPPPeriod       MPPPeriod        `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	MPPlanningLines []MPPlanningLine `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPPeriod                   MPPPeriod                    `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPlanningLines             []MPPlanningLine             `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPlanningHeaderAttachments []MPPlanningHeaderAttachment `json:"mp_planning_header_attachments" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (m *MPPlanningHeader) BeforeCreate(tx *gorm.DB) (err error) {

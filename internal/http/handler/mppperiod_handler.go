@@ -74,7 +74,7 @@ func (h *MPPPeriodHandler) FindAllPaginated(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusOK, "find all paginated success", resp)
 }
 
 func (h *MPPPeriodHandler) FindById(ctx *gin.Context) {
@@ -91,7 +91,7 @@ func (h *MPPPeriodHandler) FindById(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", resp.MPPPeriod)
+	utils.SuccessResponse(ctx, http.StatusOK, "find by id success", resp.MPPPeriod)
 }
 
 func (h *MPPPeriodHandler) Create(ctx *gin.Context) {
@@ -115,7 +115,7 @@ func (h *MPPPeriodHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusCreated, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusCreated, "mpp period created successfully", resp)
 }
 
 func (h *MPPPeriodHandler) Update(ctx *gin.Context) {
@@ -139,7 +139,7 @@ func (h *MPPPeriodHandler) Update(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusOK, "mpp period updated successfully", resp)
 }
 
 func (h *MPPPeriodHandler) Delete(ctx *gin.Context) {
@@ -156,5 +156,5 @@ func (h *MPPPeriodHandler) Delete(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", nil)
+	utils.SuccessResponse(ctx, http.StatusOK, "mpp period deleted successfully", nil)
 }
