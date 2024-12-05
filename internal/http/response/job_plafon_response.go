@@ -26,3 +26,7 @@ type CreateJobPlafonResponse struct {
 type UpdateJobPlafonResponse struct {
 	JobPlafon *entity.JobPlafon `json:"job_plafon"`
 }
+
+type FindByJobIdJobPlafonResponse struct {
+	JobPlafon *entity.JobPlafon `json:"job_plafon"`
+}

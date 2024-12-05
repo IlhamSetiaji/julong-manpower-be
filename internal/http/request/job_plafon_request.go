@@ -28,3 +28,7 @@ type UpdateJobPlafonRequest struct {
 type DeleteJobPlafonRequest struct {
 	ID string `json:"id"`
 }
+
+type FindByJobIdJobPlafonRequest struct {
+	JobID string `json:"job_id"`
+}

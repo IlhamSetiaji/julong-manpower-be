@@ -15,6 +15,7 @@ import (
 type IJobPlafonUseCase interface {
 	FindAllPaginated(request *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, error)
 	FindById(request *request.FindByIdJobPlafonRequest) (*response.FindByIdJobPlafonResponse, error)
+	FindByJobId(request *request.FindByJobIdJobPlafonRequest) (*response.FindByJobIdJobPlafonResponse, error)
 	Create(request *request.CreateJobPlafonRequest) (*response.CreateJobPlafonResponse, error)
 	Update(request *request.UpdateJobPlafonRequest) (*response.UpdateJobPlafonResponse, error)
 	Delete(request *request.DeleteJobPlafonRequest) error
@@ -59,7 +60,45 @@ func (uc *JobPlafonUseCase) FindById(request *request.FindByIdJobPlafonRequest) 
 	}, nil
 }
 
+func (uc *JobPlafonUseCase) FindByJobId(payload *request.FindByJobIdJobPlafonRequest) (*response.FindByJobIdJobPlafonResponse, error) {
+	messageResponse, err := uc.JobPlafonMessage.SendCheckJobExistMessage(request.CheckJobExistMessageRequest{
+		ID: payload.JobID,
+	})
+
+	if err != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.FindByJobId Message] " + err.Error())
+		return nil, err
+	}
+
+	if !messageResponse.Exist {
+		uc.Log.Errorf("[JobPlafonUseCase.FindByJobId] Job not found")
+		return nil, errors.New("job not found")
+	}
+
+	jobPlafon, err := uc.JobPlafonRepository.FindByJobId(uuid.MustParse(payload.JobID))
+	if err != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.FindByJobId] " + err.Error())
+		return nil, err
+	}
+
+	return &response.FindByJobIdJobPlafonResponse{
+		JobPlafon: jobPlafon,
+	}, nil
+}
+
 func (uc *JobPlafonUseCase) Create(payload *request.CreateJobPlafonRequest) (*response.CreateJobPlafonResponse, error) {
+	jobExist, err := uc.JobPlafonRepository.FindByJobId(uuid.MustParse(payload.JobID))
+
+	if err != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	if jobExist != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.Create] Job plafon already exist")
+		return nil, errors.New("job plafon already exist")
+	}
+
 	messageResponse, err := uc.JobPlafonMessage.SendCheckJobExistMessage(request.CheckJobExistMessageRequest{
 		ID: payload.JobID,
 	})

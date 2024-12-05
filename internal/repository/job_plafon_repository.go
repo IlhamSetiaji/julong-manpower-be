@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/google/uuid"
@@ -11,6 +13,7 @@ import (
 type IJobPlafonRepository interface {
 	FindAllPaginated(page int, pageSize int, search string) (*[]entity.JobPlafon, int64, error)
 	FindById(id uuid.UUID) (*entity.JobPlafon, error)
+	FindByJobId(jobId uuid.UUID) (*entity.JobPlafon, error)
 	Create(jobPlafon *entity.JobPlafon) (*entity.JobPlafon, error)
 	Update(jobPlafon *entity.JobPlafon) (*entity.JobPlafon, error)
 	Delete(id uuid.UUID) error
@@ -55,8 +58,29 @@ func (r *JobPlafonRepository) FindById(id uuid.UUID) (*entity.JobPlafon, error) 
 	var jobPlafon entity.JobPlafon
 
 	if err := r.DB.Where("id = ?", id).First(&jobPlafon).Error; err != nil {
-		r.Log.Errorf("[JobPlafonRepository.FindById] " + err.Error())
-		return nil, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warn("[JobPlafonRepository.FindById] Job not found")
+			return nil, nil
+		} else {
+			r.Log.Errorf("[JobPlafonRepository.FindById] " + err.Error())
+			return nil, err
+		}
+	}
+
+	return &jobPlafon, nil
+}
+
+func (r *JobPlafonRepository) FindByJobId(jobId uuid.UUID) (*entity.JobPlafon, error) {
+	var jobPlafon entity.JobPlafon
+
+	if err := r.DB.Where("job_id = ?", jobId).First(&jobPlafon).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warn("[JobPlafonRepository.FindByJobId] Job not found")
+			return nil, nil
+		} else {
+			r.Log.Errorf("[JobPlafonRepository.FindByJobId] " + err.Error())
+			return nil, err
+		}
 	}
 
 	return &jobPlafon, nil

@@ -17,6 +17,7 @@ import (
 type IJobPlafonHandler interface {
 	FindAllPaginated(ctx *gin.Context)
 	FindById(ctx *gin.Context)
+	FindByJobId(ctx *gin.Context)
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
@@ -71,7 +72,7 @@ func (h *JobPlafonHandler) FindAllPaginated(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusOK, "find all paginated success", resp)
 }
 
 func (h *JobPlafonHandler) FindById(ctx *gin.Context) {
@@ -86,7 +87,29 @@ func (h *JobPlafonHandler) FindById(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusOK, "find by id success", resp.JobPlafon)
+}
+
+func (h *JobPlafonHandler) FindByJobId(ctx *gin.Context) {
+	jobId := ctx.Param("job_id")
+
+	if jobId == "" {
+		h.Log.Errorf("[JobPlafonHandler.FindByJobId] job id is required")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "job id is required")
+		return
+	}
+
+	resp, err := h.UseCase.FindByJobId(&request.FindByJobIdJobPlafonRequest{
+		JobID: jobId,
+	})
+
+	if err != nil {
+		h.Log.Errorf("[JobPlafonHandler.FindByJobId] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find by job id success", resp.JobPlafon)
 }
 
 func (h *JobPlafonHandler) Create(ctx *gin.Context) {
@@ -110,7 +133,7 @@ func (h *JobPlafonHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusCreated, "success", resp.JobPlafon)
+	utils.SuccessResponse(ctx, http.StatusCreated, "job plafon created successfully", resp.JobPlafon)
 }
 
 func (h *JobPlafonHandler) Update(ctx *gin.Context) {
@@ -134,7 +157,7 @@ func (h *JobPlafonHandler) Update(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusOK, "job plafon updated successfully", resp.JobPlafon)
 }
 
 func (h *JobPlafonHandler) Delete(ctx *gin.Context) {
@@ -149,5 +172,5 @@ func (h *JobPlafonHandler) Delete(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "success", nil)
+	utils.SuccessResponse(ctx, http.StatusOK, "job plafon deleted successfully", nil)
 }

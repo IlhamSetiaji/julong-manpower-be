@@ -40,6 +40,7 @@ func (c *RouteConfig) SetupJobPlafonRoutes() {
 		jobPlafon.Use(c.AuthMiddleware)
 		jobPlafon.GET("/", c.JobPlafonHandler.FindAllPaginated)
 		jobPlafon.GET("/:id", c.JobPlafonHandler.FindById)
+		jobPlafon.GET("/job/:job_id", c.JobPlafonHandler.FindByJobId)
 		jobPlafon.POST("/", c.JobPlafonHandler.Create)
 		jobPlafon.PUT("/", c.JobPlafonHandler.Update)
 		jobPlafon.DELETE("/:id", c.JobPlafonHandler.Delete)
