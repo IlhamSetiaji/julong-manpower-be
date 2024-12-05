@@ -65,7 +65,7 @@ func (uc *JobPlafonUseCase) Create(payload *request.CreateJobPlafonRequest) (*re
 	})
 
 	if err != nil {
-		uc.Log.Errorf("[JobPlafonUseCase.Create] " + err.Error())
+		uc.Log.Errorf("[JobPlafonUseCase.Create Message] " + err.Error())
 		return nil, err
 	}
 

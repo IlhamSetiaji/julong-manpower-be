@@ -110,7 +110,7 @@ func (h *JobPlafonHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusCreated, "success", resp)
+	utils.SuccessResponse(ctx, http.StatusCreated, "success", resp.JobPlafon)
 }
 
 func (h *JobPlafonHandler) Update(ctx *gin.Context) {

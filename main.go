@@ -3,12 +3,15 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"time"
 
-	"github.com/IlhamSetiaji/go-rabbitmq-utils/rabbitmq"
+	// "github.com/IlhamSetiaji/go-rabbitmq-utils/rabbitmq"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/handler"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/route"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/rabbitmq"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-contrib/sessions"
 	"github.com/gin-contrib/sessions/cookie"
 	"github.com/gin-gonic/gin"
@@ -19,13 +22,16 @@ func main() {
 	viper := config.NewViper()
 	log := config.NewLogrus(viper)
 
-	err := rabbitmq.InitializeConnection(viper.GetString("rabbitmq.url"))
-	if err != nil {
-		log.Fatalf("Failed to connect to RabbitMQ: %v", err)
-	}
-	defer rabbitmq.CloseConnection()
+	go rabbitmq.InitConsumer(viper, log)
+	go rabbitmq.InitProducer(viper, log)
 
-	log.Info("RabbitMQ connection established")
+	// err := rabbitmq.InitializeConnection(viper.GetString("rabbitmq.url"))
+	// if err != nil {
+	// 	log.Fatalf("Failed to connect to RabbitMQ: %v", err)
+	// }
+	// defer rabbitmq.CloseConnection()
+
+	// log.Info("RabbitMQ connection established")
 
 	app := gin.Default()
 	app.Use(func(c *gin.Context) {
@@ -34,6 +40,16 @@ func main() {
 
 	store := cookie.NewStore([]byte(viper.GetString("web.cookie.secret")))
 	app.Use(sessions.Sessions(viper.GetString("web.session.name"), store))
+
+	// setup CORS middleware
+	app.Use(cors.New(cors.Config{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
 
 	// setup custom csrf middleware
 	app.Use(func(c *gin.Context) {
@@ -62,7 +78,7 @@ func main() {
 
 	// run server
 	webPort := strconv.Itoa(viper.GetInt("web.port"))
-	err = app.Run(":" + webPort)
+	err := app.Run(":" + webPort)
 	if err != nil {
 		log.Panicf("Failed to start server: %v", err)
 	}

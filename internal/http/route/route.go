@@ -19,6 +19,7 @@ func (c *RouteConfig) SetupRoutes() {
 		})
 	})
 	c.SetupMPPPeriodRoutes()
+	c.SetupJobPlafonRoutes()
 }
 
 func (c *RouteConfig) SetupMPPPeriodRoutes() {
@@ -30,6 +31,18 @@ func (c *RouteConfig) SetupMPPPeriodRoutes() {
 		mppPeriod.POST("/", c.MPPPeriodHandler.Create)
 		mppPeriod.PUT("/", c.MPPPeriodHandler.Update)
 		mppPeriod.DELETE("/:id", c.MPPPeriodHandler.Delete)
+	}
+}
+
+func (c *RouteConfig) SetupJobPlafonRoutes() {
+	jobPlafon := c.App.Group("/api/job-plafons")
+	{
+		jobPlafon.Use(c.AuthMiddleware)
+		jobPlafon.GET("/", c.JobPlafonHandler.FindAllPaginated)
+		jobPlafon.GET("/:id", c.JobPlafonHandler.FindById)
+		jobPlafon.POST("/", c.JobPlafonHandler.Create)
+		jobPlafon.PUT("/", c.JobPlafonHandler.Update)
+		jobPlafon.DELETE("/:id", c.JobPlafonHandler.Delete)
 	}
 }
 

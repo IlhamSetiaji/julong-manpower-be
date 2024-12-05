@@ -1,12 +1,13 @@
 package messaging
 
 import (
-	"encoding/json"
 	"errors"
+	"log"
 	"time"
 
-	"github.com/IlhamSetiaji/go-rabbitmq-utils/rabbitmq"
+	// "github.com/IlhamSetiaji/go-rabbitmq-utils/rabbitmq"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	jobResponse "github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
 	"github.com/google/uuid"
@@ -27,35 +28,62 @@ func NewJobPlafonMessage(log *logrus.Logger) IJobPlafonMessage {
 	}
 }
 
-func (m *JobPlafonMessage) SendCheckJobExistMessage(request request.CheckJobExistMessageRequest) (*jobResponse.CheckJobExistMessageResponse, error) {
+func (m *JobPlafonMessage) SendCheckJobExistMessage(req request.CheckJobExistMessageRequest) (*jobResponse.CheckJobExistMessageResponse, error) {
 	payload := map[string]interface{}{
-		"message_type": "check_job_exists_request",
-		"job_id":       request.ID,
+		"job_id": req.ID,
 	}
-	body, err := json.Marshal(payload)
-	if err != nil {
-		m.Log.Errorf("Failed to serialize message: %v", err)
-		return nil, err
+
+	docMsg := &request.RabbitMQRequest{
+		ID:          uuid.New().String(),
+		MessageType: "check_job_exist",
+		MessageData: payload,
+		ReplyTo:     "julong_manpower",
 	}
-	err = rabbitmq.PublishMessage("", "julong_queue_request", body)
+
+	log.Printf("INFO: document message: %v", docMsg)
+
+	// create channel and add to rchans with uid
+	rchan := make(chan response.RabbitMQResponse)
+	utils.Rchans[docMsg.ID] = rchan
+
+	// publish rabbit message
+	msg := utils.RabbitMsg{
+		QueueName: "julong_sso",
+		Message:   *docMsg,
+	}
+	utils.Pchan <- msg
+
+	// wait for reply
+	resp, err := waitReply(docMsg.ID, rchan)
 	if err != nil {
 		return nil, err
 	}
 
-	select {
-	case response := <-utils.ResponseChannel:
-		if request.ID == response["user_id"] && response["exists"].(bool) {
-			m.Log.Printf("User validated. Proceeding with employee creation.")
-			return &jobResponse.CheckJobExistMessageResponse{
-				JobID: uuid.MustParse(request.ID),
-				Exist: response["exists"].(bool),
-			}, nil
+	log.Printf("INFO: response: %v", resp)
+
+	return &jobResponse.CheckJobExistMessageResponse{
+		JobID: uuid.MustParse(resp.MessageData["job_id"].(string)),
+		Exist: resp.MessageData["exists"].(bool),
+	}, nil
+}
+
+func waitReply(id string, rchan chan response.RabbitMQResponse) (response.RabbitMQResponse, error) {
+	for {
+		select {
+		case docReply := <-rchan:
+			// responses received
+			log.Printf("INFO: received reply: %v uid: %s", docReply, id)
+
+			delete(utils.Rchans, id)
+			return docReply, nil
+		case <-time.After(10 * time.Second):
+			// timeout
+			log.Printf("ERROR: request timeout uid: %s", id)
+
+			// remove channel from rchans
+			delete(utils.Rchans, id)
+			return response.RabbitMQResponse{}, errors.New("request timeout")
 		}
-		m.Log.Errorf("User does not exist. Aborting.")
-		return nil, errors.New("user does not exist")
-	case <-time.After(5 * time.Second):
-		m.Log.Errorf("Validation response timeout. Aborting.")
-		return nil, errors.New("validation response timeout")
 	}
 }
 

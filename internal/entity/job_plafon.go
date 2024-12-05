@@ -14,14 +14,14 @@ type JobPlafon struct {
 	Plafon     int        `json:"plafon" gorm:"type:int;default:0"`
 }
 
-func (m *JobPlafon) BeforeCreate() (err error) {
+func (m *JobPlafon) BeforeCreate(tx *gorm.DB) (err error) {
 	m.ID = uuid.New()
 	m.CreatedAt = time.Now().Add(7 * time.Hour)
 	m.UpdatedAt = time.Now().Add(7 * time.Hour)
 	return nil
 }
 
-func (m *JobPlafon) BeforeUpdate() (err error) {
+func (m *JobPlafon) BeforeUpdate(tx *gorm.DB) (err error) {
 	m.UpdatedAt = time.Now().Add(7 * time.Hour)
 	return nil
 }
