@@ -13,7 +13,8 @@ func main() {
 	db := config.NewDatabase()
 
 	// migrate the schema
-	err := db.AutoMigrate(&entity.JobPlafon{}, &entity.MPPPeriod{}, &entity.MPPlanningHeader{}, &entity.MPPlanningLine{})
+	err := db.AutoMigrate(&entity.JobPlafon{}, &entity.MPPPeriod{}, &entity.MPPlanningHeader{}, &entity.MPPlanningLine{}, &entity.Major{}, &entity.MPPlanningHeaderAttachment{},
+		&entity.RequestCategory{}, &entity.MPRequestHeader{}, &entity.RequestMajor{})
 	if err != nil {
 		log.Fatal(err)
 	} else {
