@@ -3,22 +3,24 @@ package repository
 import (
 	"errors"
 
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type IMPPlanningRepository interface {
 	FindAllHeadersPaginated(page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
-	FindHeaderById(id int) (*entity.MPPlanningHeader, error)
+	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
-	DeleteHeader(id int) error
-	FindAllLinesByHeaderId(headerId int) (*[]entity.MPPlanningLine, error)
-	FindLineById(id int) (*entity.MPPlanningLine, error)
+	DeleteHeader(id uuid.UUID) error
+	FindAllLinesByHeaderIdPaginated(headerId uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningLine, int64, error)
+	FindLineById(id uuid.UUID) (*entity.MPPlanningLine, error)
 	CreateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	UpdateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
-	DeleteLine(id int) error
+	DeleteLine(id uuid.UUID) error
 }
 
 type MPPlanningRepository struct {
@@ -56,7 +58,7 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 	return &mppHeaders, total, nil
 }
 
-func (r *MPPlanningRepository) FindHeaderById(id int) (*entity.MPPlanningHeader, error) {
+func (r *MPPlanningRepository) FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error) {
 	var mppHeader entity.MPPlanningHeader
 
 	if err := r.DB.Where("id = ?", id).First(&mppHeader).Error; err != nil {
@@ -118,7 +120,7 @@ func (r *MPPlanningRepository) UpdateHeader(mppHeader *entity.MPPlanningHeader) 
 	return mppHeader, nil
 }
 
-func (r *MPPlanningRepository) DeleteHeader(id int) error {
+func (r *MPPlanningRepository) DeleteHeader(id uuid.UUID) error {
 	tx := r.DB.Begin()
 
 	if tx.Error != nil {
@@ -141,18 +143,30 @@ func (r *MPPlanningRepository) DeleteHeader(id int) error {
 	return nil
 }
 
-func (r *MPPlanningRepository) FindAllLinesByHeaderId(headerId int) (*[]entity.MPPlanningLine, error) {
+func (r *MPPlanningRepository) FindAllLinesByHeaderIdPaginated(headerId uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningLine, int64, error) {
 	var mppLines []entity.MPPlanningLine
 
-	if err := r.DB.Where("mpp_header_id = ?", headerId).Find(&mppLines).Error; err != nil {
-		r.Log.Errorf("[MPPlanningRepository.FindAllLinesByHeaderId] " + err.Error())
-		return nil, errors.New("[MPPlanningRepository.FindAllLinesByHeaderId] " + err.Error())
+	query := r.DB.Model(&entity.MPPlanningLine{}).Where("mp_planning_header_id = ?", headerId)
+
+	if search != "" {
+		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
-	return &mppLines, nil
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppLines).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllLinesByHeaderIdPaginated] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllLinesByHeaderIdPaginated] " + err.Error())
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllLinesByHeaderIdPaginated] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllLinesByHeaderIdPaginated] " + err.Error())
+	}
+
+	return &mppLines, total, nil
 }
 
-func (r *MPPlanningRepository) FindLineById(id int) (*entity.MPPlanningLine, error) {
+func (r *MPPlanningRepository) FindLineById(id uuid.UUID) (*entity.MPPlanningLine, error) {
 	var mppLine entity.MPPlanningLine
 
 	if err := r.DB.Where("id = ?", id).First(&mppLine).Error; err != nil {
@@ -214,7 +228,7 @@ func (r *MPPlanningRepository) UpdateLine(mppLine *entity.MPPlanningLine) (*enti
 	return mppLine, nil
 }
 
-func (r *MPPlanningRepository) DeleteLine(id int) error {
+func (r *MPPlanningRepository) DeleteLine(id uuid.UUID) error {
 	tx := r.DB.Begin()
 
 	if tx.Error != nil {
@@ -235,4 +249,9 @@ func (r *MPPlanningRepository) DeleteLine(id int) error {
 	}
 
 	return nil
+}
+
+func MPPlanningRepositoryFactory(log *logrus.Logger) IMPPlanningRepository {
+	db := config.NewDatabase()
+	return NewMPPlanningRepository(log, db)
 }

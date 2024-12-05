@@ -24,7 +24,7 @@ type MPPlanningHeader struct {
 	EmpOrganizationID *uuid.UUID      `json:"emp_organization_id" gorm:"type:char(36);not null;"`
 	DocumentNumber    string          `json:"document_number" gorm:"type:varchar(255);not null;"`
 	DocumentDate      time.Time       `json:"document_date" gorm:"type:date;not null;"`
-	Notes             string          `json:"notes" gorm:"type:text;"`
+	Notes             string          `json:"notes" gorm:"type:text;default:null"`
 	TotalRecruit      float64         `json:"total_recruit" gorm:"type:decimal(18,2);default:0"`
 	TotalPromote      float64         `json:"total_promote" gorm:"type:decimal(18,2);default:0"`
 	Status            MPPlaningStatus `json:"status" gorm:"default:'DRAFT'"`

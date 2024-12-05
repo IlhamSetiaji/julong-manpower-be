@@ -9,5 +9,6 @@ import (
 func NewValidator(viper *viper.Viper) *validator.Validate {
 	validate := validator.New()
 	validate.RegisterValidation("MPPPeriodStatusValidation", request.MPPPeriodStatusValidation)
+	validate.RegisterValidation("MPPlaningStatusValidation", request.MPPlaningStatusValidation)
 	return validate
 }

@@ -18,6 +18,19 @@ func MPPPeriodStatusValidation(fl validator.FieldLevel) bool {
 	}
 }
 
+func MPPlaningStatusValidation(fl validator.FieldLevel) bool {
+	status := fl.Field().String()
+	if status == "" {
+		return true
+	}
+	switch entity.MPPlaningStatus(status) {
+	case entity.MPPlaningStatusDraft, entity.MPPlaningStatusReject, entity.MPPlaningStatusSubmit, entity.MPPlaningStatusComplete:
+		return true
+	default:
+		return false
+	}
+}
+
 type RabbitMQRequest struct {
 	ID          string                 `json:"id"`
 	MessageType string                 `json:"message_type"`
