@@ -36,6 +36,7 @@ type MPPlanningHeader struct {
 	MPPPeriod                   MPPPeriod                    `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPlanningLines             []MPPlanningLine             `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPlanningHeaderAttachments []MPPlanningHeaderAttachment `json:"mp_planning_header_attachments" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPRequestHeaders            []MPRequestHeader            `json:"mp_request_headers" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (m *MPPlanningHeader) BeforeCreate(tx *gorm.DB) (err error) {

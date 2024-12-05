@@ -87,27 +87,69 @@ func (r *JobPlafonRepository) FindByJobId(jobId uuid.UUID) (*entity.JobPlafon, e
 }
 
 func (r *JobPlafonRepository) Create(jobPlafon *entity.JobPlafon) (*entity.JobPlafon, error) {
-	if err := r.DB.Create(jobPlafon).Error; err != nil {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[JobPlafonRepository.Create] " + tx.Error.Error())
+		return nil, errors.New("[JobPlafonRepository.Create] " + tx.Error.Error())
+	}
+
+	if err := tx.Create(jobPlafon).Error; err != nil {
+		tx.Rollback()
 		r.Log.Errorf("[JobPlafonRepository.Create] " + err.Error())
 		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[JobPlafonRepository.Create] " + err.Error())
+		return nil, errors.New("[JobPlafonRepository.Create] " + err.Error())
 	}
 
 	return jobPlafon, nil
 }
 
 func (r *JobPlafonRepository) Update(jobPlafon *entity.JobPlafon) (*entity.JobPlafon, error) {
-	if err := r.DB.Save(jobPlafon).Error; err != nil {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[JobPlafonRepository.Update] " + tx.Error.Error())
+		return nil, errors.New("[JobPlafonRepository.Update] " + tx.Error.Error())
+	}
+
+	if err := tx.Save(jobPlafon).Error; err != nil {
+		tx.Rollback()
 		r.Log.Errorf("[JobPlafonRepository.Update] " + err.Error())
 		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[JobPlafonRepository.Update] " + err.Error())
+		return nil, errors.New("[JobPlafonRepository.Update] " + err.Error())
 	}
 
 	return jobPlafon, nil
 }
 
 func (r *JobPlafonRepository) Delete(id uuid.UUID) error {
-	if err := r.DB.Where("id = ?", id).Delete(&entity.JobPlafon{}).Error; err != nil {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[JobPlafonRepository.Delete] " + tx.Error.Error())
+		return errors.New("[JobPlafonRepository.Delete] " + tx.Error.Error())
+	}
+
+	if err := tx.Where("id = ?", id).Delete(&entity.JobPlafon{}).Error; err != nil {
+		tx.Rollback()
 		r.Log.Errorf("[JobPlafonRepository.Delete] " + err.Error())
-		return err
+		return errors.New("[JobPlafonRepository.Delete] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[JobPlafonRepository.Delete] " + err.Error())
+		return errors.New("[JobPlafonRepository.Delete] " + err.Error())
 	}
 
 	return nil

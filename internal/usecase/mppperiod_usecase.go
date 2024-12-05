@@ -103,6 +103,17 @@ func (uc *MPPPeriodUseCase) Create(req request.CreateMPPPeriodRequest) (*respons
 }
 
 func (uc *MPPPeriodUseCase) Update(req request.UpdateMPPPeriodRequest) (*response.UpdateMPPPeriodResponse, error) {
+	exist, err := uc.MPPPeriodRepository.FindById(req.ID)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Update] " + err.Error())
+		return nil, err
+	}
+
+	if exist == nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Update] " + "MPP Period not found")
+		return nil, errors.New("MPP Period not found")
+	}
+
 	startDate, err := time.Parse("2006-01-02", req.StartDate)
 	if err != nil {
 		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
@@ -139,7 +150,18 @@ func (uc *MPPPeriodUseCase) Update(req request.UpdateMPPPeriodRequest) (*respons
 }
 
 func (uc *MPPPeriodUseCase) Delete(req request.DeleteMPPPeriodRequest) error {
-	err := uc.MPPPeriodRepository.Delete(req.ID)
+	exist, err := uc.MPPPeriodRepository.FindById(req.ID)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Delete] " + err.Error())
+		return err
+	}
+
+	if exist == nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Delete] " + "MPP Period not found")
+		return errors.New("MPP Period not found")
+	}
+
+	err = uc.MPPPeriodRepository.Delete(req.ID)
 	if err != nil {
 		uc.Log.Errorf("[MPPPeriodUseCase.Delete] " + err.Error())
 		return err

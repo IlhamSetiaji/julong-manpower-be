@@ -59,8 +59,13 @@ func (r *MPPPeriodRepository) FindById(id uuid.UUID) (*entity.MPPPeriod, error) 
 	var mppPeriod entity.MPPPeriod
 
 	if err := r.DB.Where("id = ?", id).First(&mppPeriod).Error; err != nil {
-		r.Log.Errorf("[MPPPeriodRepository.FindById] " + err.Error())
-		return nil, errors.New("[MPPPeriodRepository.FindById] " + err.Error())
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warn("[MPPPeriodRepository.FindById] Job not found")
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPPeriodRepository.FindById] " + err.Error())
+			return nil, err
+		}
 	}
 
 	return &mppPeriod, nil
@@ -85,6 +90,7 @@ func (r *MPPPeriodRepository) Create(mppPeriod *entity.MPPPeriod) (*entity.MPPPe
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		r.Log.Errorf("[MPPPeriodRepository.Create] " + err.Error())
 		return nil, errors.New("[MPPPeriodRepository.Create] " + err.Error())
 	}
@@ -106,6 +112,7 @@ func (r *MPPPeriodRepository) Update(mppPeriod *entity.MPPPeriod) (*entity.MPPPe
 	}
 
 	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
 		r.Log.Errorf("[MPPPeriodRepository.Update] " + err.Error())
 		return nil, errors.New("[MPPPeriodRepository.Update] " + err.Error())
 	}
