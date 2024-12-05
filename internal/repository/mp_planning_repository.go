@@ -42,7 +42,7 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 	query := r.DB.Model(&entity.MPPlanningHeader{})
 
 	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
+		query = query.Preload("MPPlanningLines").Where("name LIKE ?", "%"+search+"%")
 	}
 
 	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppHeaders).Error; err != nil {
@@ -61,7 +61,7 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 func (r *MPPlanningRepository) FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error) {
 	var mppHeader entity.MPPlanningHeader
 
-	if err := r.DB.Where("id = ?", id).First(&mppHeader).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Where("id = ?", id).First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderById] " + err.Error())
 			return nil, nil
@@ -146,7 +146,7 @@ func (r *MPPlanningRepository) DeleteHeader(id uuid.UUID) error {
 func (r *MPPlanningRepository) FindAllLinesByHeaderIdPaginated(headerId uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningLine, int64, error) {
 	var mppLines []entity.MPPlanningLine
 
-	query := r.DB.Model(&entity.MPPlanningLine{}).Where("mp_planning_header_id = ?", headerId)
+	query := r.DB.Model(&entity.MPPlanningLine{}).Preload("MPPlanningHeader").Where("mp_planning_header_id = ?", headerId)
 
 	if search != "" {
 		query = query.Where("name LIKE ?", "%"+search+"%")
@@ -169,7 +169,7 @@ func (r *MPPlanningRepository) FindAllLinesByHeaderIdPaginated(headerId uuid.UUI
 func (r *MPPlanningRepository) FindLineById(id uuid.UUID) (*entity.MPPlanningLine, error) {
 	var mppLine entity.MPPlanningLine
 
-	if err := r.DB.Where("id = ?", id).First(&mppLine).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningHeader").Where("id = ?", id).First(&mppLine).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindLineById] " + err.Error())
 			return nil, nil

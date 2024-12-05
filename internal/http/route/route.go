@@ -6,10 +6,11 @@ import (
 )
 
 type RouteConfig struct {
-	App              *gin.Engine
-	MPPPeriodHandler handler.IMPPPeriodHander
-	JobPlafonHandler handler.IJobPlafonHandler
-	AuthMiddleware   gin.HandlerFunc
+	App               *gin.Engine
+	MPPPeriodHandler  handler.IMPPPeriodHander
+	JobPlafonHandler  handler.IJobPlafonHandler
+	MPPlanningHandler handler.IMPPlanningHandler
+	AuthMiddleware    gin.HandlerFunc
 }
 
 func (c *RouteConfig) SetupRoutes() {
@@ -20,6 +21,7 @@ func (c *RouteConfig) SetupRoutes() {
 	})
 	c.SetupMPPPeriodRoutes()
 	c.SetupJobPlafonRoutes()
+	c.SetupMPPlanningRoutes()
 }
 
 func (c *RouteConfig) SetupMPPPeriodRoutes() {
@@ -47,11 +49,31 @@ func (c *RouteConfig) SetupJobPlafonRoutes() {
 	}
 }
 
-func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc, jobHandler handler.IJobPlafonHandler) *RouteConfig {
+func (c *RouteConfig) SetupMPPlanningRoutes() {
+	mpPlanning := c.App.Group("/api/mp-plannings")
+	{
+		mpPlanning.Use(c.AuthMiddleware)
+		mpPlanning.GET("/", c.MPPlanningHandler.FindAllHeadersPaginated)
+		mpPlanning.GET("/:id", c.MPPlanningHandler.FindById)
+		mpPlanning.POST("/", c.MPPlanningHandler.Create)
+		mpPlanning.PUT("/", c.MPPlanningHandler.Update)
+		mpPlanning.DELETE("/:id", c.MPPlanningHandler.Delete)
+
+		mpPlanning.GET("/lines/find/:id", c.MPPlanningHandler.FindLineById)
+		mpPlanning.GET("/lines/:header_id", c.MPPlanningHandler.FindAllLinesByHeaderIdPaginated)
+		mpPlanning.POST("/lines/store", c.MPPlanningHandler.CreateLine)
+		mpPlanning.PUT("/lines/update", c.MPPlanningHandler.UpdateLine)
+		mpPlanning.DELETE("/lines/delete/:id", c.MPPlanningHandler.DeleteLine)
+	}
+}
+
+func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc, jobHandler handler.IJobPlafonHandler,
+	mpPlanningHandler handler.IMPPlanningHandler) *RouteConfig {
 	return &RouteConfig{
-		App:              app,
-		MPPPeriodHandler: mppPeriodHandler,
-		AuthMiddleware:   authMiddleware,
-		JobPlafonHandler: jobHandler,
+		App:               app,
+		MPPPeriodHandler:  mppPeriodHandler,
+		AuthMiddleware:    authMiddleware,
+		JobPlafonHandler:  jobHandler,
+		MPPlanningHandler: mpPlanningHandler,
 	}
 }

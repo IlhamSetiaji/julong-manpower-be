@@ -22,6 +22,7 @@ type MPPlanningHeader struct {
 	MPPPeriodID       uuid.UUID       `json:"mpp_period_id" gorm:"type:char(36);"`
 	OrganizationID    *uuid.UUID      `json:"organization_id" gorm:"type:char(36);not null;"`
 	EmpOrganizationID *uuid.UUID      `json:"emp_organization_id" gorm:"type:char(36);not null;"`
+	JobID             *uuid.UUID      `json:"job_id" gorm:"type:char(36);not null;"` // job_id
 	DocumentNumber    string          `json:"document_number" gorm:"type:varchar(255);not null;"`
 	DocumentDate      time.Time       `json:"document_date" gorm:"type:date;not null;"`
 	Notes             string          `json:"notes" gorm:"type:text;default:null"`
@@ -37,6 +38,11 @@ type MPPlanningHeader struct {
 	MPPlanningLines             []MPPlanningLine             `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPlanningHeaderAttachments []MPPlanningHeaderAttachment `json:"mp_planning_header_attachments" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPRequestHeaders            []MPRequestHeader            `json:"mp_request_headers" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+
+	OrganizationName    string `json:"organization_name" gorm:"-"`
+	EmpOrganizationName string `json:"emp_organization_name" gorm:"-"`
+	JobName             string `json:"job_name" gorm:"-"`
+	RequestorName       string `json:"requestor_name" gorm:"-"`
 }
 
 func (m *MPPlanningHeader) BeforeCreate(tx *gorm.DB) (err error) {

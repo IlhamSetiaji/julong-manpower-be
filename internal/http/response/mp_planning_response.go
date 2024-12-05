@@ -20,6 +20,7 @@ type CreateMPPlanningResponse struct {
 	MPPPeriodID       string                 `json:"mpp_period_id"`
 	OrganizationID    string                 `json:"organization_id"`
 	EmpOrganizationID string                 `json:"emp_organization_id"`
+	JobID             string                 `json:"job_id"`
 	DocumentNumber    string                 `json:"document_number"`
 	DocumentDate      time.Time              `json:"document_date"`
 	Notes             string                 `json:"notes"`
@@ -40,6 +41,7 @@ type UpdateMPPlanningResponse struct {
 	MPPPeriodID       string                 `json:"mpp_period_id"`
 	OrganizationID    string                 `json:"organization_id"`
 	EmpOrganizationID string                 `json:"emp_organization_id"`
+	JobID             string                 `json:"job_id"`
 	DocumentNumber    string                 `json:"document_number"`
 	DocumentDate      time.Time              `json:"document_date"`
 	Notes             string                 `json:"notes"`

@@ -19,12 +19,13 @@ type CreateHeaderMPPlanningRequest struct {
 	MPPPeriodID       uuid.UUID              `json:"mpp_period_id" validate:"required"`
 	OrganizationID    uuid.UUID              `json:"organization_id" validate:"required"`
 	EmpOrganizationID uuid.UUID              `json:"emp_organization_id" validate:"required"`
+	JobID             uuid.UUID              `json:"job_id" validate:"required"` // job_id
 	DocumentNumber    string                 `json:"document_number" validate:"required"`
 	DocumentDate      string                 `json:"document_date" validate:"required,datetime=2006-01-02"`
 	Notes             string                 `json:"notes" validate:"omitempty"`
 	TotalRecruit      float64                `json:"total_recruit" validate:"required"`
 	TotalPromote      float64                `json:"total_promote" validate:"required"`
-	Status            entity.MPPlaningStatus `json:"status" validate:"required,MPPlanningStatusValidation;"`
+	Status            entity.MPPlaningStatus `json:"status" validate:"required,MPPlaningStatusValidation"`
 	RecommendedBy     string                 `json:"recommended_by" validate:"required"`
 	ApprovedBy        string                 `json:"approved_by" validate:"required"`
 	RequestorID       uuid.UUID              `json:"requestor_id" validate:"required"`
@@ -36,12 +37,13 @@ type UpdateHeaderMPPlanningRequest struct {
 	MPPPeriodID       uuid.UUID              `json:"mpp_period_id" validate:"required"`
 	OrganizationID    uuid.UUID              `json:"organization_id" validate:"required"`
 	EmpOrganizationID uuid.UUID              `json:"emp_organization_id" validate:"required"`
+	JobID             uuid.UUID              `json:"job_id" validate:"required"` // job_id
 	DocumentNumber    string                 `json:"document_number" validate:"required"`
 	DocumentDate      string                 `json:"document_date" validate:"required,datetime=2006-01-02"`
 	Notes             string                 `json:"notes" validate:"omitempty"`
 	TotalRecruit      float64                `json:"total_recruit" validate:"required"`
 	TotalPromote      float64                `json:"total_promote" validate:"required"`
-	Status            entity.MPPlaningStatus `json:"status" validate:"required,MPPlanningStatusValidation;"`
+	Status            entity.MPPlaningStatus `json:"status" validate:"required,MPPlaningStatusValidation"`
 	RecommendedBy     string                 `json:"recommended_by" validate:"required"`
 	ApprovedBy        string                 `json:"approved_by" validate:"required"`
 	RequestorID       uuid.UUID              `json:"requestor_id" validate:"required"`
@@ -65,7 +67,7 @@ type FindLineByIdMPPlanningLineRequest struct {
 
 type CreateLineMPPlanningLineRequest struct {
 	MPPlanningHeaderID     uuid.UUID `json:"mp_planning_header_id" validate:"required"`
-	OrganizationLocationID uuid.UUID `json:"organization_id" validate:"required"`
+	OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"required"`
 	JobLevelID             uuid.UUID `json:"job_level_id" validate:"required"`
 	JobID                  uuid.UUID `json:"job_id" validate:"required"`
 	Existing               int       `json:"existing" validate:"required"`
@@ -81,7 +83,7 @@ type CreateLineMPPlanningLineRequest struct {
 type UpdateLineMPPlanningLineRequest struct {
 	ID                     uuid.UUID `json:"id" validate:"required"`
 	MPPlanningHeaderID     uuid.UUID `json:"mp_planning_header_id" validate:"required"`
-	OrganizationLocationID uuid.UUID `json:"organization_id" validate:"required"`
+	OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"required"`
 	JobLevelID             uuid.UUID `json:"job_level_id" validate:"required"`
 	JobID                  uuid.UUID `json:"job_id" validate:"required"`
 	Existing               int       `json:"existing" validate:"required"`

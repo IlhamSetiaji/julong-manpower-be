@@ -3,6 +3,7 @@ package main
 import (
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	// "github.com/IlhamSetiaji/go-rabbitmq-utils/rabbitmq"
@@ -43,7 +44,7 @@ func main() {
 
 	// setup CORS middleware
 	app.Use(cors.New(cors.Config{
-		AllowAllOrigins:  true,
+		AllowOrigins:     strings.Split(viper.GetString("frontend.urls"), ","), // Frontend URL
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -68,12 +69,13 @@ func main() {
 	// factory handlers
 	mppPeriodHandler := handler.MPPPeriodHandlerFactory(log, viper)
 	jobPlafonHandler := handler.JobPlafonHandlerFactory(log, viper)
+	mpPlanningHandler := handler.MPPlanningHandlerFactory(log, viper)
 
 	// facroty middleware
 	authMiddleware := middleware.NewAuth(viper)
 
 	// setup routes
-	routeConfig := route.NewRouteConfig(app, mppPeriodHandler, authMiddleware, jobPlafonHandler)
+	routeConfig := route.NewRouteConfig(app, mppPeriodHandler, authMiddleware, jobPlafonHandler, mpPlanningHandler)
 	routeConfig.SetupRoutes()
 
 	// run server
