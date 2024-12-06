@@ -80,6 +80,24 @@ type CreateLineMPPlanningLineRequest struct {
 	RecruitMT              int       `json:"recruit_mt" validate:"required"`
 }
 
+type CreateOrUpdateBatchLineMPPlanningLinesRequest struct {
+	MPPlanningHeaderID uuid.UUID `json:"mp_planning_header_id" validate:"required"`
+	MPPlanningLines    []struct {
+		ID                     uuid.UUID `json:"id" validate:"omitempty"`
+		OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"required"`
+		JobLevelID             uuid.UUID `json:"job_level_id" validate:"required"`
+		JobID                  uuid.UUID `json:"job_id" validate:"required"`
+		Existing               int       `json:"existing" validate:"required"`
+		Recruit                int       `json:"recruit" validate:"required"`
+		SuggestedRecruit       int       `json:"suggested_recruit" validate:"required"`
+		Promotion              int       `json:"promotion" validate:"required"`
+		Total                  int       `json:"total" validate:"required"`
+		RemainingBalance       int       `json:"remaining_balance" validate:"required"`
+		RecruitPH              int       `json:"recruit_ph" validate:"required"`
+		RecruitMT              int       `json:"recruit_mt" validate:"required"`
+	} `json:"mp_planning_lines" validate:"required"`
+}
+
 type UpdateLineMPPlanningLineRequest struct {
 	ID                     uuid.UUID `json:"id" validate:"required"`
 	MPPlanningHeaderID     uuid.UUID `json:"mp_planning_header_id" validate:"required"`

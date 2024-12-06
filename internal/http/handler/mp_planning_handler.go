@@ -25,6 +25,7 @@ type IMPPlanningHandler interface {
 	CreateLine(ctx *gin.Context)
 	UpdateLine(ctx *gin.Context)
 	DeleteLine(ctx *gin.Context)
+	CreateOrUpdateBatchLineMPPlanningLines(ctx *gin.Context)
 }
 
 type MPPlanningHandler struct {
@@ -297,4 +298,28 @@ func (h *MPPlanningHandler) DeleteLine(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "delete line success", nil)
+}
+
+func (h *MPPlanningHandler) CreateOrUpdateBatchLineMPPlanningLines(ctx *gin.Context) {
+	var req request.CreateOrUpdateBatchLineMPPlanningLinesRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.Log.Errorf("[MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	if err := h.Validate.Struct(req); err != nil {
+		h.Log.Errorf("[MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	err := h.UseCase.CreateOrUpdateBatchLineMPPlanningLines(&req)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusCreated, "create or update batch line success", nil)
 }

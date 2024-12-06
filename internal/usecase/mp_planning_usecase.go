@@ -24,6 +24,7 @@ type IMPPlanningUseCase interface {
 	CreateLine(request *request.CreateLineMPPlanningLineRequest) (*response.CreateMPPlanningLineResponse, error)
 	UpdateLine(request *request.UpdateLineMPPlanningLineRequest) (*response.UpdateMPPlanningLineResponse, error)
 	DeleteLine(request *request.DeleteLineMPPlanningLineRequest) error
+	CreateOrUpdateBatchLineMPPlanningLines(request *request.CreateOrUpdateBatchLineMPPlanningLinesRequest) error
 }
 
 type MPPlanningUseCase struct {
@@ -823,6 +824,106 @@ func (uc *MPPlanningUseCase) DeleteLine(req *request.DeleteLineMPPlanningLineReq
 		return err
 	}
 
+	return nil
+}
+
+func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request.CreateOrUpdateBatchLineMPPlanningLinesRequest) error {
+	for _, line := range req.MPPlanningLines {
+		// Check if organization location exist
+		orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: line.OrganizationLocationID.String(),
+		})
+
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+			return err
+		}
+
+		if orgLocExist == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] Organization Location not found")
+			return errors.New("Organization Location not found")
+		}
+
+		// Check if job level exist
+		jobLevelExist, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+			ID: line.JobLevelID.String(),
+		})
+
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+			return err
+		}
+
+		if jobLevelExist == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] Job Level not found")
+			return errors.New("Job Level not found")
+		}
+
+		// Check if job exist
+		jobExist, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+			ID: line.JobID.String(),
+		})
+
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+			return err
+		}
+
+		if jobExist == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] Job not found")
+			return errors.New("Job not found")
+		}
+
+		exist, err := uc.MPPlanningRepository.FindLineById(line.ID)
+
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+			return err
+		}
+
+		if exist == nil {
+			_, err := uc.MPPlanningRepository.CreateLine(&entity.MPPlanningLine{
+				ID:                     line.ID,
+				MPPlanningHeaderID:     req.MPPlanningHeaderID,
+				OrganizationLocationID: &line.OrganizationLocationID,
+				JobLevelID:             &line.JobLevelID,
+				JobID:                  &line.JobID,
+				Existing:               line.Existing,
+				Recruit:                line.Recruit,
+				SuggestedRecruit:       line.SuggestedRecruit,
+				Promotion:              line.Promotion,
+				Total:                  line.Total,
+				RemainingBalance:       line.RemainingBalance,
+				RecruitPH:              line.RecruitPH,
+				RecruitMT:              line.RecruitMT,
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+				return err
+			}
+		} else {
+			_, err := uc.MPPlanningRepository.UpdateLine(&entity.MPPlanningLine{
+				ID:                     line.ID,
+				MPPlanningHeaderID:     req.MPPlanningHeaderID,
+				OrganizationLocationID: &line.OrganizationLocationID,
+				JobLevelID:             &line.JobLevelID,
+				JobID:                  &line.JobID,
+				Existing:               line.Existing,
+				Recruit:                line.Recruit,
+				SuggestedRecruit:       line.SuggestedRecruit,
+				Promotion:              line.Promotion,
+				Total:                  line.Total,
+				RemainingBalance:       line.RemainingBalance,
+				RecruitPH:              line.RecruitPH,
+				RecruitMT:              line.RecruitMT,
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+				return err
+			}
+		}
+
+	}
 	return nil
 }
 

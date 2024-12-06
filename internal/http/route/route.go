@@ -65,6 +65,7 @@ func (c *RouteConfig) SetupMPPlanningRoutes() {
 		mpPlanning.POST("/lines/store", c.MPPlanningHandler.CreateLine)
 		mpPlanning.PUT("/lines/update", c.MPPlanningHandler.UpdateLine)
 		mpPlanning.DELETE("/lines/delete/:id", c.MPPlanningHandler.DeleteLine)
+		mpPlanning.POST("/lines/batch/store", c.MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines)
 	}
 }
 
