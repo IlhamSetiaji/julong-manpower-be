@@ -29,6 +29,7 @@ func (c *RouteConfig) SetupMPPPeriodRoutes() {
 	{
 		mppPeriod.Use(c.AuthMiddleware)
 		mppPeriod.GET("/", c.MPPPeriodHandler.FindAllPaginated)
+		mppPeriod.GET("/current", c.MPPPeriodHandler.FindByCurrentDateAndStatus)
 		mppPeriod.GET("/:id", c.MPPPeriodHandler.FindById)
 		mppPeriod.POST("/", c.MPPPeriodHandler.Create)
 		mppPeriod.PUT("/", c.MPPPeriodHandler.Update)

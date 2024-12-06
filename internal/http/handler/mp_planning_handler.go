@@ -100,7 +100,7 @@ func (h *MPPlanningHandler) FindById(ctx *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "find by id success", resp.MPPlanningHeader)
+	utils.SuccessResponse(ctx, http.StatusOK, "find by id success", resp)
 }
 
 func (h *MPPlanningHandler) Create(ctx *gin.Context) {

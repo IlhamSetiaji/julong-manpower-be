@@ -92,12 +92,106 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}
 		header.RequestorName = messageUserResponse.Name
 
+		for i, line := range *&header.MPPlanningLines {
+			// Fetch organization location names using RabbitMQ
+			messageResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+				ID: line.OrganizationLocationID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+				return nil, err
+			}
+			line.OrganizationLocationName = messageResponse.Name
+
+			// Fetch job level names using RabbitMQ
+			message2Response, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+				ID: line.JobLevelID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+				return nil, err
+			}
+			line.JobLevelName = message2Response.Name
+
+			// Fetch job names using RabbitMQ
+			messageJobResposne, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+				ID: line.JobID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+				return nil, err
+			}
+			line.JobName = messageJobResposne.Name
+
+			header.MPPlanningLines[i] = line
+		}
+
 		(*mpPlanningHeaders)[i] = header
 	}
 
 	return &response.FindAllHeadersPaginatedMPPlanningResponse{
-		MPPlanningHeaders: mpPlanningHeaders,
-		Total:             total,
+		MPPlanningHeaders: func() []*response.MPPlanningHeaderResponse {
+			var headers []*response.MPPlanningHeaderResponse
+			for _, header := range *mpPlanningHeaders {
+				headers = append(headers, &response.MPPlanningHeaderResponse{
+					ID:                  header.ID,
+					MPPPeriodID:         header.MPPPeriodID,
+					OrganizationID:      header.OrganizationID,
+					EmpOrganizationID:   header.EmpOrganizationID,
+					JobID:               header.JobID,
+					DocumentNumber:      header.DocumentNumber,
+					DocumentDate:        header.DocumentDate,
+					Notes:               header.Notes,
+					TotalRecruit:        header.TotalRecruit,
+					TotalPromote:        header.TotalPromote,
+					Status:              header.Status,
+					RecommendedBy:       header.RecommendedBy,
+					ApprovedBy:          header.ApprovedBy,
+					RequestorID:         header.RequestorID,
+					NotesAttach:         header.NotesAttach,
+					OrganizationName:    header.OrganizationName,
+					EmpOrganizationName: header.EmpOrganizationName,
+					JobName:             header.JobName,
+					RequestorName:       header.RequestorName,
+					CreatedAt:           header.CreatedAt,
+					UpdatedAt:           header.UpdatedAt,
+					MPPPeriod: &response.MPPeriodResponse{
+						ID:        header.MPPPeriod.ID,
+						Title:     header.MPPPeriod.Title,
+						StartDate: header.MPPPeriod.StartDate.Format("2006-01-02"),
+						EndDate:   header.MPPPeriod.EndDate.Format("2006-01-02"),
+						CreatedAt: header.MPPPeriod.CreatedAt,
+						UpdatedAt: header.MPPPeriod.UpdatedAt,
+					},
+					MPPlanningLines: func() []*response.MPPlanningLineResponse {
+						var lines []*response.MPPlanningLineResponse
+						for _, line := range header.MPPlanningLines {
+							lines = append(lines, &response.MPPlanningLineResponse{
+								ID:                       line.ID,
+								MPPlanningHeaderID:       line.MPPlanningHeaderID,
+								OrganizationLocationID:   *line.OrganizationLocationID,
+								JobLevelID:               *line.JobLevelID,
+								JobID:                    *line.JobID,
+								Existing:                 line.Existing,
+								Recruit:                  line.Recruit,
+								SuggestedRecruit:         line.SuggestedRecruit,
+								Promotion:                line.Promotion,
+								Total:                    line.Total,
+								RemainingBalance:         line.RemainingBalance,
+								RecruitPH:                line.RecruitPH,
+								RecruitMT:                line.RecruitMT,
+								OrganizationLocationName: line.OrganizationLocationName,
+								JobLevelName:             line.JobLevelName,
+								JobName:                  line.JobName,
+							})
+						}
+						return lines
+					}(),
+				})
+			}
+			return headers
+		}(),
+		Total: total,
 	}, nil
 }
 
@@ -153,8 +247,94 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 	}
 	mpPlanningHeader.RequestorName = messageUserResponse.Name
 
+	for i, line := range *&mpPlanningHeader.MPPlanningLines {
+		// Fetch organization location names using RabbitMQ
+		messageResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: line.OrganizationLocationID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+			return nil, err
+		}
+		line.OrganizationLocationName = messageResponse.Name
+
+		// Fetch job level names using RabbitMQ
+		message2Response, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+			ID: line.JobLevelID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+			return nil, err
+		}
+		line.JobLevelName = message2Response.Name
+
+		// Fetch job names using RabbitMQ
+		messageJobResposne, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+			ID: line.JobID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+			return nil, err
+		}
+		line.JobName = messageJobResposne.Name
+
+		mpPlanningHeader.MPPlanningLines[i] = line
+	}
+
 	return &response.FindByIdMPPlanningResponse{
-		MPPlanningHeader: mpPlanningHeader,
+		ID:                  mpPlanningHeader.ID,
+		MPPPeriodID:         mpPlanningHeader.MPPPeriodID,
+		OrganizationID:      mpPlanningHeader.OrganizationID,
+		EmpOrganizationID:   mpPlanningHeader.EmpOrganizationID,
+		JobID:               mpPlanningHeader.JobID,
+		DocumentNumber:      mpPlanningHeader.DocumentNumber,
+		DocumentDate:        mpPlanningHeader.DocumentDate,
+		Notes:               mpPlanningHeader.Notes,
+		TotalRecruit:        mpPlanningHeader.TotalRecruit,
+		TotalPromote:        mpPlanningHeader.TotalPromote,
+		Status:              mpPlanningHeader.Status,
+		RecommendedBy:       mpPlanningHeader.RecommendedBy,
+		ApprovedBy:          mpPlanningHeader.ApprovedBy,
+		RequestorID:         mpPlanningHeader.RequestorID,
+		NotesAttach:         mpPlanningHeader.NotesAttach,
+		OrganizationName:    mpPlanningHeader.OrganizationName,
+		EmpOrganizationName: mpPlanningHeader.EmpOrganizationName,
+		JobName:             mpPlanningHeader.JobName,
+		RequestorName:       mpPlanningHeader.RequestorName,
+		CreatedAt:           mpPlanningHeader.CreatedAt,
+		UpdatedAt:           mpPlanningHeader.UpdatedAt,
+		MPPPeriod: &response.MPPeriodResponse{
+			ID:        mpPlanningHeader.MPPPeriod.ID,
+			Title:     mpPlanningHeader.MPPPeriod.Title,
+			StartDate: mpPlanningHeader.MPPPeriod.StartDate.Format("2006-01-02"),
+			EndDate:   mpPlanningHeader.MPPPeriod.EndDate.Format("2006-01-02"),
+			CreatedAt: mpPlanningHeader.MPPPeriod.CreatedAt,
+			UpdatedAt: mpPlanningHeader.MPPPeriod.UpdatedAt,
+		},
+		MPPlanningLines: func() []*response.MPPlanningLineResponse {
+			var lines []*response.MPPlanningLineResponse
+			for _, line := range mpPlanningHeader.MPPlanningLines {
+				lines = append(lines, &response.MPPlanningLineResponse{
+					ID:                       line.ID,
+					MPPlanningHeaderID:       line.MPPlanningHeaderID,
+					OrganizationLocationID:   *line.OrganizationLocationID,
+					JobLevelID:               *line.JobLevelID,
+					JobID:                    *line.JobID,
+					Existing:                 line.Existing,
+					Recruit:                  line.Recruit,
+					SuggestedRecruit:         line.SuggestedRecruit,
+					Promotion:                line.Promotion,
+					Total:                    line.Total,
+					RemainingBalance:         line.RemainingBalance,
+					RecruitPH:                line.RecruitPH,
+					RecruitMT:                line.RecruitMT,
+					OrganizationLocationName: line.OrganizationLocationName,
+					JobLevelName:             line.JobLevelName,
+					JobName:                  line.JobName,
+				})
+			}
+			return lines
+		}(),
 	}, nil
 }
 

@@ -30,6 +30,10 @@ type UpdateMPPPeriodRequest struct {
 	Status    entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
 }
 
+type FindByCurrentDateAndStatusMPPPeriodRequest struct {
+	Status entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
+}
+
 type DeleteMPPPeriodRequest struct {
 	ID uuid.UUID `json:"id"`
 }

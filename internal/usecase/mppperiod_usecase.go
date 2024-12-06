@@ -17,6 +17,7 @@ type IMPPPeriodUseCase interface {
 	Create(request request.CreateMPPPeriodRequest) (*response.CreateMPPPeriodResponse, error)
 	Update(request request.UpdateMPPPeriodRequest) (*response.UpdateMPPPeriodResponse, error)
 	Delete(request request.DeleteMPPPeriodRequest) error
+	FindByCurrentDateAndStatus(request request.FindByCurrentDateAndStatusMPPPeriodRequest) (*response.FindByCurrentDateAndStatusMPPPeriodResponse, error)
 }
 
 type MPPPeriodUseCase struct {
@@ -168,6 +169,18 @@ func (uc *MPPPeriodUseCase) Delete(req request.DeleteMPPPeriodRequest) error {
 	}
 
 	return nil
+}
+
+func (uc *MPPPeriodUseCase) FindByCurrentDateAndStatus(req request.FindByCurrentDateAndStatusMPPPeriodRequest) (*response.FindByCurrentDateAndStatusMPPPeriodResponse, error) {
+	mppPeriod, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(req.Status)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.FindByCurrentDateAndStatus] " + err.Error())
+		return nil, err
+	}
+
+	return &response.FindByCurrentDateAndStatusMPPPeriodResponse{
+		MPPPeriod: mppPeriod,
+	}, nil
 }
 
 func MPPPeriodUseCaseFactory(log *logrus.Logger) IMPPPeriodUseCase {

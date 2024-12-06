@@ -39,10 +39,10 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 	var mppHeaders []entity.MPPlanningHeader
 	var total int64
 
-	query := r.DB.Model(&entity.MPPlanningHeader{})
+	query := r.DB.Model(&entity.MPPlanningHeader{}).Preload("MPPlanningLines").Preload("MPPPeriod")
 
 	if search != "" {
-		query = query.Preload("MPPlanningLines").Where("name LIKE ?", "%"+search+"%")
+		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
 	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppHeaders).Error; err != nil {
@@ -61,7 +61,7 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 func (r *MPPlanningRepository) FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error) {
 	var mppHeader entity.MPPlanningHeader
 
-	if err := r.DB.Preload("MPPlanningLines").Where("id = ?", id).First(&mppHeader).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("id = ?", id).First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderById] " + err.Error())
 			return nil, nil

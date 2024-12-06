@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
@@ -21,6 +22,7 @@ type IMPPPeriodHander interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	FindByCurrentDateAndStatus(ctx *gin.Context)
 }
 
 type MPPPeriodHandler struct {
@@ -157,4 +159,25 @@ func (h *MPPPeriodHandler) Delete(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "mpp period deleted successfully", nil)
+}
+
+func (h *MPPPeriodHandler) FindByCurrentDateAndStatus(ctx *gin.Context) {
+	status := ctx.Query("status")
+
+	if status == "" {
+		status = "open"
+	}
+
+	req := request.FindByCurrentDateAndStatusMPPPeriodRequest{
+		Status: entity.MPPPeriodStatus(status),
+	}
+
+	resp, err := h.UseCase.FindByCurrentDateAndStatus(req)
+	if err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.FindByCurrentDateAndStatus] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find by current date and status success", resp.MPPPeriod)
 }
