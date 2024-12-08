@@ -8,8 +8,6 @@ import (
 
 	// "github.com/IlhamSetiaji/go-rabbitmq-utils/rabbitmq"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
-	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/handler"
-	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/route"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/rabbitmq"
 	"github.com/gin-contrib/cors"
@@ -66,16 +64,8 @@ func main() {
 		c.Next()
 	})
 
-	// factory handlers
-	mppPeriodHandler := handler.MPPPeriodHandlerFactory(log, viper)
-	jobPlafonHandler := handler.JobPlafonHandlerFactory(log, viper)
-	mpPlanningHandler := handler.MPPlanningHandlerFactory(log, viper)
-
-	// facroty middleware
-	authMiddleware := middleware.NewAuth(viper)
-
 	// setup routes
-	routeConfig := route.NewRouteConfig(app, mppPeriodHandler, authMiddleware, jobPlafonHandler, mpPlanningHandler)
+	routeConfig := route.NewRouteConfig(app, viper, log)
 	routeConfig.SetupRoutes()
 
 	// run server

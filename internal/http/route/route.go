@@ -2,15 +2,21 @@ package route
 
 import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/handler"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/gin-gonic/gin"
+	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type RouteConfig struct {
-	App               *gin.Engine
-	MPPPeriodHandler  handler.IMPPPeriodHander
-	JobPlafonHandler  handler.IJobPlafonHandler
-	MPPlanningHandler handler.IMPPlanningHandler
-	AuthMiddleware    gin.HandlerFunc
+	App                    *gin.Engine
+	Log                    *logrus.Logger
+	Viper                  *viper.Viper
+	MPPPeriodHandler       handler.IMPPPeriodHander
+	JobPlafonHandler       handler.IJobPlafonHandler
+	MPPlanningHandler      handler.IMPPlanningHandler
+	RequestCategoryHandler handler.IRequestCategoryHandler
+	AuthMiddleware         gin.HandlerFunc
 }
 
 func (c *RouteConfig) SetupRoutes() {
@@ -22,6 +28,7 @@ func (c *RouteConfig) SetupRoutes() {
 	c.SetupMPPPeriodRoutes()
 	c.SetupJobPlafonRoutes()
 	c.SetupMPPlanningRoutes()
+	c.SetupRequestCategoryRoutes()
 }
 
 func (c *RouteConfig) SetupMPPPeriodRoutes() {
@@ -71,13 +78,30 @@ func (c *RouteConfig) SetupMPPlanningRoutes() {
 	}
 }
 
-func NewRouteConfig(app *gin.Engine, mppPeriodHandler handler.IMPPPeriodHander, authMiddleware gin.HandlerFunc, jobHandler handler.IJobPlafonHandler,
-	mpPlanningHandler handler.IMPPlanningHandler) *RouteConfig {
+func (c *RouteConfig) SetupRequestCategoryRoutes() {
+	requestCategory := c.App.Group("/api/request-categories")
+	{
+		requestCategory.Use(c.AuthMiddleware)
+		requestCategory.GET("/", c.RequestCategoryHandler.FindAll)
+		requestCategory.GET("/:id", c.RequestCategoryHandler.FindById)
+	}
+}
+
+func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *RouteConfig {
+	// factory handlers
+	mppPeriodHandler := handler.MPPPeriodHandlerFactory(log, viper)
+	jobPlafonHandler := handler.JobPlafonHandlerFactory(log, viper)
+	mpPlanningHandler := handler.MPPlanningHandlerFactory(log, viper)
+	requestCategoryHandler := handler.RequestCategoryHandlerFactory(log, viper)
+
+	// facroty middleware
+	authMiddleware := middleware.NewAuth(viper)
 	return &RouteConfig{
-		App:               app,
-		MPPPeriodHandler:  mppPeriodHandler,
-		AuthMiddleware:    authMiddleware,
-		JobPlafonHandler:  jobHandler,
-		MPPlanningHandler: mpPlanningHandler,
+		App:                    app,
+		MPPPeriodHandler:       mppPeriodHandler,
+		AuthMiddleware:         authMiddleware,
+		JobPlafonHandler:       jobPlafonHandler,
+		MPPlanningHandler:      mpPlanningHandler,
+		RequestCategoryHandler: requestCategoryHandler,
 	}
 }
