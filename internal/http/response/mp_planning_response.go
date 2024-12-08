@@ -120,45 +120,47 @@ type FindByIdMPPlanningResponse struct {
 }
 
 type CreateMPPlanningResponse struct {
-	ID                string                 `json:"id"`
-	MPPPeriodID       string                 `json:"mpp_period_id"`
-	OrganizationID    string                 `json:"organization_id"`
-	EmpOrganizationID string                 `json:"emp_organization_id"`
-	JobID             string                 `json:"job_id"`
-	DocumentNumber    string                 `json:"document_number"`
-	DocumentDate      time.Time              `json:"document_date"`
-	Notes             string                 `json:"notes"`
-	TotalRecruit      float64                `json:"total_recruit"`
-	TotalPromote      float64                `json:"total_promote"`
-	Status            entity.MPPlaningStatus `json:"status"`
-	RecommendedBy     string                 `json:"recommended_by"`
-	ApprovedBy        string                 `json:"approved_by"`
-	RequestorID       string                 `json:"requestor_id"`
-	NotesAttach       string                 `json:"notes_attach"`
-	CreatedAt         time.Time              `json:"created_at"`
-	UpdatedAt         time.Time              `json:"updated_at"`
-	DeletedAt         time.Time              `json:"deleted_at"`
+	ID                string                       `json:"id"`
+	MPPPeriodID       string                       `json:"mpp_period_id"`
+	OrganizationID    string                       `json:"organization_id"`
+	EmpOrganizationID string                       `json:"emp_organization_id"`
+	JobID             string                       `json:"job_id"`
+	DocumentNumber    string                       `json:"document_number"`
+	DocumentDate      time.Time                    `json:"document_date"`
+	Notes             string                       `json:"notes"`
+	TotalRecruit      float64                      `json:"total_recruit"`
+	TotalPromote      float64                      `json:"total_promote"`
+	Status            entity.MPPlaningStatus       `json:"status"`
+	RecommendedBy     string                       `json:"recommended_by"`
+	ApprovedBy        string                       `json:"approved_by"`
+	RequestorID       string                       `json:"requestor_id"`
+	NotesAttach       string                       `json:"notes_attach"`
+	CreatedAt         time.Time                    `json:"created_at"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
+	DeletedAt         time.Time                    `json:"deleted_at"`
+	Attachments       []ManpowerAttachmentResponse `json:"attachments"`
 }
 
 type UpdateMPPlanningResponse struct {
-	ID                string                 `json:"id"`
-	MPPPeriodID       string                 `json:"mpp_period_id"`
-	OrganizationID    string                 `json:"organization_id"`
-	EmpOrganizationID string                 `json:"emp_organization_id"`
-	JobID             string                 `json:"job_id"`
-	DocumentNumber    string                 `json:"document_number"`
-	DocumentDate      time.Time              `json:"document_date"`
-	Notes             string                 `json:"notes"`
-	TotalRecruit      float64                `json:"total_recruit"`
-	TotalPromote      float64                `json:"total_promote"`
-	Status            entity.MPPlaningStatus `json:"status"`
-	RecommendedBy     string                 `json:"recommended_by"`
-	ApprovedBy        string                 `json:"approved_by"`
-	RequestorID       string                 `json:"requestor_id"`
-	NotesAttach       string                 `json:"notes_attach"`
-	CreatedAt         time.Time              `json:"created_at"`
-	UpdatedAt         time.Time              `json:"updated_at"`
-	DeletedAt         time.Time              `json:"deleted_at"`
+	ID                string                       `json:"id"`
+	MPPPeriodID       string                       `json:"mpp_period_id"`
+	OrganizationID    string                       `json:"organization_id"`
+	EmpOrganizationID string                       `json:"emp_organization_id"`
+	JobID             string                       `json:"job_id"`
+	DocumentNumber    string                       `json:"document_number"`
+	DocumentDate      time.Time                    `json:"document_date"`
+	Notes             string                       `json:"notes"`
+	TotalRecruit      float64                      `json:"total_recruit"`
+	TotalPromote      float64                      `json:"total_promote"`
+	Status            entity.MPPlaningStatus       `json:"status"`
+	RecommendedBy     string                       `json:"recommended_by"`
+	ApprovedBy        string                       `json:"approved_by"`
+	RequestorID       string                       `json:"requestor_id"`
+	NotesAttach       string                       `json:"notes_attach"`
+	CreatedAt         time.Time                    `json:"created_at"`
+	UpdatedAt         time.Time                    `json:"updated_at"`
+	DeletedAt         time.Time                    `json:"deleted_at"`
+	Attachments       []ManpowerAttachmentResponse `json:"attachments"`
 }
 
 type FindAllLinesByHeaderIdPaginatedMPPlanningLineResponse struct {
@@ -188,6 +190,12 @@ type CreateMPPlanningLineResponse struct {
 	CreatedAt              time.Time `json:"created_at"`
 	UpdatedAt              time.Time `json:"updated_at"`
 	DeletedAt              time.Time `json:"deleted_at"`
+}
+
+type ManpowerAttachmentResponse struct {
+	FileName string `json:"file_name" validate:"required"`
+	FilePath string `json:"file_path" validate:"required"`
+	FileType string `json:"file_type" validate:"required"`
 }
 
 type UpdateMPPlanningLineResponse struct {

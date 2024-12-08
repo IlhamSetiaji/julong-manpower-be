@@ -11,6 +11,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/repository"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type IMPPlanningUseCase interface {
@@ -30,6 +31,7 @@ type IMPPlanningUseCase interface {
 }
 
 type MPPlanningUseCase struct {
+	Viper                *viper.Viper
 	Log                  *logrus.Logger
 	MPPlanningRepository repository.IMPPlanningRepository
 	OrganizationMessage  messaging.IOrganizationMessage
@@ -37,8 +39,9 @@ type MPPlanningUseCase struct {
 	UserMessage          messaging.IUserMessage
 }
 
-func NewMPPlanningUseCase(log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage) IMPPlanningUseCase {
+func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage) IMPPlanningUseCase {
 	return &MPPlanningUseCase{
+		Viper:                viper,
 		Log:                  log,
 		MPPlanningRepository: repo,
 		OrganizationMessage:  message,
@@ -660,6 +663,28 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 		return nil, err
 	}
 
+	var attachments []response.ManpowerAttachmentResponse
+	if req.Attachments != nil {
+		for _, attachment := range req.Attachments {
+			_, err := uc.MPPlanningRepository.StoreAttachmentToHeader(mpPlanningHeader, entity.ManpowerAttachment{
+				FileName: attachment.FileName,
+				FilePath: attachment.FilePath,
+				FileType: attachment.FileType,
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
+				return nil, err
+			}
+
+			fullURL := uc.Viper.GetString("app.url") + attachment.FilePath
+
+			attachments = append(attachments, response.ManpowerAttachmentResponse{
+				FileName: attachment.FileName,
+				FilePath: fullURL,
+				FileType: attachment.FileType,
+			})
+		}
+	}
 	return &response.CreateMPPlanningResponse{
 		ID:                mpPlanningHeader.ID.String(),
 		MPPPeriodID:       mpPlanningHeader.MPPPeriodID.String(),
@@ -678,6 +703,7 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 		NotesAttach:       mpPlanningHeader.NotesAttach,
 		CreatedAt:         mpPlanningHeader.CreatedAt,
 		UpdatedAt:         mpPlanningHeader.UpdatedAt,
+		Attachments:       attachments,
 	}, nil
 }
 
@@ -691,6 +717,30 @@ func (uc *MPPlanningUseCase) Update(req *request.UpdateHeaderMPPlanningRequest) 
 	if exist == nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Update] MP Planning Header not found")
 		return nil, errors.New("MP Planning Header not found")
+	}
+
+	// Check if there are new attachments
+	var attachments []response.ManpowerAttachmentResponse
+	if len(req.Attachments) > 0 && req.Attachments != nil {
+		for _, attachment := range req.Attachments {
+			_, err := uc.MPPlanningRepository.StoreAttachmentToHeader(exist, entity.ManpowerAttachment{
+				FileName: attachment.FileName,
+				FilePath: attachment.FilePath,
+				FileType: attachment.FileType,
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.Update] " + err.Error())
+				return nil, err
+			}
+
+			fullURL := uc.Viper.GetString("app.url") + attachment.FilePath
+
+			attachments = append(attachments, response.ManpowerAttachmentResponse{
+				FileName: attachment.FileName,
+				FilePath: fullURL,
+				FileType: attachment.FileType,
+			})
+		}
 	}
 
 	documentDate, err := time.Parse("2006-01-02", req.DocumentDate)
@@ -739,6 +789,7 @@ func (uc *MPPlanningUseCase) Update(req *request.UpdateHeaderMPPlanningRequest) 
 		NotesAttach:       mpPlanningHeader.NotesAttach,
 		CreatedAt:         mpPlanningHeader.CreatedAt,
 		UpdatedAt:         mpPlanningHeader.UpdatedAt,
+		Attachments:       attachments,
 	}, nil
 }
 
@@ -1229,10 +1280,10 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 	return nil
 }
 
-func MPPlanningUseCaseFactory(log *logrus.Logger) IMPPlanningUseCase {
+func MPPlanningUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPPlanningUseCase {
 	repo := repository.MPPlanningRepositoryFactory(log)
 	message := messaging.OrganizationMessageFactory(log)
 	jpm := messaging.JobPlafonMessageFactory(log)
 	um := messaging.UserMessageFactory(log)
-	return NewMPPlanningUseCase(log, repo, message, jpm, um)
+	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um)
 }

@@ -15,39 +15,47 @@ type FindHeaderByIdMPPlanningRequest struct {
 	ID string `json:"id" validate:"required"`
 }
 
+type ManpowerAttachmentRequest struct {
+	FileName string `json:"file_name" validate:"required"`
+	FilePath string `json:"file_path" validate:"required"`
+	FileType string `json:"file_type" validate:"required"`
+}
+
 type CreateHeaderMPPlanningRequest struct {
-	MPPPeriodID       uuid.UUID              `json:"mpp_period_id" validate:"required"`
-	OrganizationID    uuid.UUID              `json:"organization_id" validate:"required"`
-	EmpOrganizationID uuid.UUID              `json:"emp_organization_id" validate:"required"`
-	JobID             uuid.UUID              `json:"job_id" validate:"required"` // job_id
-	DocumentNumber    string                 `json:"document_number" validate:"required"`
-	DocumentDate      string                 `json:"document_date" validate:"required,datetime=2006-01-02"`
-	Notes             string                 `json:"notes" validate:"omitempty"`
-	TotalRecruit      float64                `json:"total_recruit" validate:"required"`
-	TotalPromote      float64                `json:"total_promote" validate:"required"`
-	Status            entity.MPPlaningStatus `json:"status" validate:"required,MPPlaningStatusValidation"`
-	RecommendedBy     string                 `json:"recommended_by" validate:"required"`
-	ApprovedBy        string                 `json:"approved_by" validate:"required"`
-	RequestorID       uuid.UUID              `json:"requestor_id" validate:"required"`
-	NotesAttach       string                 `json:"notes_attach" validate:"omitempty"`
+	MPPPeriodID       uuid.UUID                   `json:"mpp_period_id" validate:"required"`
+	OrganizationID    uuid.UUID                   `json:"organization_id" validate:"required"`
+	EmpOrganizationID uuid.UUID                   `json:"emp_organization_id" validate:"required"`
+	JobID             uuid.UUID                   `json:"job_id" validate:"required"` // job_id
+	DocumentNumber    string                      `json:"document_number" validate:"required"`
+	DocumentDate      string                      `json:"document_date" validate:"required,datetime=2006-01-02"`
+	Notes             string                      `json:"notes" validate:"omitempty"`
+	TotalRecruit      float64                     `json:"total_recruit" validate:"required"`
+	TotalPromote      float64                     `json:"total_promote" validate:"required"`
+	Status            entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
+	RecommendedBy     string                      `json:"recommended_by" validate:"required"`
+	ApprovedBy        string                      `json:"approved_by" validate:"required"`
+	RequestorID       uuid.UUID                   `json:"requestor_id" validate:"required"`
+	NotesAttach       string                      `json:"notes_attach" validate:"omitempty"`
+	Attachments       []ManpowerAttachmentRequest `json:"attachments" validate:"omitempty,dive"`
 }
 
 type UpdateHeaderMPPlanningRequest struct {
-	ID                uuid.UUID              `json:"id" validate:"required"`
-	MPPPeriodID       uuid.UUID              `json:"mpp_period_id" validate:"required"`
-	OrganizationID    uuid.UUID              `json:"organization_id" validate:"required"`
-	EmpOrganizationID uuid.UUID              `json:"emp_organization_id" validate:"required"`
-	JobID             uuid.UUID              `json:"job_id" validate:"required"` // job_id
-	DocumentNumber    string                 `json:"document_number" validate:"required"`
-	DocumentDate      string                 `json:"document_date" validate:"required,datetime=2006-01-02"`
-	Notes             string                 `json:"notes" validate:"omitempty"`
-	TotalRecruit      float64                `json:"total_recruit" validate:"required"`
-	TotalPromote      float64                `json:"total_promote" validate:"required"`
-	Status            entity.MPPlaningStatus `json:"status" validate:"required,MPPlaningStatusValidation"`
-	RecommendedBy     string                 `json:"recommended_by" validate:"required"`
-	ApprovedBy        string                 `json:"approved_by" validate:"required"`
-	RequestorID       uuid.UUID              `json:"requestor_id" validate:"required"`
-	NotesAttach       string                 `json:"notes_attach" validate:"omitempty"`
+	ID                uuid.UUID                   `json:"id" validate:"required"`
+	MPPPeriodID       uuid.UUID                   `json:"mpp_period_id" validate:"required"`
+	OrganizationID    uuid.UUID                   `json:"organization_id" validate:"required"`
+	EmpOrganizationID uuid.UUID                   `json:"emp_organization_id" validate:"required"`
+	JobID             uuid.UUID                   `json:"job_id" validate:"required"` // job_id
+	DocumentNumber    string                      `json:"document_number" validate:"required"`
+	DocumentDate      string                      `json:"document_date" validate:"required,datetime=2006-01-02"`
+	Notes             string                      `json:"notes" validate:"omitempty"`
+	TotalRecruit      float64                     `json:"total_recruit" validate:"required"`
+	TotalPromote      float64                     `json:"total_promote" validate:"required"`
+	Status            entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
+	RecommendedBy     string                      `json:"recommended_by" validate:"required"`
+	ApprovedBy        string                      `json:"approved_by" validate:"required"`
+	RequestorID       uuid.UUID                   `json:"requestor_id" validate:"required"`
+	NotesAttach       string                      `json:"notes_attach" validate:"omitempty"`
+	Attachments       []ManpowerAttachmentRequest `json:"attachments" validate:"omitempty,dive"`
 }
 
 type DeleteHeaderMPPlanningRequest struct {

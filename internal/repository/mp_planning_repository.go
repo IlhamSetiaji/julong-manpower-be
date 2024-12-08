@@ -16,6 +16,8 @@ type IMPPlanningRepository interface {
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
+	StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error)
+	DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error)
 	DeleteHeader(id uuid.UUID) error
 	FindHeaderByMPPPeriodId(mppPeriodId uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindAllLinesByHeaderIdPaginated(headerId uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningLine, int64, error)
@@ -86,7 +88,7 @@ func (r *MPPlanningRepository) FindAllHeadersByRequestorIDPaginated(requestorID 
 func (r *MPPlanningRepository) FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error) {
 	var mppHeader entity.MPPlanningHeader
 
-	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("id = ?", id).First(&mppHeader).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("id = ?", id).First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderById] " + err.Error())
 			return nil, nil
@@ -140,6 +142,52 @@ func (r *MPPlanningRepository) UpdateHeader(mppHeader *entity.MPPlanningHeader) 
 		tx.Rollback()
 		r.Log.Errorf("[MPPlanningRepository.UpdateHeader] " + err.Error())
 		return nil, errors.New("[MPPlanningRepository.UpdateHeader] " + err.Error())
+	}
+
+	return mppHeader, nil
+}
+
+func (r *MPPlanningRepository) StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error) {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToHeader] " + tx.Error.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToHeader] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(mppHeader).Association("ManpowerAttachments").Append(&attachment); err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToHeader] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToHeader] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToHeader] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToHeader] " + err.Error())
+	}
+
+	return mppHeader, nil
+}
+
+func (r *MPPlanningRepository) DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error) {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.DeleteAttachmentFromHeader] " + tx.Error.Error())
+		return nil, errors.New("[MPPlanningRepository.DeleteAttachmentFromHeader] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(mppHeader).Association("ManpowerAttachments").Delete(&entity.ManpowerAttachment{ID: attachmentID}); err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteAttachmentFromHeader] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.DeleteAttachmentFromHeader] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteAttachmentFromHeader] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.DeleteAttachmentFromHeader] " + err.Error())
 	}
 
 	return mppHeader, nil

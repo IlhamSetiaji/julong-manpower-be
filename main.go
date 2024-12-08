@@ -33,6 +33,7 @@ func main() {
 	// log.Info("RabbitMQ connection established")
 
 	app := gin.Default()
+	app.Static("/storage", "./storage")
 	app.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("App-Name", viper.GetString("app.name"))
 	})

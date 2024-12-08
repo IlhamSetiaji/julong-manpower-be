@@ -2,3 +2,4 @@ config.json
 julong-manpower-be.exe
 julong-manpower-be
 go.sum
+storage/

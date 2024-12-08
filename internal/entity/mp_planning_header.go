@@ -36,7 +36,7 @@ type MPPlanningHeader struct {
 
 	MPPPeriod           MPPPeriod            `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPlanningLines     []MPPlanningLine     `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	ManpowerAttachments []ManpowerAttachment `json:"manpower_attachments" gorm:"polymorphicType:OwnerType;polymorphicId:OwnerID;polymorphicValue:mp_planning_headers"`
+	ManpowerAttachments []ManpowerAttachment `json:"manpower_attachments" gorm:"polymorphicType:OwnerType;polymorphicId:OwnerID;polymorphicValue:mp_planning_headers";constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPRequestHeaders    []MPRequestHeader    `json:"mp_request_headers" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	OrganizationName    string `json:"organization_name" gorm:"-"`
