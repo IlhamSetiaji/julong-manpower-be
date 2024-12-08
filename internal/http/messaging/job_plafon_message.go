@@ -17,6 +17,7 @@ type IJobPlafonMessage interface {
 	SendCheckJobExistMessage(request request.CheckJobExistMessageRequest) (*jobResponse.CheckJobExistMessageResponse, error)
 	SendFindJobByIDMessage(request request.SendFindJobByIDMessageRequest) (*jobResponse.SendFindJobByIDMessageResponse, error)
 	SendFindJobLevelByIDMessage(request request.SendFindJobLevelByIDMessageRequest) (*jobResponse.SendFindJobLevelByIDMessageResponse, error)
+	SendCheckJobByJobLevelMessage(request request.CheckJobByJobLevelRequest) (*jobResponse.CheckJobExistMessageResponse, error)
 }
 
 type JobPlafonMessage struct {
@@ -66,9 +67,11 @@ func (m *JobPlafonMessage) SendCheckJobExistMessage(req request.CheckJobExistMes
 		return nil, errors.New(errMsg)
 	}
 
+	exist := resp.MessageData["job_id"].(string) != ""
+
 	return &jobResponse.CheckJobExistMessageResponse{
 		JobID: uuid.MustParse(resp.MessageData["job_id"].(string)),
-		Exist: resp.MessageData["exists"].(bool),
+		Exist: exist,
 	}, nil
 }
 
@@ -155,6 +158,52 @@ func (m *JobPlafonMessage) SendFindJobLevelByIDMessage(req request.SendFindJobLe
 	return &jobResponse.SendFindJobLevelByIDMessageResponse{
 		JobLevelID: uuid.MustParse(resp.MessageData["job_level_id"].(string)),
 		Name:       resp.MessageData["name"].(string),
+	}, nil
+}
+
+func (m *JobPlafonMessage) SendCheckJobByJobLevelMessage(req request.CheckJobByJobLevelRequest) (*jobResponse.CheckJobExistMessageResponse, error) {
+	payload := map[string]interface{}{
+		"job_id":       req.JobID,
+		"job_level_id": req.JobLevelID,
+	}
+
+	docMsg := &request.RabbitMQRequest{
+		ID:          uuid.New().String(),
+		MessageType: "check_job_by_job_level",
+		MessageData: payload,
+		ReplyTo:     "julong_manpower",
+	}
+
+	log.Printf("INFO: document message: %v", docMsg)
+
+	// create channel and add to rchans with uid
+	rchan := make(chan response.RabbitMQResponse)
+	utils.Rchans[docMsg.ID] = rchan
+
+	// publish rabbit message
+	msg := utils.RabbitMsg{
+		QueueName: "julong_sso",
+		Message:   *docMsg,
+	}
+	utils.Pchan <- msg
+
+	// wait for reply
+	resp, err := waitReply(docMsg.ID, rchan)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("INFO: response: %v", resp)
+
+	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
+		return nil, errors.New(errMsg)
+	}
+
+	exist := resp.MessageData["job_id"].(string) != ""
+
+	return &jobResponse.CheckJobExistMessageResponse{
+		JobID: uuid.MustParse(resp.MessageData["job_id"].(string)),
+		Exist: exist,
 	}, nil
 }
 

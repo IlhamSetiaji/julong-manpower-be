@@ -40,3 +40,8 @@ type DeleteJobPlafonRequest struct {
 type FindByJobIdJobPlafonRequest struct {
 	JobID string `json:"job_id"`
 }
+
+type CheckJobByJobLevelRequest struct {
+	JobID      string `json:"job_id"`
+	JobLevelID string `json:"job_level_id"`
+}

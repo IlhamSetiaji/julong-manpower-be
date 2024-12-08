@@ -749,6 +749,27 @@ func (uc *MPPlanningUseCase) CreateLine(req *request.CreateLineMPPlanningLineReq
 		return nil, errors.New("Job not found")
 	}
 
+	// check if job level and job is exist
+	jobLevelJobExist, err := uc.JobPlafonMessage.SendCheckJobByJobLevelMessage(request.CheckJobByJobLevelRequest{
+		JobLevelID: req.JobLevelID.String(),
+		JobID:      req.JobID.String(),
+	})
+
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] " + err.Error())
+		return nil, err
+	}
+
+	if jobLevelJobExist == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Job Level and Job not found")
+		return nil, errors.New("Job Level and Job not found")
+	}
+
+	if req.RecruitPH == 0 && req.RecruitMT == 0 {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Recruit PH and Recruit MT cannot be 0")
+		return nil, errors.New("Recruit PH and Recruit MT cannot be 0")
+	}
+
 	mpPlanningLine, err := uc.MPPlanningRepository.CreateLine(&entity.MPPlanningLine{
 		MPPlanningHeaderID:     req.MPPlanningHeaderID,
 		OrganizationLocationID: &req.OrganizationLocationID,
@@ -759,8 +780,8 @@ func (uc *MPPlanningUseCase) CreateLine(req *request.CreateLineMPPlanningLineReq
 		SuggestedRecruit:       req.SuggestedRecruit,
 		Promotion:              req.Promotion,
 		Total:                  req.Total,
-		RemainingBalancePH:     req.RemainingBalancePH,
-		RemainingBalanceMT:     req.RemainingBalanceMT,
+		RemainingBalancePH:     req.RecruitPH,
+		RemainingBalanceMT:     req.RecruitMT,
 		RecruitPH:              req.RecruitPH,
 		RecruitMT:              req.RecruitMT,
 	})
@@ -847,6 +868,27 @@ func (uc *MPPlanningUseCase) UpdateLine(req *request.UpdateLineMPPlanningLineReq
 		return nil, errors.New("MP Planning Line not found")
 	}
 
+	// check if job level and job is exist
+	jobLevelJobExist, err := uc.JobPlafonMessage.SendCheckJobByJobLevelMessage(request.CheckJobByJobLevelRequest{
+		JobLevelID: req.JobLevelID.String(),
+		JobID:      req.JobID.String(),
+	})
+
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] " + err.Error())
+		return nil, err
+	}
+
+	if jobLevelJobExist == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Job Level and Job not found")
+		return nil, errors.New("Job Level and Job not found")
+	}
+
+	if req.RecruitPH == 0 && req.RecruitMT == 0 {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Recruit PH and Recruit MT cannot be 0")
+		return nil, errors.New("Recruit PH and Recruit MT cannot be 0")
+	}
+
 	mpPlanningLine, err := uc.MPPlanningRepository.UpdateLine(&entity.MPPlanningLine{
 		ID:                     req.ID,
 		MPPlanningHeaderID:     req.MPPlanningHeaderID,
@@ -858,8 +900,8 @@ func (uc *MPPlanningUseCase) UpdateLine(req *request.UpdateLineMPPlanningLineReq
 		SuggestedRecruit:       req.SuggestedRecruit,
 		Promotion:              req.Promotion,
 		Total:                  req.Total,
-		RemainingBalancePH:     req.RemainingBalancePH,
-		RemainingBalanceMT:     req.RemainingBalanceMT,
+		RemainingBalancePH:     req.RecruitPH,
+		RemainingBalanceMT:     req.RecruitMT,
 		RecruitPH:              req.RecruitPH,
 		RecruitMT:              req.RecruitMT,
 	})
@@ -964,6 +1006,27 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 			return err
 		}
 
+		// check if job level and job is exist
+		jobLevelJobExist, err := uc.JobPlafonMessage.SendCheckJobByJobLevelMessage(request.CheckJobByJobLevelRequest{
+			JobLevelID: line.JobLevelID.String(),
+			JobID:      line.JobID.String(),
+		})
+
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateLine] " + err.Error())
+			return err
+		}
+
+		if jobLevelJobExist == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Job Level and Job not found")
+			return errors.New("Job Level and Job not found")
+		}
+
+		if line.RecruitPH == 0 && line.RecruitMT == 0 {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Recruit PH and Recruit MT cannot be 0")
+			return errors.New("Recruit PH and Recruit MT cannot be 0")
+		}
+
 		if exist == nil {
 			_, err := uc.MPPlanningRepository.CreateLine(&entity.MPPlanningLine{
 				ID:                     line.ID,
@@ -976,8 +1039,8 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 				SuggestedRecruit:       line.SuggestedRecruit,
 				Promotion:              line.Promotion,
 				Total:                  line.Total,
-				RemainingBalancePH:     line.RemainingBalancePH,
-				RemainingBalanceMT:     line.RemainingBalanceMT,
+				RemainingBalancePH:     line.RecruitPH,
+				RemainingBalanceMT:     line.RecruitMT,
 				RecruitPH:              line.RecruitPH,
 				RecruitMT:              line.RecruitMT,
 			})
@@ -997,8 +1060,8 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 				SuggestedRecruit:       line.SuggestedRecruit,
 				Promotion:              line.Promotion,
 				Total:                  line.Total,
-				RemainingBalancePH:     line.RemainingBalancePH,
-				RemainingBalanceMT:     line.RemainingBalanceMT,
+				RemainingBalancePH:     line.RecruitPH,
+				RemainingBalanceMT:     line.RecruitMT,
 				RecruitPH:              line.RecruitPH,
 				RecruitMT:              line.RecruitMT,
 			})
