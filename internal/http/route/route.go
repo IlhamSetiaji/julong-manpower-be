@@ -55,6 +55,7 @@ func (c *RouteConfig) SetupMPPlanningRoutes() {
 	{
 		mpPlanning.Use(c.AuthMiddleware)
 		mpPlanning.GET("/", c.MPPlanningHandler.FindAllHeadersPaginated)
+		mpPlanning.GET("/requestor", c.MPPlanningHandler.FindAllHeadersByRequestorIDPaginated)
 		mpPlanning.GET("/mpp-period/:mpp_period_id", c.MPPlanningHandler.FindHeaderByMPPPeriodId)
 		mpPlanning.GET("/:id", c.MPPlanningHandler.FindById)
 		mpPlanning.POST("/", c.MPPlanningHandler.Create)

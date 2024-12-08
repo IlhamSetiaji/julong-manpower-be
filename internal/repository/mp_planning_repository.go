@@ -12,6 +12,7 @@ import (
 
 type IMPPlanningRepository interface {
 	FindAllHeadersPaginated(page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
+	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
@@ -54,6 +55,29 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 	if err := query.Count(&total).Error; err != nil {
 		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated] " + err.Error())
 		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated] " + err.Error())
+	}
+
+	return &mppHeaders, total, nil
+}
+
+func (r *MPPlanningRepository) FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error) {
+	var mppHeaders []entity.MPPlanningHeader
+
+	query := r.DB.Model(&entity.MPPlanningHeader{}).Preload("MPPlanningLines").Preload("MPPPeriod").Where("requestor_id = ?", requestorID)
+
+	if search != "" {
+		query = query.Where("name LIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppHeaders).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByRequestorIDPaginated] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersByRequestorIDPaginated] " + err.Error())
+	}
+
+	var total int64
+	if err := query.Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByRequestorIDPaginated] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersByRequestorIDPaginated] " + err.Error())
 	}
 
 	return &mppHeaders, total, nil
