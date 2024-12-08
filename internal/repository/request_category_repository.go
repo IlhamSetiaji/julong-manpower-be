@@ -38,7 +38,7 @@ func (r *RequestCategoryRepository) FindById(id uuid.UUID) (*entity.RequestCateg
 	if err := r.DB.First(&requestCategory, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderById] Request Category with ID %s not found", id)
-			return nil, errors.New("[MPPlanningRepository.FindHeaderById] Request Category not found")
+			return nil, nil
 		} else {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderById] %s", err.Error())
 			return nil, errors.New("[MPPlanningRepository.FindHeaderById] Internal server error")

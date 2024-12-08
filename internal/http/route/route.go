@@ -16,6 +16,7 @@ type RouteConfig struct {
 	JobPlafonHandler       handler.IJobPlafonHandler
 	MPPlanningHandler      handler.IMPPlanningHandler
 	RequestCategoryHandler handler.IRequestCategoryHandler
+	MajorHandler           handler.IMajorHandler
 	AuthMiddleware         gin.HandlerFunc
 }
 
@@ -29,6 +30,7 @@ func (c *RouteConfig) SetupRoutes() {
 	c.SetupJobPlafonRoutes()
 	c.SetupMPPlanningRoutes()
 	c.SetupRequestCategoryRoutes()
+	c.SetupMajorRoutes()
 }
 
 func (c *RouteConfig) SetupMPPPeriodRoutes() {
@@ -87,12 +89,22 @@ func (c *RouteConfig) SetupRequestCategoryRoutes() {
 	}
 }
 
+func (c *RouteConfig) SetupMajorRoutes() {
+	major := c.App.Group("/api/majors")
+	{
+		major.Use(c.AuthMiddleware)
+		major.GET("/", c.MajorHandler.FindAll)
+		major.GET("/:id", c.MajorHandler.FindById)
+	}
+}
+
 func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *RouteConfig {
 	// factory handlers
 	mppPeriodHandler := handler.MPPPeriodHandlerFactory(log, viper)
 	jobPlafonHandler := handler.JobPlafonHandlerFactory(log, viper)
 	mpPlanningHandler := handler.MPPlanningHandlerFactory(log, viper)
 	requestCategoryHandler := handler.RequestCategoryHandlerFactory(log, viper)
+	majorHandler := handler.MajorHandlerFactory(log, viper)
 
 	// facroty middleware
 	authMiddleware := middleware.NewAuth(viper)
@@ -103,5 +115,6 @@ func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *Ro
 		JobPlafonHandler:       jobPlafonHandler,
 		MPPlanningHandler:      mpPlanningHandler,
 		RequestCategoryHandler: requestCategoryHandler,
+		MajorHandler:           majorHandler,
 	}
 }

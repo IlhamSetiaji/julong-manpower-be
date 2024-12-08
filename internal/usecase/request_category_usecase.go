@@ -1,6 +1,8 @@
 package usecase
 
 import (
+	"errors"
+
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/repository"
@@ -45,6 +47,10 @@ func (u *RequestCategoryUseCase) FindById(req *request.FindByIdRequestCategoryRe
 	requestCategory, err := u.Repo.FindById(req.ID)
 	if err != nil {
 		return nil, err
+	}
+
+	if requestCategory == nil {
+		return nil, errors.New("Request Category not found")
 	}
 
 	responseCategory := response.RequestCategoryResponse{
