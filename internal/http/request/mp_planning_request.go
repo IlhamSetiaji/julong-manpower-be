@@ -75,9 +75,14 @@ type CreateLineMPPlanningLineRequest struct {
 	SuggestedRecruit       int       `json:"suggested_recruit" validate:"required"`
 	Promotion              int       `json:"promotion" validate:"required"`
 	Total                  int       `json:"total" validate:"required"`
-	RemainingBalance       int       `json:"remaining_balance" validate:"required"`
+	RemainingBalancePH     int       `json:"remaining_balance_ph" validate:"required"`
+	RemainingBalanceMT     int       `json:"remaining_balance_mt" validate:"required"`
 	RecruitPH              int       `json:"recruit_ph" validate:"required"`
 	RecruitMT              int       `json:"recruit_mt" validate:"required"`
+}
+
+type FindHeaderByMPPPeriodIdMPPlanningRequest struct {
+	MPPPeriodID string `json:"mpp_period_id" validate:"required"`
 }
 
 type CreateOrUpdateBatchLineMPPlanningLinesRequest struct {
@@ -92,7 +97,8 @@ type CreateOrUpdateBatchLineMPPlanningLinesRequest struct {
 		SuggestedRecruit       int       `json:"suggested_recruit" validate:"required"`
 		Promotion              int       `json:"promotion" validate:"required"`
 		Total                  int       `json:"total" validate:"required"`
-		RemainingBalance       int       `json:"remaining_balance" validate:"required"`
+		RemainingBalancePH     int       `json:"remaining_balance_ph" validate:"required"`
+		RemainingBalanceMT     int       `json:"remaining_balance_mt" validate:"required"`
 		RecruitPH              int       `json:"recruit_ph" validate:"required"`
 		RecruitMT              int       `json:"recruit_mt" validate:"required"`
 	} `json:"mp_planning_lines" validate:"required"`
@@ -109,7 +115,8 @@ type UpdateLineMPPlanningLineRequest struct {
 	SuggestedRecruit       int       `json:"suggested_recruit" validate:"required"`
 	Promotion              int       `json:"promotion" validate:"required"`
 	Total                  int       `json:"total" validate:"required"`
-	RemainingBalance       int       `json:"remaining_balance" validate:"required"`
+	RemainingBalancePH     int       `json:"remaining_balance_ph" validate:"required"`
+	RemainingBalanceMT     int       `json:"remaining_balance_mt" validate:"required"`
 	RecruitPH              int       `json:"recruit_ph" validate:"required"`
 	RecruitMT              int       `json:"recruit_mt" validate:"required"`
 }

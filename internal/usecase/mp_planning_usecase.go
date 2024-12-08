@@ -19,6 +19,7 @@ type IMPPlanningUseCase interface {
 	Create(request *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error)
 	Update(request *request.UpdateHeaderMPPlanningRequest) (*response.UpdateMPPlanningResponse, error)
 	Delete(request *request.DeleteHeaderMPPlanningRequest) error
+	FindHeaderByMPPPeriodId(request *request.FindHeaderByMPPPeriodIdMPPlanningRequest) (*response.FindHeaderByMPPPeriodIdMPPlanningResponse, error)
 	FindAllLinesByHeaderIdPaginated(request *request.FindAllLinesByHeaderIdPaginatedMPPlanningLineRequest) (*response.FindAllLinesByHeaderIdPaginatedMPPlanningLineResponse, error)
 	FindLineById(request *request.FindLineByIdMPPlanningLineRequest) (*response.FindByIdMPPlanningLineResponse, error)
 	CreateLine(request *request.CreateLineMPPlanningLineRequest) (*response.CreateMPPlanningLineResponse, error)
@@ -178,7 +179,8 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 								SuggestedRecruit:         line.SuggestedRecruit,
 								Promotion:                line.Promotion,
 								Total:                    line.Total,
-								RemainingBalance:         line.RemainingBalance,
+								RemainingBalancePH:       line.RemainingBalancePH,
+								RemainingBalanceMT:       line.RemainingBalanceMT,
 								RecruitPH:                line.RecruitPH,
 								RecruitMT:                line.RecruitMT,
 								OrganizationLocationName: line.OrganizationLocationName,
@@ -326,7 +328,8 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 					SuggestedRecruit:         line.SuggestedRecruit,
 					Promotion:                line.Promotion,
 					Total:                    line.Total,
-					RemainingBalance:         line.RemainingBalance,
+					RemainingBalancePH:       line.RemainingBalancePH,
+					RemainingBalanceMT:       line.RemainingBalanceMT,
 					RecruitPH:                line.RecruitPH,
 					RecruitMT:                line.RecruitMT,
 					OrganizationLocationName: line.OrganizationLocationName,
@@ -336,6 +339,82 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 			}
 			return lines
 		}(),
+	}, nil
+}
+
+func (uc *MPPlanningUseCase) FindHeaderByMPPPeriodId(req *request.FindHeaderByMPPPeriodIdMPPlanningRequest) (*response.FindHeaderByMPPPeriodIdMPPlanningResponse, error) {
+	mpPlanningHeader, err := uc.MPPlanningRepository.FindHeaderByMPPPeriodId(uuid.MustParse(req.MPPPeriodID))
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId] " + err.Error())
+		return nil, err
+	}
+
+	if mpPlanningHeader == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId] MP Planning Header not found")
+		return nil, errors.New("MP Planning Header not found")
+	}
+
+	// Fetch organization names using RabbitMQ
+	messageResponse, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+		ID: mpPlanningHeader.OrganizationID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId Message] " + err.Error())
+		return nil, err
+	}
+	mpPlanningHeader.OrganizationName = messageResponse.Name
+
+	// Fetch emp organization names using RabbitMQ
+	message2Response, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+		ID: mpPlanningHeader.EmpOrganizationID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId Message] " + err.Error())
+		return nil, err
+	}
+	mpPlanningHeader.EmpOrganizationName = message2Response.Name
+
+	// Fetch job names using RabbitMQ
+	messageJobResposne, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+		ID: mpPlanningHeader.JobID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId Message] " + err.Error())
+		return nil, err
+	}
+	mpPlanningHeader.JobName = messageJobResposne.Name
+
+	// Fetch requestor names using RabbitMQ
+	messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+		ID: mpPlanningHeader.RequestorID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId Message] " + err.Error())
+		return nil, err
+	}
+
+	return &response.FindHeaderByMPPPeriodIdMPPlanningResponse{
+		ID:                  mpPlanningHeader.ID,
+		MPPPeriodID:         mpPlanningHeader.MPPPeriodID,
+		OrganizationID:      mpPlanningHeader.OrganizationID,
+		EmpOrganizationID:   mpPlanningHeader.EmpOrganizationID,
+		JobID:               mpPlanningHeader.JobID,
+		DocumentNumber:      mpPlanningHeader.DocumentNumber,
+		DocumentDate:        mpPlanningHeader.DocumentDate,
+		Notes:               mpPlanningHeader.Notes,
+		TotalRecruit:        mpPlanningHeader.TotalRecruit,
+		TotalPromote:        mpPlanningHeader.TotalPromote,
+		Status:              mpPlanningHeader.Status,
+		RecommendedBy:       mpPlanningHeader.RecommendedBy,
+		ApprovedBy:          mpPlanningHeader.ApprovedBy,
+		RequestorID:         mpPlanningHeader.RequestorID,
+		NotesAttach:         mpPlanningHeader.NotesAttach,
+		OrganizationName:    mpPlanningHeader.OrganizationName,
+		EmpOrganizationName: mpPlanningHeader.EmpOrganizationName,
+		JobName:             mpPlanningHeader.JobName,
+		RequestorName:       messageUserResponse.Name,
+		CreatedAt:           mpPlanningHeader.CreatedAt,
+		UpdatedAt:           mpPlanningHeader.UpdatedAt,
 	}, nil
 }
 
@@ -680,7 +759,8 @@ func (uc *MPPlanningUseCase) CreateLine(req *request.CreateLineMPPlanningLineReq
 		SuggestedRecruit:       req.SuggestedRecruit,
 		Promotion:              req.Promotion,
 		Total:                  req.Total,
-		RemainingBalance:       req.RemainingBalance,
+		RemainingBalancePH:     req.RemainingBalancePH,
+		RemainingBalanceMT:     req.RemainingBalanceMT,
 		RecruitPH:              req.RecruitPH,
 		RecruitMT:              req.RecruitMT,
 	})
@@ -700,7 +780,8 @@ func (uc *MPPlanningUseCase) CreateLine(req *request.CreateLineMPPlanningLineReq
 		SuggestedRecruit:       mpPlanningLine.SuggestedRecruit,
 		Promotion:              mpPlanningLine.Promotion,
 		Total:                  mpPlanningLine.Total,
-		RemainingBalance:       mpPlanningLine.RemainingBalance,
+		RemainingBalancePH:     mpPlanningLine.RemainingBalancePH,
+		RemainingBalanceMT:     mpPlanningLine.RemainingBalanceMT,
 		RecruitPH:              mpPlanningLine.RecruitPH,
 		RecruitMT:              mpPlanningLine.RecruitMT,
 		CreatedAt:              mpPlanningLine.CreatedAt,
@@ -777,7 +858,8 @@ func (uc *MPPlanningUseCase) UpdateLine(req *request.UpdateLineMPPlanningLineReq
 		SuggestedRecruit:       req.SuggestedRecruit,
 		Promotion:              req.Promotion,
 		Total:                  req.Total,
-		RemainingBalance:       req.RemainingBalance,
+		RemainingBalancePH:     req.RemainingBalancePH,
+		RemainingBalanceMT:     req.RemainingBalanceMT,
 		RecruitPH:              req.RecruitPH,
 		RecruitMT:              req.RecruitMT,
 	})
@@ -797,7 +879,8 @@ func (uc *MPPlanningUseCase) UpdateLine(req *request.UpdateLineMPPlanningLineReq
 		SuggestedRecruit:       mpPlanningLine.SuggestedRecruit,
 		Promotion:              mpPlanningLine.Promotion,
 		Total:                  mpPlanningLine.Total,
-		RemainingBalance:       mpPlanningLine.RemainingBalance,
+		RemainingBalancePH:     mpPlanningLine.RemainingBalancePH,
+		RemainingBalanceMT:     mpPlanningLine.RemainingBalanceMT,
 		RecruitPH:              mpPlanningLine.RecruitPH,
 		RecruitMT:              mpPlanningLine.RecruitMT,
 		CreatedAt:              mpPlanningLine.CreatedAt,
@@ -893,7 +976,8 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 				SuggestedRecruit:       line.SuggestedRecruit,
 				Promotion:              line.Promotion,
 				Total:                  line.Total,
-				RemainingBalance:       line.RemainingBalance,
+				RemainingBalancePH:     line.RemainingBalancePH,
+				RemainingBalanceMT:     line.RemainingBalanceMT,
 				RecruitPH:              line.RecruitPH,
 				RecruitMT:              line.RecruitMT,
 			})
@@ -913,7 +997,8 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 				SuggestedRecruit:       line.SuggestedRecruit,
 				Promotion:              line.Promotion,
 				Total:                  line.Total,
-				RemainingBalance:       line.RemainingBalance,
+				RemainingBalancePH:     line.RemainingBalancePH,
+				RemainingBalanceMT:     line.RemainingBalanceMT,
 				RecruitPH:              line.RecruitPH,
 				RecruitMT:              line.RecruitMT,
 			})

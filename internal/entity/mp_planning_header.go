@@ -27,17 +27,17 @@ type MPPlanningHeader struct {
 	DocumentDate      time.Time       `json:"document_date" gorm:"type:date;not null;"`
 	Notes             string          `json:"notes" gorm:"type:text;default:null"`
 	TotalRecruit      float64         `json:"total_recruit" gorm:"type:decimal(18,2);default:0"`
-	TotalPromote      float64         `json:"total_promote" gorm:"type:decimal(18,2);default:0"`
+	TotalPromote      float64         `json:"total_promote" gorm:"ty	pe:decimal(18,2);default:0"`
 	Status            MPPlaningStatus `json:"status" gorm:"default:'DRAFT'"`
 	RecommendedBy     string          `json:"recommended_by" gorm:"type:text;"`   // free text
 	ApprovedBy        string          `json:"approved_by" gorm:"type:text;"`      // free text
 	RequestorID       *uuid.UUID      `json:"requestor_id" gorm:"type:char(36);"` // user_id
 	NotesAttach       string          `json:"notes_attach" gorm:"type:text;"`
 
-	MPPPeriod                   MPPPeriod                    `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	MPPlanningLines             []MPPlanningLine             `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	MPPlanningHeaderAttachments []MPPlanningHeaderAttachment `json:"mp_planning_header_attachments" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	MPRequestHeaders            []MPRequestHeader            `json:"mp_request_headers" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPPeriod           MPPPeriod            `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPlanningLines     []MPPlanningLine     `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	ManpowerAttachments []ManpowerAttachment `json:"manpower_attachments" gorm:"polymorphicType:OwnerType;polymorphicId:OwnerID;polymorphicValue:mp_planning_headers"`
+	MPRequestHeaders    []MPRequestHeader    `json:"mp_request_headers" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	OrganizationName    string `json:"organization_name" gorm:"-"`
 	EmpOrganizationName string `json:"emp_organization_name" gorm:"-"`

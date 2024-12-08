@@ -20,6 +20,7 @@ type IMPPlanningHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	FindHeaderByMPPPeriodId(ctx *gin.Context)
 	FindAllLinesByHeaderIdPaginated(ctx *gin.Context)
 	FindLineById(ctx *gin.Context)
 	CreateLine(ctx *gin.Context)
@@ -172,6 +173,28 @@ func (h *MPPlanningHandler) Delete(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "delete success", nil)
+}
+
+func (h *MPPlanningHandler) FindHeaderByMPPPeriodId(ctx *gin.Context) {
+	mppPeriodId := ctx.Param("mpp_period_id")
+
+	if mppPeriodId == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "mpp_period_id is required")
+		return
+	}
+
+	req := request.FindHeaderByMPPPeriodIdMPPlanningRequest{
+		MPPPeriodID: mppPeriodId,
+	}
+
+	resp, err := h.UseCase.FindHeaderByMPPPeriodId(&req)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.FindHeaderByMPPPeriodId] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find header by mpp period id success", resp)
 }
 
 func (h *MPPlanningHandler) FindAllLinesByHeaderIdPaginated(ctx *gin.Context) {

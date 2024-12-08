@@ -16,6 +16,7 @@ type IMPPlanningRepository interface {
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	DeleteHeader(id uuid.UUID) error
+	FindHeaderByMPPPeriodId(mppPeriodId uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindAllLinesByHeaderIdPaginated(headerId uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningLine, int64, error)
 	FindLineById(id uuid.UUID) (*entity.MPPlanningLine, error)
 	CreateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
@@ -143,6 +144,22 @@ func (r *MPPlanningRepository) DeleteHeader(id uuid.UUID) error {
 	return nil
 }
 
+func (r *MPPlanningRepository) FindHeaderByMPPPeriodId(mppPeriodId uuid.UUID) (*entity.MPPlanningHeader, error) {
+	var mppHeader entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("mpp_period_id = ?", mppPeriodId).First(&mppHeader).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByMPPPeriodId] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByMPPPeriodId] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindHeaderByMPPPeriodId] " + err.Error())
+		}
+	}
+
+	return &mppHeader, nil
+}
+
 func (r *MPPlanningRepository) FindAllLinesByHeaderIdPaginated(headerId uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningLine, int64, error) {
 	var mppLines []entity.MPPlanningLine
 
@@ -213,7 +230,7 @@ func (r *MPPlanningRepository) UpdateLine(mppLine *entity.MPPlanningLine) (*enti
 		return nil, errors.New("[MPPlanningRepository.UpdateLine] " + tx.Error.Error())
 	}
 
-	if err := tx.Save(mppLine).Error; err != nil {
+	if err := tx.Model(mppLine).Where("id = ?", mppLine.ID).Updates(mppLine).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPPlanningRepository.UpdateLine] " + err.Error())
 		return nil, errors.New("[MPPlanningRepository.UpdateLine] " + err.Error())
