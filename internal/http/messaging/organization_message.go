@@ -61,7 +61,7 @@ func (m *OrganizationMessage) SendFindOrganizationByIDMessage(req request.SendFi
 	log.Printf("INFO: response: %v", resp)
 
 	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
-		return nil, errors.New(errMsg)
+		return nil, errors.New("[SendFindOrganizationByIDMessage] " + errMsg)
 	}
 
 	return &orgResponse.SendFindOrganizationByIDMessageResponse{
@@ -104,7 +104,7 @@ func (m *OrganizationMessage) SendFindOrganizationLocationByIDMessage(req reques
 	log.Printf("INFO: response: %v", resp)
 
 	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
-		return nil, errors.New(errMsg)
+		return nil, errors.New("[SendFindOrganizationLocationByIDMessage] " + errMsg)
 	}
 
 	return &orgResponse.SendFindOrganizationLocationByIDMessageResponse{

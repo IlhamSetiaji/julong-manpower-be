@@ -14,7 +14,7 @@ func main() {
 
 	// migrate the schema
 	err := db.AutoMigrate(&entity.JobPlafon{}, &entity.MPPPeriod{}, &entity.MPPlanningHeader{}, &entity.MPPlanningLine{}, &entity.Major{}, &entity.ManpowerAttachment{},
-		&entity.RequestCategory{}, &entity.MPRequestHeader{}, &entity.RequestMajor{}, &entity.MPRequestApprovalHistory{})
+		&entity.RequestCategory{}, &entity.MPRequestHeader{}, &entity.RequestMajor{}, &entity.MPRequestApprovalHistory{}, &entity.MPPlanningApprovalHistory{})
 	if err != nil {
 		log.Fatal(err)
 	} else {

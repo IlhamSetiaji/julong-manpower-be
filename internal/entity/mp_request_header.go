@@ -91,9 +91,10 @@ type MPRequestHeader struct {
 	MPRequestType              MPRequestTypeEnum   `json:"mp_request_type" gorm:"default:'ON_BUDGET'"`
 	RecruitmentType            RecruitmentTypeEnum `json:"recruitment_type" gorm:"type:text;default:not null"`
 
-	RequestCategory  RequestCategory  `json:"request_category" gorm:"foreignKey:RequestCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	RequestMajors    []RequestMajor   `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
-	MPPlanningHeader MPPlanningHeader `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	RequestCategory            RequestCategory            `json:"request_category" gorm:"foreignKey:RequestCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	RequestMajors              []RequestMajor             `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPlanningHeader           MPPlanningHeader           `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPRequestApprovalHistories []MPRequestApprovalHistory `json:"mp_request_approval_histories" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	OrganizationName         string `json:"organization_name" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`

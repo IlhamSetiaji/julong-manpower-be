@@ -20,7 +20,11 @@ type MPRequestApprovalHistory struct {
 	MPRequestHeaderID uuid.UUID                      `json:"mp_request_header_id" gorm:"type:char(36);"`
 	ApproverID        uuid.UUID                      `json:"approver_id" gorm:"type:char(36);"`
 	ApproverName      string                         `json:"approver_name" gorm:"type:varchar(255);"`
+	Notes             string                         `json:"notes" gorm:"type:text;"`
 	Status            MPRequestApprovalHistoryStatus `json:"status" gorm:"not null"`
+
+	MPRequestHeader     MPRequestHeader      `gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`
+	ManpowerAttachments []ManpowerAttachment `json:"manpower_attachments" gorm:"polymorphicType:OwnerType;polymorphicId:OwnerID;polymorphicValue:mp_request_approval_histories" constraint:"OnUpdate:CASCADE,OnDelete:CASCADE"`
 }
 
 func (m *MPRequestApprovalHistory) BeforeCreate(tx *gorm.DB) (err error) {

@@ -64,7 +64,7 @@ func (m *JobPlafonMessage) SendCheckJobExistMessage(req request.CheckJobExistMes
 	log.Printf("INFO: response: %v", resp)
 
 	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
-		return nil, errors.New(errMsg)
+		return nil, errors.New("[SendCheckJobExistMessage] " + errMsg)
 	}
 
 	exist := resp.MessageData["job_id"].(string) != ""
@@ -109,7 +109,7 @@ func (m *JobPlafonMessage) SendFindJobByIDMessage(req request.SendFindJobByIDMes
 	log.Printf("INFO: response: %v", resp)
 
 	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
-		return nil, errors.New(errMsg)
+		return nil, errors.New("[SendFindJobByIDMessage] " + errMsg)
 	}
 
 	return &jobResponse.SendFindJobByIDMessageResponse{
@@ -152,7 +152,7 @@ func (m *JobPlafonMessage) SendFindJobLevelByIDMessage(req request.SendFindJobLe
 	log.Printf("INFO: response: %v", resp)
 
 	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
-		return nil, errors.New(errMsg)
+		return nil, errors.New("[SendFindJobLevelByIDMessage] " + errMsg)
 	}
 
 	return &jobResponse.SendFindJobLevelByIDMessageResponse{
@@ -196,7 +196,7 @@ func (m *JobPlafonMessage) SendCheckJobByJobLevelMessage(req request.CheckJobByJ
 	log.Printf("INFO: response: %v", resp)
 
 	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
-		return nil, errors.New(errMsg)
+		return nil, errors.New("[SendCheckJobByJobLevelMessage] " + errMsg)
 	}
 
 	exist := resp.MessageData["job_id"].(string) != ""

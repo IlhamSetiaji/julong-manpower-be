@@ -59,7 +59,7 @@ func (m *UserMessage) SendFindUserByIDMessage(req request.SendFindUserByIDMessag
 	log.Printf("INFO: response: %v", resp)
 
 	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
-		return nil, errors.New(errMsg)
+		return nil, errors.New("[SendFindUserByIDMessage] " + errMsg)
 	}
 
 	return &response.SendFindUserByIDResponse{
