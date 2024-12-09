@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -18,6 +19,7 @@ type IMPPlanningUseCase interface {
 	FindAllHeadersPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
+	GenerateDocumentNumber(dateNow time.Time) (string, error)
 	Create(request *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error)
 	Update(request *request.UpdateHeaderMPPlanningRequest) (*response.UpdateMPPlanningResponse, error)
 	Delete(request *request.DeleteHeaderMPPlanningRequest) error
@@ -353,6 +355,20 @@ func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uu
 		}(),
 		Total: total,
 	}, nil
+}
+
+func (uc *MPPlanningUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
+	foundMpPlanningHeader, err := uc.MPPlanningRepository.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.GenerateDocumentNumber] " + err.Error())
+		return "", err
+	}
+
+	if foundMpPlanningHeader == nil {
+		return "MPP/" + dateNow.Format("20060102") + "/001", nil
+	}
+
+	return "MPP/" + dateNow.Format("20060102") + "/" + fmt.Sprintf("%03d", len(*foundMpPlanningHeader)+1), nil
 }
 
 func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error) {

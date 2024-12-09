@@ -14,6 +14,7 @@ type IMPPlanningRepository interface {
 	FindAllHeadersPaginated(page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
+	GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error)
@@ -99,6 +100,22 @@ func (r *MPPlanningRepository) FindHeaderById(id uuid.UUID) (*entity.MPPlanningH
 	}
 
 	return &mppHeader, nil
+}
+
+func (r *MPPlanningRepository) GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error) {
+	var mppHeaders []entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("document_date = ?", documentDate).Find(&mppHeaders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.GetHeadersByDocumentDate] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.GetHeadersByDocumentDate] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.GetHeadersByDocumentDate] " + err.Error())
+		}
+	}
+
+	return &mppHeaders, nil
 }
 
 func (r *MPPlanningRepository) CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error) {

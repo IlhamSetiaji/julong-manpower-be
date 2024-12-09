@@ -23,6 +23,7 @@ import (
 type IMPPlanningHandler interface {
 	FindAllHeadersPaginated(ctx *gin.Context)
 	FindAllHeadersByRequestorIDPaginated(ctx *gin.Context)
+	GenerateDocumentNumber(ctx *gin.Context)
 	FindById(ctx *gin.Context)
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
@@ -132,6 +133,19 @@ func (h *MPPlanningHandler) FindAllHeadersByRequestorIDPaginated(ctx *gin.Contex
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers by requestor id paginated success", resp)
+}
+
+func (h *MPPlanningHandler) GenerateDocumentNumber(ctx *gin.Context) {
+	dateNow := time.Now()
+
+	resp, err := h.UseCase.GenerateDocumentNumber(dateNow)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.GenerateDocumentNumber] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "generate document number success", resp)
 }
 
 func (h *MPPlanningHandler) FindById(ctx *gin.Context) {
