@@ -13,8 +13,8 @@ func main() {
 	db := config.NewDatabase()
 
 	// migrate the schema
-	err := db.AutoMigrate(&entity.JobPlafon{}, &entity.MPPPeriod{}, &entity.MPPlanningHeader{}, &entity.MPPlanningLine{}, &entity.Major{}, &entity.MPPlanningHeaderAttachment{},
-		&entity.RequestCategory{}, &entity.MPRequestHeader{}, &entity.RequestMajor{})
+	err := db.AutoMigrate(&entity.JobPlafon{}, &entity.MPPPeriod{}, &entity.MPPlanningHeader{}, &entity.MPPlanningLine{}, &entity.Major{}, &entity.ManpowerAttachment{},
+		&entity.RequestCategory{}, &entity.MPRequestHeader{}, &entity.RequestMajor{}, &entity.MPRequestApprovalHistory{})
 	if err != nil {
 		log.Fatal(err)
 	} else {
@@ -55,6 +55,68 @@ func main() {
 	for _, mppPeriod := range mppPeriods {
 		if err := db.Create(&mppPeriod).Error; err != nil {
 			log.Fatalf("Error when creating mppPeriod: " + err.Error())
+		}
+	}
+
+	requestCategories := []entity.RequestCategory{
+		{
+			Name:          "Undur Diri",
+			IsReplacement: true,
+		},
+		{
+			Name:          "Dimutasikan",
+			IsReplacement: true,
+		},
+		{
+			Name:          "Pensiun",
+			IsReplacement: true,
+		},
+		{
+			Name:          "Diberhentikan",
+			IsReplacement: true,
+		},
+		{
+			Name:          "Promosi",
+			IsReplacement: true,
+		},
+		{
+			Name:          "Meninggal Dunia",
+			IsReplacement: true,
+		},
+		{
+			Name:          "Posisi Baru",
+			IsReplacement: false,
+		},
+		{
+			Name:          "Pegawai Baru",
+			IsReplacement: false,
+		},
+	}
+
+	for _, requestCategory := range requestCategories {
+		if err := db.Create(&requestCategory).Error; err != nil {
+			log.Fatalf("Error when creating requestCategory: " + err.Error())
+		}
+	}
+
+	majors := []entity.Major{
+		{
+			Major:          "Teknik Informatika",
+			EducationLevel: entity.EducationLevelEnumBachelor,
+		},
+		{
+			Major:          "Teknik Elektro",
+			EducationLevel: entity.EducationLevelEnumBachelor,
+		},
+		{
+			Major:          "Teknik Mesin",
+			EducationLevel: entity.EducationLevelEnumBachelor,
+		},
+	}
+
+	for _, major := range majors {
+		if err := db.Create(&major).Error; err != nil {
+			log.Fatalf("Error when creating major: " + err.Error())
 		}
 	}
 

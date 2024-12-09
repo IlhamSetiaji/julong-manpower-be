@@ -31,6 +31,19 @@ func MPPlaningStatusValidation(fl validator.FieldLevel) bool {
 	}
 }
 
+func RecruitmentTypeValidation(fl validator.FieldLevel) bool {
+	status := fl.Field().String()
+	if status == "" {
+		return true
+	}
+	switch entity.RecruitmentTypeEnum(status) {
+	case entity.RecruitmentTypeEnumMT, entity.RecruitmentTypeEnumPH, entity.RecruitmentTypeEnumNS:
+		return true
+	default:
+		return false
+	}
+}
+
 type RabbitMQRequest struct {
 	ID          string                 `json:"id"`
 	MessageType string                 `json:"message_type"`
