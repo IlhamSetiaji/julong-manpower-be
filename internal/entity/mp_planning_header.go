@@ -29,9 +29,9 @@ type MPPlanningHeader struct {
 	TotalRecruit      float64         `json:"total_recruit" gorm:"type:decimal(18,2);default:0"`
 	TotalPromote      float64         `json:"total_promote" gorm:"ty	pe:decimal(18,2);default:0"`
 	Status            MPPlaningStatus `json:"status" gorm:"default:'DRAFT'"`
-	RecommendedBy     string          `json:"recommended_by" gorm:"type:text;"`   // free text
-	ApprovedBy        string          `json:"approved_by" gorm:"type:text;"`      // free text
-	RequestorID       *uuid.UUID      `json:"requestor_id" gorm:"type:char(36);"` // user_id
+	RecommendedBy     string          `json:"recommended_by" gorm:"type:text;"`          // free text
+	ApprovedBy        string          `json:"approved_by" gorm:"type:text;default:null"` // free text
+	RequestorID       *uuid.UUID      `json:"requestor_id" gorm:"type:char(36);"`        // user_id
 	NotesAttach       string          `json:"notes_attach" gorm:"type:text;"`
 
 	MPPPeriod                   MPPPeriod                   `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

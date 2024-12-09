@@ -14,10 +14,12 @@ type IMPPlanningRepository interface {
 	FindAllHeadersPaginated(page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
+	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
 	GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error)
+	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPPlanningApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPPlanningApprovalHistory, error)
 	DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error)
 	DeleteHeader(id uuid.UUID) error
 	FindHeaderByMPPPeriodId(mppPeriodId uuid.UUID) (*entity.MPPlanningHeader, error)
@@ -118,6 +120,40 @@ func (r *MPPlanningRepository) GetHeadersByDocumentDate(documentDate string) (*[
 	return &mppHeaders, nil
 }
 
+func (r *MPPlanningRepository) UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + tx.Error.Error())
+		return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
+		Status:     entity.MPPlaningStatus(status),
+		ApprovedBy: approvedBy,
+	}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+		return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+	}
+
+	if approvalHistory != nil {
+		if err := tx.Create(approvalHistory).Error; err != nil {
+			tx.Rollback()
+			r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+			return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+		return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+	}
+
+	return nil
+}
+
 func (r *MPPlanningRepository) CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error) {
 	tx := r.DB.Begin()
 
@@ -185,6 +221,29 @@ func (r *MPPlanningRepository) StoreAttachmentToHeader(mppHeader *entity.MPPlann
 	}
 
 	return mppHeader, nil
+}
+
+func (r *MPPlanningRepository) StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPPlanningApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPPlanningApprovalHistory, error) {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + tx.Error.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(mppApprovalHistory).Association("ManpowerAttachments").Append(&attachment); err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
+	}
+
+	return mppApprovalHistory, nil
 }
 
 func (r *MPPlanningRepository) DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error) {

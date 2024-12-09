@@ -70,6 +70,7 @@ func (c *RouteConfig) SetupMPPlanningRoutes() {
 		mpPlanning.GET("/:id", c.MPPlanningHandler.FindById)
 		mpPlanning.POST("/", c.MPPlanningHandler.Create)
 		mpPlanning.PUT("/", c.MPPlanningHandler.Update)
+		mpPlanning.PUT("/update-status", c.MPPlanningHandler.UpdateStatusMPPPlanningHeader)
 		mpPlanning.DELETE("/:id", c.MPPlanningHandler.Delete)
 
 		mpPlanning.GET("/lines/find/:id", c.MPPlanningHandler.FindLineById)

@@ -20,6 +20,7 @@ type IMPPlanningUseCase interface {
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
+	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
 	Create(request *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error)
 	Update(request *request.UpdateHeaderMPPlanningRequest) (*response.UpdateMPPlanningResponse, error)
 	Delete(request *request.DeleteHeaderMPPlanningRequest) error
@@ -202,6 +203,75 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}(),
 		Total: total,
 	}, nil
+}
+
+func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateStatusMPPlanningHeaderRequest) error {
+	mpPlanningHeader, err := uc.MPPlanningRepository.FindHeaderById(uuid.MustParse(req.ID))
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] " + err.Error())
+		return err
+	}
+
+	if mpPlanningHeader == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] MP Planning Header not found")
+		return errors.New("MP Planning Header not found")
+	}
+
+	messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+		ID: req.ApproverID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByRequestorIDPaginated Message] " + err.Error())
+		return err
+	}
+	if messageUserResponse == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] User not found")
+		return errors.New("User not found")
+	}
+
+	approvalHistory := &entity.MPPlanningApprovalHistory{
+		MPPlanningHeaderID: uuid.MustParse(req.ID),
+		ApproverID:         req.ApproverID,
+		ApproverName:       messageUserResponse.Name,
+		Notes:              req.Notes,
+		Status: func() entity.MPPlanningApprovalHistoryStatus {
+			if req.Status == entity.MPPlaningStatusReject {
+				return entity.MPPlanningApprovalHistoryStatusRejected
+			}
+			return entity.MPPlanningApprovalHistoryStatusApproved
+		}(),
+	}
+
+	err = uc.MPPlanningRepository.UpdateStatusHeader(uuid.MustParse(req.ID), string(req.Status), req.ApprovedBy, approvalHistory)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] " + err.Error())
+		return err
+	}
+
+	var attachments []response.ManpowerAttachmentResponse
+	if req.Attachments != nil {
+		for _, attachment := range req.Attachments {
+			_, err := uc.MPPlanningRepository.StoreAttachmentToApprovalHistory(approvalHistory, entity.ManpowerAttachment{
+				FileName: attachment.FileName,
+				FilePath: attachment.FilePath,
+				FileType: attachment.FileType,
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] " + err.Error())
+				return err
+			}
+
+			fullURL := uc.Viper.GetString("app.url") + attachment.FilePath
+
+			attachments = append(attachments, response.ManpowerAttachmentResponse{
+				FileName: attachment.FileName,
+				FilePath: fullURL,
+				FileType: attachment.FileType,
+			})
+		}
+	}
+
+	return nil
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error) {

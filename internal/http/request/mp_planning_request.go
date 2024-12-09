@@ -21,6 +21,16 @@ type ManpowerAttachmentRequest struct {
 	FileType string `json:"file_type" validate:"required"`
 }
 
+type UpdateStatusMPPlanningHeaderRequest struct {
+	ID          string                      `json:"id" validate:"required"`
+	Status      entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
+	Notes       string                      `json:"notes" validate:"omitempty"`
+	Attachments []ManpowerAttachmentRequest `json:"attachments" validate:"omitempty,dive"`
+	ApprovedBy  string                      `json:"approved_by" validate:"required"`
+	ApproverID  uuid.UUID                   `json:"approver_id" validate:"required"`
+	// ApproverName string                      `json:"approved_by_name" validate:"omitempty"`
+}
+
 type CreateHeaderMPPlanningRequest struct {
 	MPPPeriodID       uuid.UUID                   `json:"mpp_period_id" validate:"required"`
 	OrganizationID    uuid.UUID                   `json:"organization_id" validate:"required"`
@@ -33,7 +43,7 @@ type CreateHeaderMPPlanningRequest struct {
 	TotalPromote      float64                     `json:"total_promote" validate:"required"`
 	Status            entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
 	RecommendedBy     string                      `json:"recommended_by" validate:"required"`
-	ApprovedBy        string                      `json:"approved_by" validate:"required"`
+	ApprovedBy        string                      `json:"approved_by" validate:"omitempty"`
 	RequestorID       uuid.UUID                   `json:"requestor_id" validate:"required"`
 	NotesAttach       string                      `json:"notes_attach" validate:"omitempty"`
 	Attachments       []ManpowerAttachmentRequest `json:"attachments" validate:"omitempty,dive"`
@@ -52,7 +62,7 @@ type UpdateHeaderMPPlanningRequest struct {
 	TotalPromote      float64                     `json:"total_promote" validate:"required"`
 	Status            entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
 	RecommendedBy     string                      `json:"recommended_by" validate:"required"`
-	ApprovedBy        string                      `json:"approved_by" validate:"required"`
+	ApprovedBy        string                      `json:"approved_by" validate:"omitempty"`
 	RequestorID       uuid.UUID                   `json:"requestor_id" validate:"required"`
 	NotesAttach       string                      `json:"notes_attach" validate:"omitempty"`
 	Attachments       []ManpowerAttachmentRequest `json:"attachments" validate:"omitempty,dive"`

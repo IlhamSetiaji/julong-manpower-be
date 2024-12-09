@@ -28,6 +28,7 @@ type IMPPlanningHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	UpdateStatusMPPPlanningHeader(ctx *gin.Context)
 	FindHeaderByMPPPeriodId(ctx *gin.Context)
 	FindAllLinesByHeaderIdPaginated(ctx *gin.Context)
 	FindLineById(ctx *gin.Context)
@@ -250,6 +251,88 @@ func (h *MPPlanningHandler) Create(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusCreated, "create success", resp)
+}
+
+func (h *MPPlanningHandler) UpdateStatusMPPPlanningHeader(ctx *gin.Context) {
+	if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB max memory
+		h.Log.Errorf("[MPPlanningHandler.UpdateStatusMPPPlanningHeader] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	// Get JSON payload from form data
+	jsonData := ctx.Request.FormValue("payload")
+	if jsonData == "" {
+		h.Log.Errorf("[MPPlanningHandler.UpdateStatusMPPPlanningHeader] JSON payload is empty")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "JSON payload is empty")
+		return
+	}
+
+	payload := new(request.UpdateStatusMPPlanningHeaderRequest)
+	if err := json.Unmarshal([]byte(jsonData), payload); err != nil {
+		h.Log.Errorf("[MPPlanningHandler.UpdateStatusMPPPlanningHeader] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	} else {
+		h.Log.Infof("Payload: %v", payload)
+	}
+
+	// Validate payload
+	if err := h.Validate.Struct(payload); err != nil {
+		h.Log.Errorf("[MPPlanningHandler.UpdateStatusMPPPlanningHeader] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	// Process uploaded files
+	form, err := ctx.MultipartForm()
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.UpdateStatusMPPPlanningHeader] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	files := form.File["attachments"]
+	var attachments []request.ManpowerAttachmentRequest
+
+	for _, file := range files {
+		// Generate a new file name with a timestamp
+		timestamp := time.Now().UnixNano()
+		extension := filepath.Ext(file.Filename)
+		newFileName := fmt.Sprintf("%d%s", timestamp, extension)
+		filePath := "storage/mp_planning_header/attachments/" + newFileName
+
+		// Save the file or process it as needed
+		if err := ctx.SaveUploadedFile(file, filePath); err != nil {
+			h.Log.Errorf("[MPPlanningHandler.UpdateStatusMPPPlanningHeader] " + err.Error())
+			utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+			return
+		} else {
+			h.Log.Infof("File %s uploaded successfully", filePath)
+		}
+
+		// Get the file type (MIME type)
+		fileType := file.Header.Get("Content-Type")
+
+		// Add file information to attachments
+		attachments = append(attachments, request.ManpowerAttachmentRequest{
+			FileName: newFileName,
+			FilePath: filePath, // Or generate a URL if needed
+			FileType: fileType,
+		})
+	}
+
+	// Add attachments to payload
+	payload.Attachments = attachments
+
+	err = h.UseCase.UpdateStatusMPPlanningHeader(payload)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.UpdateStatusMPPPlanningHeader] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "update status success", nil)
 }
 
 func (h *MPPlanningHandler) Update(ctx *gin.Context) {
