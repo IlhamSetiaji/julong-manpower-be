@@ -15,6 +15,7 @@ import (
 type IOrganizationMessage interface {
 	SendFindOrganizationByIDMessage(request request.SendFindOrganizationByIDMessageRequest) (*orgResponse.SendFindOrganizationByIDMessageResponse, error)
 	SendFindOrganizationLocationByIDMessage(request request.SendFindOrganizationLocationByIDMessageRequest) (*orgResponse.SendFindOrganizationLocationByIDMessageResponse, error)
+	SendFindOrganizationStructureByIDMessage(request request.SendFindOrganizationStructureByIDMessageRequest) (*orgResponse.SendFindOrganizationStructureByIDMessageResponse, error)
 }
 
 type OrganizationMessage struct {
@@ -110,6 +111,49 @@ func (m *OrganizationMessage) SendFindOrganizationLocationByIDMessage(req reques
 	return &orgResponse.SendFindOrganizationLocationByIDMessageResponse{
 		OrganizationLocationID: resp.MessageData["organization_location_id"].(string),
 		Name:                   resp.MessageData["name"].(string),
+	}, nil
+}
+
+func (m *OrganizationMessage) SendFindOrganizationStructureByIDMessage(req request.SendFindOrganizationStructureByIDMessageRequest) (*orgResponse.SendFindOrganizationStructureByIDMessageResponse, error) {
+	payload := map[string]interface{}{
+		"organization_structure_id": req.ID,
+	}
+
+	docMsg := &request.RabbitMQRequest{
+		ID:          uuid.New().String(),
+		MessageType: "find_organization_structure_by_id",
+		MessageData: payload,
+		ReplyTo:     "julong_manpower",
+	}
+
+	log.Printf("INFO: document message: %v", docMsg)
+
+	// create channel and add to rchans with uid
+	rchan := make(chan response.RabbitMQResponse)
+	utils.Rchans[docMsg.ID] = rchan
+
+	// publish rabbit message
+	msg := utils.RabbitMsg{
+		QueueName: "julong_sso",
+		Message:   *docMsg,
+	}
+	utils.Pchan <- msg
+
+	// wait for reply
+	resp, err := waitReply(docMsg.ID, rchan)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("INFO: response: %v", resp)
+
+	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
+		return nil, errors.New("[SendFindOrganizationStructureByIDMessage] " + errMsg)
+	}
+
+	return &orgResponse.SendFindOrganizationStructureByIDMessageResponse{
+		OrganizationStructureID: resp.MessageData["organization_structure_id"].(string),
+		Name:                    resp.MessageData["name"].(string),
 	}, nil
 }
 

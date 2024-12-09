@@ -85,8 +85,8 @@ type MPRequestHeader struct {
 	DepartmentHead             *uuid.UUID          `json:"department_head" gorm:"type:char(36);not null"`
 	VpGmDirector               string              `json:"vp_gm_director" gorm:"type:text;default:null"`
 	CEO                        string              `json:"ceo" gorm:"type:text;default:null"`
-	HrdHoUnit                  *uuid.UUID          `json:"hrd_ho_unit" gorm:"type:char(36);not null"` // verificator tim rekrutmen
-	MPPlanningHeaderID         *uuid.UUID          `json:"mp_planning_header_id" gorm:"type:char(36);not null"`
+	HrdHoUnit                  *uuid.UUID          `json:"hrd_ho_unit" gorm:"type:char(36);null"` // verificator tim rekrutmen
+	MPPlanningHeaderID         *uuid.UUID          `json:"mp_planning_header_id" gorm:"type:char(36);null"`
 	Status                     MPRequestStatus     `json:"status" gorm:"default:'DRAFT'"`
 	MPRequestType              MPRequestTypeEnum   `json:"mp_request_type" gorm:"default:'ON_BUDGET'"`
 	RecruitmentType            RecruitmentTypeEnum `json:"recruitment_type" gorm:"type:text;default:not null"`

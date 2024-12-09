@@ -1,0 +1,98 @@
+package dto
+
+import (
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
+)
+
+func ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader {
+	return &entity.MPRequestHeader{
+		OrganizationID:             &req.OrganizationID,
+		OrganizationLocationID:     &req.OrganizationLocationID,
+		ForOrganizationID:          &req.ForOrganizationID,
+		ForOrganizationLocationID:  &req.ForOrganizationLocationID,
+		ForOrganizationStructureID: &req.ForOrganizationStructureID,
+		JobID:                      &req.JobID,
+		RequestCategoryID:          req.RequestCategoryID,
+		ExpectedDate:               &req.ExpectedDate,
+		Experiences:                req.Experiences,
+		DocumentNumber:             req.DocumentNumber,
+		DocumentDate:               req.DocumentDate,
+		MaleNeeds:                  req.MaleNeeds,
+		FemaleNeeds:                req.FemaleNeeds,
+		MinimumAge:                 req.MinimumAge,
+		MaximumAge:                 req.MaximumAge,
+		MinimumExperience:          req.MinimumExperience,
+		MaritalStatus:              req.MaritalStatus,
+		MinimumEducation:           req.MinimumEducation,
+		RequiredQualification:      req.RequiredQualification,
+		Certificate:                req.Certificate,
+		ComputerSkill:              req.ComputerSkill,
+		LanguageSkill:              req.LanguageSkill,
+		OtherSkill:                 req.OtherSkill,
+		Jobdesc:                    req.Jobdesc,
+		SalaryMin:                  req.SalaryMin,
+		SalaryMax:                  req.SalaryMax,
+		RequestorID:                req.RequestorID,
+		DepartmentHead:             req.DepartmentHead,
+		VpGmDirector:               req.VpGmDirector,
+		CEO:                        req.CEO,
+		HrdHoUnit:                  req.HrdHoUnit,
+		MPPlanningHeaderID:         req.MPPlanningHeaderID,
+		Status:                     req.Status,
+		MPRequestType:              req.MPRequestType,
+		RecruitmentType:            req.RecruitmentType,
+	}
+}
+
+func ConvertToResponse(entity *entity.MPRequestHeader) *response.MPRequestHeaderResponse {
+	return &response.MPRequestHeaderResponse{
+		ID:                         entity.ID,
+		OrganizationID:             *entity.OrganizationID,
+		OrganizationLocationID:     *entity.OrganizationLocationID,
+		ForOrganizationID:          *entity.ForOrganizationID,
+		ForOrganizationLocationID:  *entity.ForOrganizationLocationID,
+		ForOrganizationStructureID: *entity.ForOrganizationStructureID,
+		JobID:                      *entity.JobID,
+		RequestCategoryID:          entity.RequestCategoryID,
+		ExpectedDate:               *entity.ExpectedDate,
+		Experiences:                entity.Experiences,
+		DocumentNumber:             entity.DocumentNumber,
+		DocumentDate:               entity.DocumentDate,
+		MaleNeeds:                  entity.MaleNeeds,
+		FemaleNeeds:                entity.FemaleNeeds,
+		MinimumAge:                 entity.MinimumAge,
+		MaximumAge:                 entity.MaximumAge,
+		MinimumExperience:          entity.MinimumExperience,
+		MaritalStatus:              entity.MaritalStatus,
+		MinimumEducation:           entity.MinimumEducation,
+		RequiredQualification:      entity.RequiredQualification,
+		Certificate:                entity.Certificate,
+		ComputerSkill:              entity.ComputerSkill,
+		LanguageSkill:              entity.LanguageSkill,
+		OtherSkill:                 entity.OtherSkill,
+		Jobdesc:                    entity.Jobdesc,
+		SalaryMin:                  entity.SalaryMin,
+		SalaryMax:                  entity.SalaryMax,
+		RequestorID:                entity.RequestorID,
+		DepartmentHead:             entity.DepartmentHead,
+		VpGmDirector:               entity.VpGmDirector,
+		CEO:                        entity.CEO,
+		HrdHoUnit:                  entity.HrdHoUnit,
+		MPPlanningHeaderID:         entity.MPPlanningHeaderID,
+		Status:                     entity.Status,
+		MPRequestType:              entity.MPRequestType,
+		RecruitmentType:            entity.RecruitmentType,
+
+		OrganizationName:         entity.OrganizationName,
+		OrganizationLocationName: entity.OrganizationLocationName,
+		ForOrganizationName:      entity.ForOrganizationName,
+		ForOrganizationLocation:  entity.ForOrganizationLocation,
+		ForOrganizationStructure: entity.ForOrganizationStructure,
+		JobName:                  entity.JobName,
+		RequestorName:            entity.RequestorName,
+		DepartmentHeadName:       entity.DepartmentHeadName,
+		HrdHoUnitName:            entity.HrdHoUnitName,
+	}
+}

@@ -7,3 +7,7 @@ type SendFindOrganizationByIDMessageRequest struct {
 type SendFindOrganizationLocationByIDMessageRequest struct {
 	ID string `json:"id"`
 }
+
+type SendFindOrganizationStructureByIDMessageRequest struct {
+	ID string `json:"id"`
+}
