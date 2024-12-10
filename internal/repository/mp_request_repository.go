@@ -40,7 +40,7 @@ func (r *MPRequestRepository) Create(mpRequestHeader *entity.MPRequestHeader) (*
 	return mpRequestHeader, nil
 }
 
-func MPRequestFactory(log *logrus.Logger) IMPRequestRepository {
+func MPRequestRepositoryFactory(log *logrus.Logger) IMPRequestRepository {
 	db := config.NewDatabase()
 	return NewMPRequestRepository(log, db)
 }

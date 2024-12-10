@@ -17,6 +17,7 @@ type RouteConfig struct {
 	MPPlanningHandler      handler.IMPPlanningHandler
 	RequestCategoryHandler handler.IRequestCategoryHandler
 	MajorHandler           handler.IMajorHandler
+	MPRequestHandler       handler.IMPRequestHandler
 	AuthMiddleware         gin.HandlerFunc
 }
 
@@ -100,6 +101,14 @@ func (c *RouteConfig) SetupMajorRoutes() {
 	}
 }
 
+func (c *RouteConfig) SetupMPRequestRoutes() {
+	mpRequest := c.App.Group("/api/mp-requests")
+	{
+		mpRequest.Use(c.AuthMiddleware)
+		mpRequest.POST("/", c.MPRequestHandler.Create)
+	}
+}
+
 func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *RouteConfig {
 	// factory handlers
 	mppPeriodHandler := handler.MPPPeriodHandlerFactory(log, viper)
@@ -107,6 +116,7 @@ func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *Ro
 	mpPlanningHandler := handler.MPPlanningHandlerFactory(log, viper)
 	requestCategoryHandler := handler.RequestCategoryHandlerFactory(log, viper)
 	majorHandler := handler.MajorHandlerFactory(log, viper)
+	mpRequestHandler := handler.MPRequestHandlerFactory(log, viper)
 
 	// facroty middleware
 	authMiddleware := middleware.NewAuth(viper)
@@ -118,5 +128,6 @@ func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *Ro
 		MPPlanningHandler:      mpPlanningHandler,
 		RequestCategoryHandler: requestCategoryHandler,
 		MajorHandler:           majorHandler,
+		MPRequestHandler:       mpRequestHandler,
 	}
 }

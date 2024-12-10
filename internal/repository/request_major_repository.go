@@ -38,7 +38,7 @@ func (r *RequestMajorRepository) Create(requestMajor *entity.RequestMajor) (*ent
 	return requestMajor, nil
 }
 
-func RequestMajorFactory(log *logrus.Logger) IRequestMajorRepository {
+func RequestMajorRepositoryFactory(log *logrus.Logger) IRequestMajorRepository {
 	db := config.NewDatabase()
 	return NewRequestMajorRepository(log, db)
 }

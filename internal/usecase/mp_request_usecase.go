@@ -180,3 +180,12 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 
 	return dto.ConvertToResponse(mpRequestHeader), nil
 }
+
+func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestUseCase {
+	mpRequestRepository := repository.MPRequestRepositoryFactory(log)
+	requestMajorRepository := repository.RequestMajorRepositoryFactory(log)
+	organizationMessage := messaging.OrganizationMessageFactory(log)
+	jobPlafonMessage := messaging.JobPlafonMessageFactory(log)
+	userMessage := messaging.UserMessageFactory(log)
+	return NewMPRequestUseCase(viper, log, mpRequestRepository, requestMajorRepository, organizationMessage, jobPlafonMessage, userMessage)
+}
