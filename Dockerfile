@@ -31,10 +31,10 @@ COPY config.template.json /app/config.template.json
 COPY init-config.sh /app/init-config.sh
 
 # Copy the views directory
-COPY views /app/views
+# COPY views /app/views
 
 # Copy the static directory
-COPY public /app/public
+# COPY public /app/public
 
 # Make the initialization script executable
 RUN chmod +x /app/init-config.sh
