@@ -276,6 +276,7 @@ func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateSta
 		ApproverID:         req.ApproverID,
 		ApproverName:       messageUserResponse.Name,
 		Notes:              req.Notes,
+		Level:              string(req.Level),
 		Status: func() entity.MPPlanningApprovalHistoryStatus {
 			if req.Status == entity.MPPlaningStatusReject {
 				return entity.MPPlanningApprovalHistoryStatusRejected

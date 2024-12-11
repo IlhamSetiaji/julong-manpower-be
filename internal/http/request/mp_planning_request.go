@@ -22,12 +22,13 @@ type ManpowerAttachmentRequest struct {
 }
 
 type UpdateStatusMPPlanningHeaderRequest struct {
-	ID          string                      `json:"id" validate:"required"`
-	Status      entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
-	Notes       string                      `json:"notes" validate:"omitempty"`
-	Attachments []ManpowerAttachmentRequest `json:"attachments" validate:"omitempty,dive"`
-	ApprovedBy  string                      `json:"approved_by" validate:"required"`
-	ApproverID  uuid.UUID                   `json:"approver_id" validate:"required"`
+	ID          string                                `json:"id" validate:"required"`
+	Status      entity.MPPlaningStatus                `json:"status" validate:"required,MPPlaningStatusValidation"`
+	Notes       string                                `json:"notes" validate:"omitempty"`
+	Level       entity.MPPlanningApprovalHistoryLevel `json:"level" validate:"required,MPPlanningApprovalHistoryLevelValidation"`
+	Attachments []ManpowerAttachmentRequest           `json:"attachments" validate:"omitempty,dive"`
+	ApprovedBy  string                                `json:"approved_by" validate:"required"`
+	ApproverID  uuid.UUID                             `json:"approver_id" validate:"required"`
 	// ApproverName string                      `json:"approved_by_name" validate:"omitempty"`
 }
 

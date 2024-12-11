@@ -128,13 +128,28 @@ func (r *MPPlanningRepository) UpdateStatusHeader(id uuid.UUID, status string, a
 		return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + tx.Error.Error())
 	}
 
-	if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
-		Status:     entity.MPPlaningStatus(status),
-		ApprovedBy: approvedBy,
-	}).Error; err != nil {
-		tx.Rollback()
-		r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
-		return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+	if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelManager) {
+		if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
+			Status:            entity.MPPlaningStatus(status),
+			ApprovedBy:        approvedBy,
+			ApproverManagerID: &approvalHistory.ApproverID,
+			NotesManager:      approvalHistory.Notes,
+		}).Error; err != nil {
+			tx.Rollback()
+			r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+			return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+		}
+	} else {
+		if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
+			Status:                entity.MPPlaningStatus(status),
+			ApprovedBy:            approvedBy,
+			ApproverRecruitmentID: &approvalHistory.ApproverID,
+			NotesRecruitment:      approvalHistory.Notes,
+		}).Error; err != nil {
+			tx.Rollback()
+			r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+			return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+		}
 	}
 
 	if approvalHistory != nil {

@@ -14,6 +14,13 @@ const (
 	MPPlanningApprovalHistoryStatusRejected MPPlanningApprovalHistoryStatus = "Rejected"
 )
 
+type MPPlanningApprovalHistoryLevel string
+
+const (
+	MPPlanningApprovalHistoryLevelManager     MPPlanningApprovalHistoryLevel = "Level Manager"
+	MPPlanningApprovalHistoryLevelRecruitment MPPlanningApprovalHistoryLevel = "Level Recruitment"
+)
+
 type MPPlanningApprovalHistory struct {
 	gorm.Model         `json:"-"`
 	ID                 uuid.UUID                       `json:"id" gorm:"type:char(36);primaryKey;"`
