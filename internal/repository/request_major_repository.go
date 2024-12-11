@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"errors"
+
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/sirupsen/logrus"
@@ -33,6 +35,11 @@ func (r *RequestMajorRepository) Create(requestMajor *entity.RequestMajor) (*ent
 		tx.Rollback()
 		r.Log.Errorf("[RequestMajorRepository.Create] error when commit transaction: %v", err)
 		return nil, err
+	}
+
+	if err := r.DB.Preload("Major").First(requestMajor, requestMajor.ID).Error; err != nil {
+		r.Log.Errorf("[RequestMajorRepository.Create] error when preloading associations: %v", err)
+		return nil, errors.New("[RequestMajorRepository.Create] error when preloading associations " + err.Error())
 	}
 
 	return requestMajor, nil

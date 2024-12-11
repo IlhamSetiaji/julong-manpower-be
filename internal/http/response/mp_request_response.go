@@ -45,9 +45,9 @@ type MPRequestHeaderResponse struct {
 	MPRequestType              entity.MPRequestTypeEnum   `json:"mp_request_type"`
 	RecruitmentType            entity.RecruitmentTypeEnum `json:"recruitment_type"`
 
-	RequestCategory  RequestCategoryResponse  `json:"request_category" gorm:"foreignKey:RequestCategoryID"`
-	RequestMajors    []RequestMajorResponse   `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID"`
-	MPPlanningHeader MPPlanningHeaderResponse `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID"`
+	RequestCategory  map[string]interface{}   `json:"request_category" gorm:"foreignKey:RequestCategoryID"`
+	RequestMajors    []map[string]interface{} `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID"`
+	MPPlanningHeader map[string]interface{}   `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID"`
 
 	OrganizationName         string `json:"organization_name" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`

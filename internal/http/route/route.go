@@ -32,6 +32,7 @@ func (c *RouteConfig) SetupRoutes() {
 	c.SetupMPPlanningRoutes()
 	c.SetupRequestCategoryRoutes()
 	c.SetupMajorRoutes()
+	c.SetupMPRequestRoutes()
 }
 
 func (c *RouteConfig) SetupMPPPeriodRoutes() {

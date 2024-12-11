@@ -1,8 +1,6 @@
 package request
 
 import (
-	"time"
-
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/google/uuid"
 )
@@ -15,22 +13,22 @@ type CreateMPRequestHeaderRequest struct {
 	ForOrganizationStructureID uuid.UUID                  `json:"for_organization_structure_id" validate:"required,uuid"`
 	JobID                      uuid.UUID                  `json:"job_id" validate:"required,uuid"`
 	RequestCategoryID          uuid.UUID                  `json:"request_category_id" validate:"required,uuid"`
-	ExpectedDate               time.Time                  `json:"expected_date" validate:"required"`
+	ExpectedDate               string                     `json:"expected_date" validate:"required"`
 	Experiences                string                     `json:"experiences" validate:"required"`
 	DocumentNumber             string                     `json:"document_number" validate:"required"`
-	DocumentDate               time.Time                  `json:"document_date" validate:"required"`
+	DocumentDate               string                     `json:"document_date" validate:"required"`
 	MaleNeeds                  int                        `json:"male_needs" validate:"required"`
 	FemaleNeeds                int                        `json:"female_needs" validate:"required"`
 	MinimumAge                 int                        `json:"minimum_age" validate:"required"`
 	MaximumAge                 int                        `json:"maximum_age" validate:"required"`
 	MinimumExperience          int                        `json:"minimum_experience" validate:"required"`
-	MaritalStatus              entity.MaritalStatusEnum   `json:"marital_status" validate:"required,MaritalStatusEnumValidation"`
-	MinimumEducation           entity.EducationEnum       `json:"minimum_education" validate:"required,EducationEnumValidation"`
+	MaritalStatus              entity.MaritalStatusEnum   `json:"marital_status" validate:"required,MaritalStatusValidation"`
+	MinimumEducation           entity.EducationEnum       `json:"minimum_education" validate:"required,MinimumEducationValidation"`
 	RequiredQualification      string                     `json:"required_qualification" validate:"required"`
-	Certificate                string                     `json:"certificate" validate:"required"`
-	ComputerSkill              string                     `json:"computer_skill" validate:"required"`
-	LanguageSkill              string                     `json:"language_skill" validate:"required"`
-	OtherSkill                 string                     `json:"other_skill" validate:"required"`
+	Certificate                string                     `json:"certificate" validate:"omitempty"`
+	ComputerSkill              string                     `json:"computer_skill" validate:"omitempty"`
+	LanguageSkill              string                     `json:"language_skill" validate:"omitempty"`
+	OtherSkill                 string                     `json:"other_skill" validate:"omitempty"`
 	Jobdesc                    string                     `json:"jobdesc" validate:"required"`
 	SalaryMin                  string                     `json:"salary_min" validate:"required"`
 	SalaryMax                  string                     `json:"salary_max" validate:"required"`

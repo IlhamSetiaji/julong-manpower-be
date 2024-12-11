@@ -37,6 +37,11 @@ func (r *MPRequestRepository) Create(mpRequestHeader *entity.MPRequestHeader) (*
 		return nil, errors.New("[MPRequestRepository.Create] error when commit transaction " + err.Error())
 	}
 
+	if err := r.DB.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").First(mpRequestHeader, mpRequestHeader.ID).Error; err != nil {
+		r.Log.Errorf("[MPRequestRepository.Create] error when preloading associations: %v", err)
+		return nil, errors.New("[MPRequestRepository.Create] error when preloading associations " + err.Error())
+	}
+
 	return mpRequestHeader, nil
 }
 

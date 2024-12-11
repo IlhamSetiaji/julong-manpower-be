@@ -168,7 +168,7 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 
 	// create request major
 	for _, majorID := range req.MajorIDs {
-		_, err := uc.RequestMajorRepository.Create(&entity.RequestMajor{
+		reqMajor, err := uc.RequestMajorRepository.Create(&entity.RequestMajor{
 			MPRequestHeaderID: mpRequestHeader.ID,
 			MajorID:           majorID,
 		})
@@ -176,7 +176,18 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 			uc.Log.Errorf("[MPRequestUseCase.Create] error when create request major: %v", err)
 			return nil, err
 		}
+
+		mpRequestHeader.RequestMajors = append(mpRequestHeader.RequestMajors, *reqMajor)
 	}
+
+	mpRequestHeader.OrganizationName = orgExist.Name
+	mpRequestHeader.OrganizationLocationName = orgLocExist.Name
+	mpRequestHeader.ForOrganizationName = forOrgExist.Name
+	mpRequestHeader.ForOrganizationLocation = forOrgLocExist.Name
+	mpRequestHeader.ForOrganizationStructure = forOrgStructExist.Name
+	mpRequestHeader.JobName = jobExist.Name
+	mpRequestHeader.RequestorName = requestorExist.Name
+	mpRequestHeader.DepartmentHeadName = deptHeadExist.Name
 
 	return dto.ConvertToResponse(mpRequestHeader), nil
 }
