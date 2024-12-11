@@ -87,7 +87,7 @@ type FindLineByIdMPPlanningLineRequest struct {
 
 type CreateLineMPPlanningLineRequest struct {
 	MPPlanningHeaderID     uuid.UUID `json:"mp_planning_header_id" validate:"required"`
-	OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"required"`
+	OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"omitempty"` // organization_location_id
 	JobLevelID             uuid.UUID `json:"job_level_id" validate:"required"`
 	JobID                  uuid.UUID `json:"job_id" validate:"required"`
 	Existing               int       `json:"existing" validate:"required"`
@@ -109,7 +109,7 @@ type CreateOrUpdateBatchLineMPPlanningLinesRequest struct {
 	MPPlanningHeaderID uuid.UUID `json:"mp_planning_header_id" validate:"required"`
 	MPPlanningLines    []struct {
 		ID                     uuid.UUID `json:"id" validate:"omitempty"`
-		OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"required"`
+		OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"omitempty"` // organization_location_id
 		JobLevelID             uuid.UUID `json:"job_level_id" validate:"required"`
 		JobID                  uuid.UUID `json:"job_id" validate:"required"`
 		Existing               int       `json:"existing" validate:"required"`
@@ -127,7 +127,7 @@ type CreateOrUpdateBatchLineMPPlanningLinesRequest struct {
 type UpdateLineMPPlanningLineRequest struct {
 	ID                     uuid.UUID `json:"id" validate:"required"`
 	MPPlanningHeaderID     uuid.UUID `json:"mp_planning_header_id" validate:"required"`
-	OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"required"`
+	OrganizationLocationID uuid.UUID `json:"organization_location_id" validate:"omitempty"` // organization_location_id
 	JobLevelID             uuid.UUID `json:"job_level_id" validate:"required"`
 	JobID                  uuid.UUID `json:"job_id" validate:"required"`
 	Existing               int       `json:"existing" validate:"required"`

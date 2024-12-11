@@ -1108,19 +1108,21 @@ func (uc *MPPlanningUseCase) FindLineById(req *request.FindLineByIdMPPlanningLin
 }
 
 func (uc *MPPlanningUseCase) CreateLine(req *request.CreateLineMPPlanningLineRequest) (*response.CreateMPPlanningLineResponse, error) {
-	// Check if organization location exist
-	orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-		ID: req.OrganizationLocationID.String(),
-	})
+	if req.OrganizationLocationID != uuid.Nil {
+		// Check if organization location exist
+		orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: req.OrganizationLocationID.String(),
+		})
 
-	if err != nil {
-		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] " + err.Error())
-		return nil, err
-	}
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateLine] " + err.Error())
+			return nil, err
+		}
 
-	if orgLocExist == nil {
-		uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Organization Location not found")
-		return nil, errors.New("Organization Location not found")
+		if orgLocExist == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateLine] Organization Location not found")
+			return nil, errors.New("Organization Location not found")
+		}
 	}
 
 	// Check if job level exist
@@ -1215,19 +1217,21 @@ func (uc *MPPlanningUseCase) CreateLine(req *request.CreateLineMPPlanningLineReq
 }
 
 func (uc *MPPlanningUseCase) UpdateLine(req *request.UpdateLineMPPlanningLineRequest) (*response.UpdateMPPlanningLineResponse, error) {
-	// Check if organization location exist
-	orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-		ID: req.OrganizationLocationID.String(),
-	})
+	if req.OrganizationLocationID != uuid.Nil {
+		// Check if organization location exist
+		orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: req.OrganizationLocationID.String(),
+		})
 
-	if err != nil {
-		uc.Log.Errorf("[MPPlanningUseCase.UpdateLine] " + err.Error())
-		return nil, err
-	}
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.UpdateLine] " + err.Error())
+			return nil, err
+		}
 
-	if orgLocExist == nil {
-		uc.Log.Errorf("[MPPlanningUseCase.UpdateLine] Organization Location not found")
-		return nil, errors.New("Organization Location not found")
+		if orgLocExist == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.UpdateLine] Organization Location not found")
+			return nil, errors.New("Organization Location not found")
+		}
 	}
 
 	// Check if job level exist
@@ -1358,19 +1362,21 @@ func (uc *MPPlanningUseCase) DeleteLine(req *request.DeleteLineMPPlanningLineReq
 
 func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request.CreateOrUpdateBatchLineMPPlanningLinesRequest) error {
 	for _, line := range req.MPPlanningLines {
-		// Check if organization location exist
-		orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-			ID: line.OrganizationLocationID.String(),
-		})
+		if line.OrganizationLocationID != uuid.Nil {
+			// Check if organization location exist
+			orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+				ID: line.OrganizationLocationID.String(),
+			})
 
-		if err != nil {
-			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
-			return err
-		}
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+				return err
+			}
 
-		if orgLocExist == nil {
-			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] Organization Location not found")
-			return errors.New("Organization Location not found")
+			if orgLocExist == nil {
+				uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] Organization Location not found")
+				return errors.New("Organization Location not found")
+			}
 		}
 
 		// Check if job level exist
