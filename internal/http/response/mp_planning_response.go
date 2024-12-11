@@ -8,31 +8,39 @@ import (
 )
 
 type MPPlanningHeaderResponse struct {
-	ID                uuid.UUID              `json:"id"`
-	MPPPeriodID       uuid.UUID              `json:"mpp_period_id"`
-	OrganizationID    *uuid.UUID             `json:"organization_id"`
-	EmpOrganizationID *uuid.UUID             `json:"emp_organization_id"`
-	JobID             *uuid.UUID             `json:"job_id"` // job_id
-	DocumentNumber    string                 `json:"document_number"`
-	DocumentDate      time.Time              `json:"document_date"`
-	Notes             string                 `json:"notes"`
-	TotalRecruit      float64                `json:"total_recruit"`
-	TotalPromote      float64                `json:"total_promote"`
-	Status            entity.MPPlaningStatus `json:"status"`
-	RecommendedBy     string                 `json:"recommended_by"` // free text
-	ApprovedBy        string                 `json:"approved_by"`    // free text
-	RequestorID       *uuid.UUID             `json:"requestor_id"`   // user_id
-	NotesAttach       string                 `json:"notes_attach"`
-	CreatedAt         time.Time              `json:"created_at"`
-	UpdatedAt         time.Time              `json:"updated_at"`
-	DeletedAt         *time.Time             `json:"deleted_at"`
+	ID                     uuid.UUID              `json:"id"`
+	MPPPeriodID            uuid.UUID              `json:"mpp_period_id"`
+	OrganizationID         *uuid.UUID             `json:"organization_id"`
+	EmpOrganizationID      *uuid.UUID             `json:"emp_organization_id"`
+	OrganizationLocationID *uuid.UUID             `json:"organization_location_id"`
+	JobID                  *uuid.UUID             `json:"job_id"` // job_id
+	DocumentNumber         string                 `json:"document_number"`
+	DocumentDate           time.Time              `json:"document_date"`
+	Notes                  string                 `json:"notes"`
+	TotalRecruit           float64                `json:"total_recruit"`
+	TotalPromote           float64                `json:"total_promote"`
+	Status                 entity.MPPlaningStatus `json:"status"`
+	RecommendedBy          string                 `json:"recommended_by"` // free text
+	ApprovedBy             string                 `json:"approved_by"`    // free text
+	RequestorID            *uuid.UUID             `json:"requestor_id"`   // user_id
+	NotesAttach            string                 `json:"notes_attach"`
+	ApproverManagerID      *uuid.UUID             `json:"approver_manager_id"` // user_id
+	NotesManager           string                 `json:"notes_manager"`
+	ApproverRecruitmentID  *uuid.UUID             `json:"approver_recruitment_id"` // user_id
+	NotesRecruitment       string                 `json:"notes_recruitment"`
+	CreatedAt              time.Time              `json:"created_at"`
+	UpdatedAt              time.Time              `json:"updated_at"`
+	DeletedAt              *time.Time             `json:"deleted_at"`
 
-	OrganizationName    string                    `json:"organization_name" gorm:"-"`
-	EmpOrganizationName string                    `json:"emp_organization_name" gorm:"-"`
-	JobName             string                    `json:"job_name" gorm:"-"`
-	RequestorName       string                    `json:"requestor_name" gorm:"-"`
-	MPPPeriod           *MPPeriodResponse         `json:"mpp_period"`
-	MPPlanningLines     []*MPPlanningLineResponse `json:"mp_planning_lines"`
+	OrganizationName         string                    `json:"organization_name" gorm:"-"`
+	EmpOrganizationName      string                    `json:"emp_organization_name" gorm:"-"`
+	JobName                  string                    `json:"job_name" gorm:"-"`
+	RequestorName            string                    `json:"requestor_name" gorm:"-"`
+	OrganizationLocationName string                    `json:"organization_location_name" gorm:"-"`
+	ApproverManagerName      string                    `json:"approver_manager_name" gorm:"-"`
+	ApproverRecruitmentName  string                    `json:"approver_recruitment_name" gorm:"-"`
+	MPPPeriod                *MPPeriodResponse         `json:"mpp_period"`
+	MPPlanningLines          []*MPPlanningLineResponse `json:"mp_planning_lines"`
 }
 
 type FindHeaderByMPPPeriodIdMPPlanningResponse struct {

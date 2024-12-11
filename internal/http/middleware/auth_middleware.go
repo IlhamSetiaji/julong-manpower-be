@@ -6,8 +6,11 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
@@ -52,7 +55,7 @@ func NewAuth(viper *viper.Viper) gin.HandlerFunc {
 	}
 }
 
-func GetUser(c *gin.Context) (jwt.MapClaims, error) {
+func GetUser(c *gin.Context, log *logrus.Logger) (map[string]interface{}, error) {
 	auth, exists := c.Get("auth")
 	if !exists {
 		return nil, errors.New("auth key not found in context")
@@ -63,5 +66,21 @@ func GetUser(c *gin.Context) (jwt.MapClaims, error) {
 		return nil, errors.New("invalid auth claims type")
 	}
 
-	return claims, nil
+	message := messaging.UserMessageFactory(log)
+
+	messageResponse, err := message.SendGetUserMe(request.SendFindUserByIDMessageRequest{
+		ID: claims["id"].(string),
+	})
+
+	if err != nil {
+		log.Errorf("[GetUserMe.Create Message] " + err.Error())
+		return nil, err
+	}
+
+	if messageResponse.User == nil {
+		log.Errorf("[GetUserMe.Create] User not found")
+		return nil, errors.New("User not found")
+	}
+
+	return messageResponse.User, nil
 }

@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
@@ -39,25 +40,28 @@ type IMPPlanningHandler interface {
 }
 
 type MPPlanningHandler struct {
-	Log      *logrus.Logger
-	Viper    *viper.Viper
-	UseCase  usecase.IMPPlanningUseCase
-	Validate *validator.Validate
+	Log        *logrus.Logger
+	Viper      *viper.Viper
+	UseCase    usecase.IMPPlanningUseCase
+	Validate   *validator.Validate
+	UserHelper helper.IUserHelper
 }
 
-func NewMPPlanningHandler(log *logrus.Logger, viper *viper.Viper, useCase usecase.IMPPlanningUseCase, validate *validator.Validate) IMPPlanningHandler {
+func NewMPPlanningHandler(log *logrus.Logger, viper *viper.Viper, useCase usecase.IMPPlanningUseCase, validate *validator.Validate, userHelper helper.IUserHelper) IMPPlanningHandler {
 	return &MPPlanningHandler{
-		Log:      log,
-		Viper:    viper,
-		UseCase:  useCase,
-		Validate: validate,
+		Log:        log,
+		Viper:      viper,
+		UseCase:    useCase,
+		Validate:   validate,
+		UserHelper: userHelper,
 	}
 }
 
 func MPPlanningHandlerFactory(log *logrus.Logger, viper *viper.Viper) IMPPlanningHandler {
 	usecase := usecase.MPPlanningUseCaseFactory(viper, log)
 	validate := config.NewValidator(viper)
-	return NewMPPlanningHandler(log, viper, usecase, validate)
+	userHelper := helper.UserHelperFactory(log)
+	return NewMPPlanningHandler(log, viper, usecase, validate, userHelper)
 }
 
 func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
@@ -93,7 +97,7 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 }
 
 func (h *MPPlanningHandler) FindAllHeadersByRequestorIDPaginated(ctx *gin.Context) {
-	user, err := middleware.GetUser(ctx)
+	user, err := middleware.GetUser(ctx, h.Log)
 	if err != nil {
 		utils.ErrorResponse(ctx, 500, "error", err.Error())
 		h.Log.Errorf("Error when getting user: %v", err)
@@ -201,11 +205,38 @@ func (h *MPPlanningHandler) Create(ctx *gin.Context) {
 		return
 	}
 
+	// Get user information
+	user, err := middleware.GetUser(ctx, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		return
+	}
+
+	// check if organization location exists in user
+	organizationLocationID, err := h.UserHelper.CheckOrganizationLocation(user)
+	if err != nil {
+		h.Log.Errorf("Error when checking organization location: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+
+	if organizationLocationID != payload.OrganizationLocationID {
+		h.Log.Errorf("Organization location ID is not match")
+		utils.ErrorResponse(ctx, 400, "error", "Organization location ID is not match")
+		return
+	}
+
 	// Process uploaded files
 	form, err := ctx.MultipartForm()
 	if err != nil {
-		h.Log.Errorf("[MPPlanningHandler.Create] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		h.Log.Errorf("[MPPlanningHandler.Create] " + err.Error())
 		return
 	}
 
@@ -245,8 +276,8 @@ func (h *MPPlanningHandler) Create(ctx *gin.Context) {
 	// Call use case to create the record
 	resp, err := h.UseCase.Create(payload)
 	if err != nil {
-		h.Log.Errorf("[MPPlanningHandler.Create] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		h.Log.Errorf("[MPPlanningHandler.Create] " + err.Error())
 		return
 	}
 

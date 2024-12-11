@@ -21,6 +21,7 @@ type MPPlanningApprovalHistory struct {
 	ApproverID         uuid.UUID                       `json:"approver_id" gorm:"type:char(36);"`
 	ApproverName       string                          `json:"approver_name" gorm:"type:varchar(255);"`
 	Notes              string                          `json:"notes" gorm:"type:text;"`
+	Level              string                          `json:"level" gorm:"type:varchar(255);"`
 	Status             MPPlanningApprovalHistoryStatus `json:"status" gorm:"not null"`
 
 	MPPlanningHeader    MPPlanningHeader     `gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

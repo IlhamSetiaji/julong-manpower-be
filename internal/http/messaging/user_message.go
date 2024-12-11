@@ -13,6 +13,7 @@ import (
 
 type IUserMessage interface {
 	SendFindUserByIDMessage(request request.SendFindUserByIDMessageRequest) (*response.SendFindUserByIDResponse, error)
+	SendGetUserMe(request request.SendFindUserByIDMessageRequest) (*response.SendGetUserMeResponse, error)
 }
 
 type UserMessage struct {
@@ -65,6 +66,48 @@ func (m *UserMessage) SendFindUserByIDMessage(req request.SendFindUserByIDMessag
 	return &response.SendFindUserByIDResponse{
 		ID:   resp.MessageData["user_id"].(string),
 		Name: resp.MessageData["name"].(string),
+	}, nil
+}
+
+func (m *UserMessage) SendGetUserMe(req request.SendFindUserByIDMessageRequest) (*response.SendGetUserMeResponse, error) {
+	payload := map[string]interface{}{
+		"user_id": req.ID,
+	}
+
+	docMsg := &request.RabbitMQRequest{
+		ID:          uuid.New().String(),
+		MessageType: "get_user_me",
+		MessageData: payload,
+		ReplyTo:     "julong_manpower",
+	}
+
+	log.Printf("INFO: document message: %v", docMsg)
+
+	// create channel and add to rchans with uid
+	rchan := make(chan response.RabbitMQResponse)
+	utils.Rchans[docMsg.ID] = rchan
+
+	// publish rabbit message
+	msg := utils.RabbitMsg{
+		QueueName: "julong_sso",
+		Message:   *docMsg,
+	}
+	utils.Pchan <- msg
+
+	// wait for reply
+	resp, err := waitReply(docMsg.ID, rchan)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("INFO: response: %v", resp)
+
+	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
+		return nil, errors.New("[SendGetUserMe] " + errMsg)
+	}
+
+	return &response.SendGetUserMeResponse{
+		User: resp.MessageData,
 	}, nil
 }
 
