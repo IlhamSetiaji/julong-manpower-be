@@ -26,7 +26,7 @@ type MPRequestHeaderResponse struct {
 	MaximumAge                 int                        `json:"maximum_age"`
 	MinimumExperience          int                        `json:"minimum_experience"`
 	MaritalStatus              entity.MaritalStatusEnum   `json:"marital_status"`
-	MinimumEducation           entity.EducationEnum       `json:"minimum_education"`
+	MinimumEducation           entity.EducationLevelEnum  `json:"minimum_education"`
 	RequiredQualification      string                     `json:"required_qualification"`
 	Certificate                string                     `json:"certificate"`
 	ComputerSkill              string                     `json:"computer_skill"`

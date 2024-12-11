@@ -40,16 +40,37 @@ func main() {
 		log.Fatal(err)
 	}
 
+	budgetDateStart1, err := time.Parse("2006-01-02", "2024-06-01")
+	if err != nil {
+		log.Fatal(err)
+	}
+	budgetDateEnd1, err := time.Parse("2006-01-02", "2025-07-01")
+	if err != nil {
+		log.Fatal(err)
+	}
+	budgetDateStart2, err := time.Parse("2006-01-02", "2023-06-01")
+	if err != nil {
+		log.Fatal(err)
+	}
+	budgetDateEnd2, err := time.Parse("2006-01-02", "2024-07-01")
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	mppPeriods = append(mppPeriods, entity.MPPPeriod{
-		Title:     "MPP Period 1",
-		StartDate: startDate1,
-		EndDate:   endDate1,
-		Status:    entity.MPPeriodStatusOpen,
+		Title:           "MPP Period 1",
+		StartDate:       startDate1,
+		EndDate:         endDate1,
+		BudgetStartDate: budgetDateStart1,
+		BudgetEndDate:   budgetDateEnd1,
+		Status:          entity.MPPeriodStatusOpen,
 	}, entity.MPPPeriod{
-		Title:     "MPP Period 2",
-		StartDate: startDate2,
-		EndDate:   endDate2,
-		Status:    entity.MPPeriodStatusComplete,
+		Title:           "MPP Period 2",
+		StartDate:       startDate2,
+		EndDate:         endDate2,
+		BudgetStartDate: budgetDateStart2,
+		BudgetEndDate:   budgetDateEnd2,
+		Status:          entity.MPPeriodStatusComplete,
 	})
 
 	for _, mppPeriod := range mppPeriods {

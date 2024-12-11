@@ -1,6 +1,8 @@
 package request
 
 import (
+	"time"
+
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/go-playground/validator/v10"
 )
@@ -62,8 +64,10 @@ func MinimumEducationValidation(fl validator.FieldLevel) bool {
 	if status == "" {
 		return true
 	}
-	switch entity.EducationEnum(status) {
-	case entity.EducationEnumSD, entity.EducationEnumSMP, entity.EducationEnumSMA, entity.EducationEnumD3, entity.EducationEnumS1, entity.EducationEnumS2, entity.EducationEnumS3:
+	switch entity.EducationLevelEnum(status) {
+	case entity.EducationLevelEnumD3, entity.EducationLevelEnumD4, entity.EducationLevelEnumSMA,
+		entity.EducationLevelEnumBachelor, entity.EducationLevelEnumDoctoral, entity.EducationLevelEnumMaster, entity.EducationLevelEnumD1, entity.EducationLevelEnumD2,
+		entity.EducationLevelEnumSD, entity.EducationLevelEnumSMP, entity.EducationLevelEnumTK:
 		return true
 	default:
 		return false
@@ -107,6 +111,17 @@ func RecruitmentTypeEnumValidation(fl validator.FieldLevel) bool {
 	default:
 		return false
 	}
+}
+
+func ValidateDateMoreThanEqualToday(fl validator.FieldLevel) bool {
+	startDateStr := fl.Field().String()
+	startDate, err := time.Parse("2006-01-02", startDateStr)
+	if err != nil {
+		return false
+	}
+
+	today := time.Now().Truncate(24 * time.Hour)
+	return !startDate.Before(today)
 }
 
 type RabbitMQRequest struct {

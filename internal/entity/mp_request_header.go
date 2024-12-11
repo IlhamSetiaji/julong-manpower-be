@@ -25,18 +25,6 @@ const (
 	MaritalStatusEnumWidowed  MaritalStatusEnum = "widowed"
 )
 
-type EducationEnum string
-
-const (
-	EducationEnumSD  EducationEnum = "sd"
-	EducationEnumSMP EducationEnum = "smp"
-	EducationEnumSMA EducationEnum = "sma"
-	EducationEnumD3  EducationEnum = "d3"
-	EducationEnumS1  EducationEnum = "s1"
-	EducationEnumS2  EducationEnum = "s2"
-	EducationEnumS3  EducationEnum = "s3"
-)
-
 type MPRequestTypeEnum string
 
 const (
@@ -72,7 +60,7 @@ type MPRequestHeader struct {
 	MaximumAge                 int                 `json:"maximum_age" gorm:"type:int;default:0"`
 	MinimumExperience          int                 `json:"minimum_experience" gorm:"type:int;default:0"`
 	MaritalStatus              MaritalStatusEnum   `json:"marital_status" gorm:"default:'single'not null"`
-	MinimumEducation           EducationEnum       `json:"minimum_education" gorm:"default:'s1';not null"`
+	MinimumEducation           EducationLevelEnum  `json:"minimum_education" gorm:"default:'s1';not null"`
 	RequiredQualification      string              `json:"required_qualification" gorm:"type:text;default:null"`
 	Certificate                string              `json:"certificate" gorm:"type:text;default:null"`
 	ComputerSkill              string              `json:"computer_skill" gorm:"type:text;default:null"`
