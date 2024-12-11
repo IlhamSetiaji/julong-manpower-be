@@ -101,6 +101,40 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}
 		header.RequestorName = messageUserResponse.Name
 
+		// fetch organization location names using RabbitMQ
+		messageOrgLocResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: header.OrganizationLocationID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			return nil, err
+		}
+		header.OrganizationLocationName = messageOrgLocResponse.Name
+
+		if header.ApproverManagerID != nil {
+			// fetch approver manager names using RabbitMQ
+			messageApprManagerResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+				ID: header.ApproverManagerID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+				return nil, err
+			}
+			header.ApproverManagerName = messageApprManagerResponse.Name
+		}
+
+		if header.ApproverRecruitmentID != nil {
+			// fetch approver recruitment names using RabbitMQ
+			messageApprRecruitmentResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+				ID: header.ApproverRecruitmentID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+				return nil, err
+			}
+			header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
+		}
+
 		for i, line := range *&header.MPPlanningLines {
 			// Fetch organization location names using RabbitMQ
 			messageResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
@@ -331,6 +365,40 @@ func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uu
 		}
 		header.RequestorName = messageUserResponse.Name
 
+		// fetch organization location names using RabbitMQ
+		messageOrgLocResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: header.OrganizationLocationID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			return nil, err
+		}
+		header.OrganizationLocationName = messageOrgLocResponse.Name
+
+		if header.ApproverManagerID != nil {
+			// fetch approver manager names using RabbitMQ
+			messageApprManagerResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+				ID: header.ApproverManagerID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+				return nil, err
+			}
+			header.ApproverManagerName = messageApprManagerResponse.Name
+		}
+
+		if header.ApproverRecruitmentID != nil {
+			// fetch approver recruitment names using RabbitMQ
+			messageApprRecruitmentResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+				ID: header.ApproverRecruitmentID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+				return nil, err
+			}
+			header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
+		}
+
 		for i, line := range *&header.MPPlanningLines {
 			// Fetch organization location names using RabbitMQ
 			messageResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
@@ -373,27 +441,34 @@ func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uu
 			var headers []*response.MPPlanningHeaderResponse
 			for _, header := range *mpPlanningHeaders {
 				headers = append(headers, &response.MPPlanningHeaderResponse{
-					ID:                  header.ID,
-					MPPPeriodID:         header.MPPPeriodID,
-					OrganizationID:      header.OrganizationID,
-					EmpOrganizationID:   header.EmpOrganizationID,
-					JobID:               header.JobID,
-					DocumentNumber:      header.DocumentNumber,
-					DocumentDate:        header.DocumentDate,
-					Notes:               header.Notes,
-					TotalRecruit:        header.TotalRecruit,
-					TotalPromote:        header.TotalPromote,
-					Status:              header.Status,
-					RecommendedBy:       header.RecommendedBy,
-					ApprovedBy:          header.ApprovedBy,
-					RequestorID:         header.RequestorID,
-					NotesAttach:         header.NotesAttach,
-					OrganizationName:    header.OrganizationName,
-					EmpOrganizationName: header.EmpOrganizationName,
-					JobName:             header.JobName,
-					RequestorName:       header.RequestorName,
-					CreatedAt:           header.CreatedAt,
-					UpdatedAt:           header.UpdatedAt,
+					ID:                       header.ID,
+					MPPPeriodID:              header.MPPPeriodID,
+					OrganizationID:           header.OrganizationID,
+					EmpOrganizationID:        header.EmpOrganizationID,
+					JobID:                    header.JobID,
+					DocumentNumber:           header.DocumentNumber,
+					DocumentDate:             header.DocumentDate,
+					Notes:                    header.Notes,
+					TotalRecruit:             header.TotalRecruit,
+					TotalPromote:             header.TotalPromote,
+					Status:                   header.Status,
+					RecommendedBy:            header.RecommendedBy,
+					ApprovedBy:               header.ApprovedBy,
+					RequestorID:              header.RequestorID,
+					NotesAttach:              header.NotesAttach,
+					OrganizationName:         header.OrganizationName,
+					EmpOrganizationName:      header.EmpOrganizationName,
+					JobName:                  header.JobName,
+					RequestorName:            header.RequestorName,
+					OrganizationLocationName: header.OrganizationLocationName,
+					ApproverManagerID:        header.ApproverManagerID,
+					ApproverRecruitmentID:    header.ApproverRecruitmentID,
+					NotesManager:             header.NotesManager,
+					NotesRecruitment:         header.NotesRecruitment,
+					ApproverManagerName:      header.ApproverManagerName,
+					ApproverRecruitmentName:  header.ApproverRecruitmentName,
+					CreatedAt:                header.CreatedAt,
+					UpdatedAt:                header.UpdatedAt,
 					MPPPeriod: &response.MPPeriodResponse{
 						ID:        header.MPPPeriod.ID,
 						Title:     header.MPPPeriod.Title,
@@ -730,6 +805,20 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 		return nil, errors.New("Requestor not found")
 	}
 
+	// check if organization location is exist
+	orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+		ID: req.OrganizationLocationID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find organization location by id message: %v", err)
+		return nil, err
+	}
+
+	if orgLocExist == nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] organization location with id %s is not exist", req.OrganizationLocationID.String())
+		return nil, errors.New("organization location is not exist")
+	}
+
 	documentDate, err := time.Parse("2006-01-02", req.DocumentDate)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
@@ -838,6 +927,20 @@ func (uc *MPPlanningUseCase) Update(req *request.UpdateHeaderMPPlanningRequest) 
 		}
 	}
 
+	// check if organization location is exist
+	orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+		ID: req.OrganizationLocationID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find organization location by id message: %v", err)
+		return nil, err
+	}
+
+	if orgLocExist == nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] organization location with id %s is not exist", req.OrganizationLocationID.String())
+		return nil, errors.New("organization location is not exist")
+	}
+
 	documentDate, err := time.Parse("2006-01-02", req.DocumentDate)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Update] " + err.Error())
@@ -845,21 +948,22 @@ func (uc *MPPlanningUseCase) Update(req *request.UpdateHeaderMPPlanningRequest) 
 	}
 
 	mpPlanningHeader, err := uc.MPPlanningRepository.UpdateHeader(&entity.MPPlanningHeader{
-		ID:                req.ID,
-		MPPPeriodID:       req.MPPPeriodID,
-		OrganizationID:    &req.OrganizationID,
-		EmpOrganizationID: &req.EmpOrganizationID,
-		JobID:             &req.JobID,
-		DocumentNumber:    req.DocumentNumber,
-		DocumentDate:      documentDate,
-		Notes:             req.Notes,
-		TotalRecruit:      req.TotalRecruit,
-		TotalPromote:      req.TotalPromote,
-		Status:            req.Status,
-		RecommendedBy:     req.RecommendedBy,
-		ApprovedBy:        req.ApprovedBy,
-		RequestorID:       &req.RequestorID,
-		NotesAttach:       req.NotesAttach,
+		ID:                     req.ID,
+		MPPPeriodID:            req.MPPPeriodID,
+		OrganizationID:         &req.OrganizationID,
+		EmpOrganizationID:      &req.EmpOrganizationID,
+		OrganizationLocationID: &req.OrganizationLocationID,
+		JobID:                  &req.JobID,
+		DocumentNumber:         req.DocumentNumber,
+		DocumentDate:           documentDate,
+		Notes:                  req.Notes,
+		TotalRecruit:           req.TotalRecruit,
+		TotalPromote:           req.TotalPromote,
+		Status:                 req.Status,
+		RecommendedBy:          req.RecommendedBy,
+		ApprovedBy:             req.ApprovedBy,
+		RequestorID:            &req.RequestorID,
+		NotesAttach:            req.NotesAttach,
 	})
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Update] " + err.Error())

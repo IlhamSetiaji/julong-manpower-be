@@ -130,7 +130,28 @@ func (h *MPPlanningHandler) FindAllHeadersByRequestorIDPaginated(ctx *gin.Contex
 		Search:   search,
 	}
 
-	resp, err := h.UseCase.FindAllHeadersByRequestorIDPaginated(uuid.MustParse(user["id"].(string)), &req)
+	userData, ok := user["user"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("User information is missing or invalid")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "User information is missing or invalid")
+		return
+	}
+
+	userID, ok := userData["id"].(string)
+	if !ok {
+		h.Log.Errorf("[MPPlanningHandler.FindAllHeadersByRequestorIDPaginated] User ID is missing or invalid")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "User ID is missing or invalid")
+		return
+	}
+
+	requestorID, err := uuid.Parse(userID)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.FindAllHeadersByRequestorIDPaginated] Invalid User ID format: %v", err)
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "Invalid User ID format")
+		return
+	}
+
+	resp, err := h.UseCase.FindAllHeadersByRequestorIDPaginated(requestorID, &req)
 	if err != nil {
 		h.Log.Errorf("[MPPlanningHandler.FindAllHeadersByRequestorIDPaginated] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
@@ -393,6 +414,33 @@ func (h *MPPlanningHandler) Update(ctx *gin.Context) {
 	if err := h.Validate.Struct(payload); err != nil {
 		h.Log.Errorf("[MPPlanningHandler.Update] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	// Get user information
+	user, err := middleware.GetUser(ctx, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		return
+	}
+
+	// check if organization location exists in user
+	organizationLocationID, err := h.UserHelper.CheckOrganizationLocation(user)
+	if err != nil {
+		h.Log.Errorf("Error when checking organization location: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+
+	if organizationLocationID != payload.OrganizationLocationID {
+		h.Log.Errorf("Organization location ID is not match")
+		utils.ErrorResponse(ctx, 400, "error", "Organization location ID is not match")
 		return
 	}
 
