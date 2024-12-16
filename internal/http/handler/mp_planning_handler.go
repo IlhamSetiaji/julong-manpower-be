@@ -31,6 +31,7 @@ type IMPPlanningHandler interface {
 	Delete(ctx *gin.Context)
 	UpdateStatusMPPPlanningHeader(ctx *gin.Context)
 	GetPlanningApprovalHistoryByHeaderId(ctx *gin.Context)
+	GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(ctx *gin.Context)
 	FindHeaderByMPPPeriodId(ctx *gin.Context)
 	FindAllLinesByHeaderIdPaginated(ctx *gin.Context)
 	FindLineById(ctx *gin.Context)
@@ -404,6 +405,24 @@ func (h *MPPlanningHandler) GetPlanningApprovalHistoryByHeaderId(ctx *gin.Contex
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "get planning approval history by header id success", resp)
+}
+
+func (h *MPPlanningHandler) GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(ctx *gin.Context) {
+	approvalHistoryId := ctx.Param("approval_history_id")
+
+	if approvalHistoryId == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "approval_history_id is required")
+		return
+	}
+
+	resp, err := h.UseCase.GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(uuid.MustParse(approvalHistoryId))
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "get planning approval history attachments by approval history id success", resp)
 }
 
 func (h *MPPlanningHandler) Update(ctx *gin.Context) {

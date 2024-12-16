@@ -53,6 +53,7 @@ type MPPlanningApprovalHistoryResponse struct {
 	Status             entity.MPPlanningApprovalHistoryStatus `json:"status"`
 	CreatedAt          time.Time                              `json:"created_at"`
 	UpdatedAt          time.Time                              `json:"updated_at"`
+	Attachments        []*ManpowerAttachmentResponse          `json:"attachments"`
 }
 
 type FindHeaderByMPPPeriodIdMPPlanningResponse struct {
@@ -213,6 +214,7 @@ type CreateMPPlanningLineResponse struct {
 }
 
 type ManpowerAttachmentResponse struct {
+	ID       string `json:"id,omitempty"`
 	FileName string `json:"file_name" validate:"required"`
 	FilePath string `json:"file_path" validate:"required"`
 	FileType string `json:"file_type" validate:"required"`

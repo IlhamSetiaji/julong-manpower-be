@@ -21,6 +21,7 @@ type IMPPlanningRepository interface {
 	StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPPlanningApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPPlanningApprovalHistory, error)
 	GetPlanningApprovalHistoryByHeaderId(headerId uuid.UUID) (*[]entity.MPPlanningApprovalHistory, error)
+	GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryId uuid.UUID) (*[]entity.ManpowerAttachment, error)
 	DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error)
 	DeleteHeader(id uuid.UUID) error
 	FindHeaderByMPPPeriodId(mppPeriodId uuid.UUID) (*entity.MPPlanningHeader, error)
@@ -277,6 +278,22 @@ func (r *MPPlanningRepository) GetPlanningApprovalHistoryByHeaderId(headerId uui
 	}
 
 	return &mppApprovalHistories, nil
+}
+
+func (r *MPPlanningRepository) GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryId uuid.UUID) (*[]entity.ManpowerAttachment, error) {
+	var attachments []entity.ManpowerAttachment
+
+	if err := r.DB.Where("owner_id = ? AND owner_type = ?", approvalHistoryId, "mp_planning_approval_histories").Find(&attachments).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId] " + err.Error())
+		}
+	}
+
+	return &attachments, nil
 }
 
 func (r *MPPlanningRepository) DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error) {

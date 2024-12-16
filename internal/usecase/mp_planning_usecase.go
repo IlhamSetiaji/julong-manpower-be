@@ -23,6 +23,7 @@ type IMPPlanningUseCase interface {
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
 	GetPlanningApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPPlanningApprovalHistoryResponse, error)
+	GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryID uuid.UUID) ([]*response.ManpowerAttachmentResponse, error)
 	Create(request *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error)
 	Update(request *request.UpdateHeaderMPPlanningRequest) (*response.UpdateMPPlanningResponse, error)
 	Delete(request *request.DeleteHeaderMPPlanningRequest) error
@@ -330,7 +331,21 @@ func (uc *MPPlanningUseCase) GetPlanningApprovalHistoryByHeaderId(headerID uuid.
 		return nil, nil
 	}
 
-	return dto.ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories), nil
+	return dto.ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories, uc.Viper), nil
+}
+
+func (uc *MPPlanningUseCase) GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryID uuid.UUID) ([]*response.ManpowerAttachmentResponse, error) {
+	attachments, err := uc.MPPlanningRepository.GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId] " + err.Error())
+		return nil, err
+	}
+
+	if attachments == nil {
+		return nil, nil
+	}
+
+	return dto.ConvertManpowerAttachmentsToResponse(attachments, uc.Viper), nil
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error) {
