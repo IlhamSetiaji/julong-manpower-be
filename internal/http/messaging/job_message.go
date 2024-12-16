@@ -1,6 +1,7 @@
 package messaging
 
 import (
+	"errors"
 	"log"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/dto"
@@ -57,6 +58,10 @@ func (m *JobMessage) SendFindJobDataByIdMessage(req request.SendFindJobByIDMessa
 	}
 
 	log.Printf("INFO: response: %v", resp.MessageData["job"])
+
+	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
+		return nil, errors.New("[SendFindJobDataByIdMessage] " + errMsg)
+	}
 
 	jobData := resp.MessageData["job"].(map[string]interface{})
 	return dto.ConvertInterfaceToJobResponse(jobData), nil
