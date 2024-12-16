@@ -12,6 +12,8 @@ type JobPlafon struct {
 	ID         uuid.UUID  `json:"id" gorm:"type:char(36);primaryKey;"`
 	JobID      *uuid.UUID `json:"job_id" gorm:"type:char(36);not null;unique"`
 	Plafon     int        `json:"plafon" gorm:"type:int;default:0"`
+
+	JobName string `json:"job_name" gorm:"-"`
 }
 
 func (m *JobPlafon) BeforeCreate(tx *gorm.DB) (err error) {

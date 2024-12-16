@@ -35,11 +35,26 @@ func NewJobPlafonUseCase(log *logrus.Logger, repo repository.IJobPlafonRepositor
 	}
 }
 
-func (uc *JobPlafonUseCase) FindAllPaginated(request *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, error) {
-	jobPlafons, total, err := uc.JobPlafonRepository.FindAllPaginated(request.Page, request.PageSize, request.Search)
+func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, error) {
+	jobPlafons, total, err := uc.JobPlafonRepository.FindAllPaginated(req.Page, req.PageSize, req.Search)
 	if err != nil {
 		uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated] " + err.Error())
 		return nil, err
+	}
+
+	for i, jobPlafon := range *jobPlafons {
+		messageResponse, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+			ID: jobPlafon.JobID.String(),
+		})
+
+		if err != nil {
+			uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated Message] " + err.Error())
+			return nil, err
+		}
+
+		jobPlafon.JobName = messageResponse.Name
+
+		(*jobPlafons)[i] = jobPlafon
 	}
 
 	return &response.FindAllPaginatedJobPlafonResponse{
