@@ -70,6 +70,18 @@ func (uc *MPPPeriodUseCase) Create(req request.CreateMPPPeriodRequest) (*respons
 		return nil, err
 	}
 
+	budgetStartDate, err := time.Parse("2006-01-02", req.BudgetStartDate)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	budgetEndDate, err := time.Parse("2006-01-02", req.BudgetEndDate)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
 	periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
 	if err != nil {
 		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
@@ -82,10 +94,12 @@ func (uc *MPPPeriodUseCase) Create(req request.CreateMPPPeriodRequest) (*respons
 	}
 
 	mppPeriodEntity := &entity.MPPPeriod{
-		Title:     req.Title,
-		StartDate: startDate,
-		EndDate:   endDate,
-		Status:    req.Status,
+		Title:           req.Title,
+		StartDate:       startDate,
+		EndDate:         endDate,
+		BudgetStartDate: budgetStartDate,
+		BudgetEndDate:   budgetEndDate,
+		Status:          req.Status,
 	}
 
 	mppPeriod, err := uc.MPPPeriodRepository.Create(mppPeriodEntity)
