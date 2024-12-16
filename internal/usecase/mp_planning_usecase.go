@@ -43,9 +43,10 @@ type MPPlanningUseCase struct {
 	OrganizationMessage  messaging.IOrganizationMessage
 	JobPlafonMessage     messaging.IJobPlafonMessage
 	UserMessage          messaging.IUserMessage
+	EmployeeMessage      messaging.IEmployeeMessage
 }
 
-func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage) IMPPlanningUseCase {
+func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage) IMPPlanningUseCase {
 	return &MPPlanningUseCase{
 		Viper:                viper,
 		Log:                  log,
@@ -53,6 +54,7 @@ func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repositor
 		OrganizationMessage:  message,
 		JobPlafonMessage:     jpm,
 		UserMessage:          um,
+		EmployeeMessage:      em,
 	}
 }
 
@@ -90,19 +92,31 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-			return nil, err
+			// return nil, err
+			header.JobName = ""
+		} else {
+			header.JobName = messageJobResposne.Name
 		}
-		header.JobName = messageJobResposne.Name
 
 		// Fetch requestor names using RabbitMQ
-		messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+		// messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+		// 	ID: header.RequestorID.String(),
+		// })
+		// if err != nil {
+		// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+		// 	return nil, err
+		// }
+		// header.RequestorName = messageUserResponse.Name
+		messageEmployeeResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 			ID: header.RequestorID.String(),
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-			return nil, err
+			// return nil, err
+			header.RequestorName = ""
+		} else {
+			header.RequestorName = messageEmployeeResponse.Name
 		}
-		header.RequestorName = messageUserResponse.Name
 
 		// fetch organization location names using RabbitMQ
 		messageOrgLocResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
@@ -116,26 +130,46 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 
 		if header.ApproverManagerID != nil {
 			// fetch approver manager names using RabbitMQ
-			messageApprManagerResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// messageApprManagerResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// 	ID: header.ApproverManagerID.String(),
+			// })
+			// if err != nil {
+			// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			// 	return nil, err
+			// }
+			// header.ApproverManagerName = messageApprManagerResponse.Name
+			messageApprManagerResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 				ID: header.ApproverManagerID.String(),
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-				return nil, err
+				// return nil, err
+				header.ApproverManagerName = ""
+			} else {
+				header.ApproverManagerName = messageApprManagerResponse.Name
 			}
-			header.ApproverManagerName = messageApprManagerResponse.Name
 		}
 
 		if header.ApproverRecruitmentID != nil {
 			// fetch approver recruitment names using RabbitMQ
-			messageApprRecruitmentResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// messageApprRecruitmentResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// 	ID: header.ApproverRecruitmentID.String(),
+			// })
+			// if err != nil {
+			// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			// 	return nil, err
+			// }
+			// header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
+			messageApprRecruitmentResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 				ID: header.ApproverRecruitmentID.String(),
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-				return nil, err
+				// return nil, err
+				header.ApproverRecruitmentName = ""
+			} else {
+				header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
 			}
-			header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
 		}
 
 		for i, line := range *&header.MPPlanningLines {
@@ -264,22 +298,33 @@ func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateSta
 		return errors.New("MP Planning Header not found")
 	}
 
-	messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// 	ID: req.ApproverID.String(),
+	// })
+	// if err != nil {
+	// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByRequestorIDPaginated Message] " + err.Error())
+	// 	return err
+	// }
+	// if messageUserResponse == nil {
+	// 	uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] User not found")
+	// 	return errors.New("User not found")
+	// }
+	messageEmployeeResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 		ID: req.ApproverID.String(),
 	})
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByRequestorIDPaginated Message] " + err.Error())
 		return err
 	}
-	if messageUserResponse == nil {
-		uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] User not found")
-		return errors.New("User not found")
+	if messageEmployeeResponse == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] Employee not found")
+		return errors.New("Employee not found")
 	}
 
 	approvalHistory := &entity.MPPlanningApprovalHistory{
 		MPPlanningHeaderID: uuid.MustParse(req.ID),
 		ApproverID:         req.ApproverID,
-		ApproverName:       messageUserResponse.Name,
+		ApproverName:       messageEmployeeResponse.Name,
 		Notes:              req.Notes,
 		Level:              string(req.Level),
 		Status: func() entity.MPPlanningApprovalHistoryStatus {
@@ -390,14 +435,24 @@ func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uu
 		header.JobName = messageJobResposne.Name
 
 		// Fetch requestor names using RabbitMQ
-		messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+		// messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+		// 	ID: header.RequestorID.String(),
+		// })
+		// if err != nil {
+		// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByRequestorIDPaginated Message] " + err.Error())
+		// 	return nil, err
+		// }
+		// header.RequestorName = messageUserResponse.Name
+		messageEmployeeResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 			ID: header.RequestorID.String(),
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByRequestorIDPaginated Message] " + err.Error())
-			return nil, err
+			// return nil,
+			header.RequestorName = ""
+		} else {
+			header.RequestorName = messageEmployeeResponse.Name
 		}
-		header.RequestorName = messageUserResponse.Name
 
 		// fetch organization location names using RabbitMQ
 		messageOrgLocResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
@@ -411,26 +466,46 @@ func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uu
 
 		if header.ApproverManagerID != nil {
 			// fetch approver manager names using RabbitMQ
-			messageApprManagerResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// messageApprManagerResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// 	ID: header.ApproverManagerID.String(),
+			// })
+			// if err != nil {
+			// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			// 	return nil, err
+			// }
+			// header.ApproverManagerName = messageApprManagerResponse.Name
+			messageApprManagerResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 				ID: header.ApproverManagerID.String(),
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-				return nil, err
+				// return nil, err
+				header.ApproverManagerName = ""
+			} else {
+				header.ApproverManagerName = messageApprManagerResponse.Name
 			}
-			header.ApproverManagerName = messageApprManagerResponse.Name
 		}
 
 		if header.ApproverRecruitmentID != nil {
 			// fetch approver recruitment names using RabbitMQ
-			messageApprRecruitmentResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// messageApprRecruitmentResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			// 	ID: header.ApproverRecruitmentID.String(),
+			// })
+			// if err != nil {
+			// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			// 	return nil, err
+			// }
+			// header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
+			messageApprRecruitmentResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 				ID: header.ApproverRecruitmentID.String(),
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-				return nil, err
+				// return nil, err
+				header.ApproverRecruitmentName = ""
+			} else {
+				header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
 			}
-			header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
 		}
 
 		for i, line := range *&header.MPPlanningLines {
@@ -601,14 +676,24 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 	mpPlanningHeader.JobName = messageJobResposne.Name
 
 	// Fetch requestor names using RabbitMQ
-	messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// 	ID: mpPlanningHeader.RequestorID.String(),
+	// })
+	// if err != nil {
+	// 	uc.Log.Errorf("[MPPlanningUseCase.FindById Message] " + err.Error())
+	// 	return nil, err
+	// }
+	// mpPlanningHeader.RequestorName = messageUserResponse.Name
+	messageEmployeeResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 		ID: mpPlanningHeader.RequestorID.String(),
 	})
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindById Message] " + err.Error())
-		return nil, err
+		// return nil, err
+		mpPlanningHeader.RequestorName = ""
+	} else {
+		mpPlanningHeader.RequestorName = messageEmployeeResponse.Name
 	}
-	mpPlanningHeader.RequestorName = messageUserResponse.Name
 
 	for i, line := range *&mpPlanningHeader.MPPlanningLines {
 		// Fetch organization location names using RabbitMQ
@@ -745,12 +830,22 @@ func (uc *MPPlanningUseCase) FindHeaderByMPPPeriodId(req *request.FindHeaderByMP
 	mpPlanningHeader.JobName = messageJobResposne.Name
 
 	// Fetch requestor names using RabbitMQ
-	messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// 	ID: mpPlanningHeader.RequestorID.String(),
+	// })
+	// if err != nil {
+	// 	uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId Message] " + err.Error())
+	// 	return nil, err
+	// }
+	messageEmployeeResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 		ID: mpPlanningHeader.RequestorID.String(),
 	})
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderByMPPPeriodId Message] " + err.Error())
-		return nil, err
+		// return nil, err
+		mpPlanningHeader.RequestorName = ""
+	} else {
+		mpPlanningHeader.RequestorName = messageEmployeeResponse.Name
 	}
 
 	return &response.FindHeaderByMPPPeriodIdMPPlanningResponse{
@@ -772,7 +867,7 @@ func (uc *MPPlanningUseCase) FindHeaderByMPPPeriodId(req *request.FindHeaderByMP
 		OrganizationName:    mpPlanningHeader.OrganizationName,
 		EmpOrganizationName: mpPlanningHeader.EmpOrganizationName,
 		JobName:             mpPlanningHeader.JobName,
-		RequestorName:       messageUserResponse.Name,
+		RequestorName:       messageEmployeeResponse.Name,
 		CreatedAt:           mpPlanningHeader.CreatedAt,
 		UpdatedAt:           mpPlanningHeader.UpdatedAt,
 	}, nil
@@ -825,7 +920,20 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 	}
 
 	// Check if requestor exist
-	requestorExist, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// requestorExist, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// 	ID: req.RequestorID.String(),
+	// })
+
+	// if err != nil {
+	// 	uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
+	// 	return nil, err
+	// }
+
+	// if requestorExist == nil {
+	// 	uc.Log.Errorf("[MPPlanningUseCase.Create] Requestor not found")
+	// 	return nil, errors.New("Requestor not found")
+	// }
+	requestorExist, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 		ID: req.RequestorID.String(),
 	})
 
@@ -1524,5 +1632,6 @@ func MPPlanningUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPPlannin
 	message := messaging.OrganizationMessageFactory(log)
 	jpm := messaging.JobPlafonMessageFactory(log)
 	um := messaging.UserMessageFactory(log)
-	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um)
+	em := messaging.EmployeeMessageFactory(log)
+	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em)
 }
