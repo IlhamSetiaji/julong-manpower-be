@@ -25,13 +25,15 @@ type JobPlafonUseCase struct {
 	Log                 *logrus.Logger
 	JobPlafonRepository repository.IJobPlafonRepository
 	JobPlafonMessage    messaging.IJobPlafonMessage
+	JobMessage          messaging.IJobMessage
 }
 
-func NewJobPlafonUseCase(log *logrus.Logger, repo repository.IJobPlafonRepository, message messaging.IJobPlafonMessage) IJobPlafonUseCase {
+func NewJobPlafonUseCase(log *logrus.Logger, repo repository.IJobPlafonRepository, message messaging.IJobPlafonMessage, jm messaging.IJobMessage) IJobPlafonUseCase {
 	return &JobPlafonUseCase{
 		Log:                 log,
 		JobPlafonRepository: repo,
 		JobPlafonMessage:    message,
+		JobMessage:          jm,
 	}
 }
 
@@ -43,7 +45,17 @@ func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPla
 	}
 
 	for i, jobPlafon := range *jobPlafons {
-		messageResponse, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+		// messageResponse, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+		// 	ID: jobPlafon.JobID.String(),
+		// })
+
+		// if err != nil {
+		// 	uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated Message] " + err.Error())
+		// 	return nil, err
+		// }
+
+		// jobPlafon.JobName = messageResponse.Name
+		messageResponse, err := uc.JobMessage.SendFindJobDataByIdMessage(request.SendFindJobByIDMessageRequest{
 			ID: jobPlafon.JobID.String(),
 		})
 
@@ -53,6 +65,7 @@ func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPla
 		}
 
 		jobPlafon.JobName = messageResponse.Name
+		jobPlafon.OrganizationName = messageResponse.OrganizationName
 
 		(*jobPlafons)[i] = jobPlafon
 	}
@@ -188,5 +201,6 @@ func (uc *JobPlafonUseCase) Delete(request *request.DeleteJobPlafonRequest) erro
 func JobPlafonUseCaseFactory(log *logrus.Logger) IJobPlafonUseCase {
 	repo := repository.JobPlafonRepositoryFactory(log)
 	message := messaging.JobPlafonMessageFactory(log)
-	return NewJobPlafonUseCase(log, repo, message)
+	jm := messaging.JobMessageFactory(log)
+	return NewJobPlafonUseCase(log, repo, message, jm)
 }
