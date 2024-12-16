@@ -20,6 +20,7 @@ type IMPPlanningRepository interface {
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPPlanningApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPPlanningApprovalHistory, error)
+	GetPlanningApprovalHistoryByHeaderId(headerId uuid.UUID) (*[]entity.MPPlanningApprovalHistory, error)
 	DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error)
 	DeleteHeader(id uuid.UUID) error
 	FindHeaderByMPPPeriodId(mppPeriodId uuid.UUID) (*entity.MPPlanningHeader, error)
@@ -260,6 +261,22 @@ func (r *MPPlanningRepository) StoreAttachmentToApprovalHistory(mppApprovalHisto
 	}
 
 	return mppApprovalHistory, nil
+}
+
+func (r *MPPlanningRepository) GetPlanningApprovalHistoryByHeaderId(headerId uuid.UUID) (*[]entity.MPPlanningApprovalHistory, error) {
+	var mppApprovalHistories []entity.MPPlanningApprovalHistory
+
+	if err := r.DB.Preload("ManpowerAttachments").Where("mp_planning_header_id = ?", headerId).Find(&mppApprovalHistories).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.GetPlanningApprovalHistoryByHeaderId] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.GetPlanningApprovalHistoryByHeaderId] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.GetPlanningApprovalHistoryByHeaderId] " + err.Error())
+		}
+	}
+
+	return &mppApprovalHistories, nil
 }
 
 func (r *MPPlanningRepository) DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error) {

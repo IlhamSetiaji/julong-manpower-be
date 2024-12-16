@@ -109,6 +109,18 @@ func (uc *JobPlafonUseCase) FindByJobId(payload *request.FindByJobIdJobPlafonReq
 		return nil, err
 	}
 
+	jobResponse, err := uc.JobMessage.SendFindJobDataByIdMessage(request.SendFindJobByIDMessageRequest{
+		ID: jobPlafon.JobID.String(),
+	})
+
+	if err != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated Message] " + err.Error())
+		return nil, err
+	}
+
+	jobPlafon.JobName = jobResponse.Name
+	jobPlafon.OrganizationName = jobResponse.OrganizationName
+
 	return &response.FindByJobIdJobPlafonResponse{
 		JobPlafon: jobPlafon,
 	}, nil
