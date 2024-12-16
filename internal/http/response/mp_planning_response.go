@@ -43,6 +43,18 @@ type MPPlanningHeaderResponse struct {
 	MPPlanningLines          []*MPPlanningLineResponse `json:"mp_planning_lines"`
 }
 
+type MPPlanningApprovalHistoryResponse struct {
+	ID                 uuid.UUID                              `json:"id"`
+	MPPlanningHeaderID uuid.UUID                              `json:"mp_planning_header_id"`
+	ApproverID         uuid.UUID                              `json:"approver_id"`
+	ApproverName       string                                 `json:"approver_name"`
+	Notes              string                                 `json:"notes"`
+	Level              string                                 `json:"level"`
+	Status             entity.MPPlanningApprovalHistoryStatus `json:"status"`
+	CreatedAt          time.Time                              `json:"created_at"`
+	UpdatedAt          time.Time                              `json:"updated_at"`
+}
+
 type FindHeaderByMPPPeriodIdMPPlanningResponse struct {
 	ID                uuid.UUID              `json:"id"`
 	MPPPeriodID       uuid.UUID              `json:"mpp_period_id"`

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/dto"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
@@ -21,6 +22,7 @@ type IMPPlanningUseCase interface {
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
+	GetPlanningApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPPlanningApprovalHistoryResponse, error)
 	Create(request *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error)
 	Update(request *request.UpdateHeaderMPPlanningRequest) (*response.UpdateMPPlanningResponse, error)
 	Delete(request *request.DeleteHeaderMPPlanningRequest) error
@@ -315,6 +317,20 @@ func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateSta
 	}
 
 	return nil
+}
+
+func (uc *MPPlanningUseCase) GetPlanningApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPPlanningApprovalHistoryResponse, error) {
+	approvalHistories, err := uc.MPPlanningRepository.GetPlanningApprovalHistoryByHeaderId(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.GetPlanningApprovalHistoryByHeaderId] " + err.Error())
+		return nil, err
+	}
+
+	if approvalHistories == nil {
+		return nil, nil
+	}
+
+	return dto.ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories), nil
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error) {
