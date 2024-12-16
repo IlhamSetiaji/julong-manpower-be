@@ -44,7 +44,7 @@ type CreateHeaderMPPlanningRequest struct {
 	TotalRecruit           float64                     `json:"total_recruit" validate:"omitempty"`
 	TotalPromote           float64                     `json:"total_promote" validate:"omitempty"`
 	Status                 entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
-	RecommendedBy          string                      `json:"recommended_by" validate:"required"`
+	RecommendedBy          string                      `json:"recommended_by" validate:"omitempty"`
 	ApprovedBy             string                      `json:"approved_by" validate:"omitempty"`
 	RequestorID            uuid.UUID                   `json:"requestor_id" validate:"required"`
 	NotesAttach            string                      `json:"notes_attach" validate:"omitempty"`
@@ -61,10 +61,10 @@ type UpdateHeaderMPPlanningRequest struct {
 	DocumentNumber         string                      `json:"document_number" validate:"required"`
 	DocumentDate           string                      `json:"document_date" validate:"required,datetime=2006-01-02"`
 	Notes                  string                      `json:"notes" validate:"omitempty"`
-	TotalRecruit           float64                     `json:"total_recruit" validate:"required"`
-	TotalPromote           float64                     `json:"total_promote" validate:"required"`
+	TotalRecruit           float64                     `json:"total_recruit" validate:"omitempty"`
+	TotalPromote           float64                     `json:"total_promote" validate:"omitempty"`
 	Status                 entity.MPPlaningStatus      `json:"status" validate:"required,MPPlaningStatusValidation"`
-	RecommendedBy          string                      `json:"recommended_by" validate:"required"`
+	RecommendedBy          string                      `json:"recommended_by" validate:"omitempty"`
 	ApprovedBy             string                      `json:"approved_by" validate:"omitempty"`
 	RequestorID            uuid.UUID                   `json:"requestor_id" validate:"required"`
 	NotesAttach            string                      `json:"notes_attach" validate:"omitempty"`
