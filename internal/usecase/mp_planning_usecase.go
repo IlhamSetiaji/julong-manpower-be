@@ -145,9 +145,11 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
-				return nil, err
+				// return nil, err
+				line.OrganizationLocationName = ""
+			} else {
+				line.OrganizationLocationName = messageResponse.Name
 			}
-			line.OrganizationLocationName = messageResponse.Name
 
 			// Fetch job level names using RabbitMQ
 			message2Response, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
