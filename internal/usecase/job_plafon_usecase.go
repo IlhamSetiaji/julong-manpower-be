@@ -76,12 +76,26 @@ func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPla
 	}, nil
 }
 
-func (uc *JobPlafonUseCase) FindById(request *request.FindByIdJobPlafonRequest) (*response.FindByIdJobPlafonResponse, error) {
-	jobPlafon, err := uc.JobPlafonRepository.FindById(uuid.MustParse(request.ID))
+func (uc *JobPlafonUseCase) FindById(req *request.FindByIdJobPlafonRequest) (*response.FindByIdJobPlafonResponse, error) {
+	jobPlafon, err := uc.JobPlafonRepository.FindById(uuid.MustParse(req.ID))
 	if err != nil {
 		uc.Log.Errorf("[JobPlafonUseCase.FindById] " + err.Error())
 		return nil, err
 	}
+
+	jobResponse, err := uc.JobMessage.SendFindJobDataByIdMessage(request.SendFindJobByIDMessageRequest{
+		ID: jobPlafon.JobID.String(),
+	})
+
+	if err != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated Message] " + err.Error())
+		return nil, err
+	}
+
+	uc.Log.Infof("jobResponse: %+v", jobResponse.Name)
+
+	jobPlafon.JobName = jobResponse.Name
+	jobPlafon.OrganizationName = jobResponse.OrganizationName
 
 	return &response.FindByIdJobPlafonResponse{
 		JobPlafon: jobPlafon,
@@ -117,6 +131,8 @@ func (uc *JobPlafonUseCase) FindByJobId(payload *request.FindByJobIdJobPlafonReq
 		uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated Message] " + err.Error())
 		return nil, err
 	}
+
+	uc.Log.Infof("jobResponse: %+v", jobResponse.Name)
 
 	jobPlafon.JobName = jobResponse.Name
 	jobPlafon.OrganizationName = jobResponse.OrganizationName
