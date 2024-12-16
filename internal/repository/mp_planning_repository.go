@@ -52,14 +52,15 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 		query = query.Where("name LIKE ?", "%"+search+"%")
 	}
 
+	countQuery := query.Session(&gorm.Session{})
+	if err := countQuery.Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
+	}
+
 	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppHeaders).Error; err != nil {
 		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated - pagination side] " + err.Error())
 		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated - pagination side] " + err.Error())
-	}
-
-	if err := query.Count(&total).Error; err != nil {
-		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
-		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
 	}
 
 	return &mppHeaders, total, nil
