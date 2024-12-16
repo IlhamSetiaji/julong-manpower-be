@@ -13,7 +13,7 @@ func MPPPeriodStatusValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.MPPPeriodStatus(status) {
-	case entity.MPPeriodStatusOpen, entity.MPPeriodStatusComplete, entity.MPPeriodStatusClose:
+	case entity.MPPeriodStatusOpen, entity.MPPeriodStatusComplete, entity.MPPeriodStatusClose, entity.MPPPeriodStatusDraft, entity.MPPeriodStatusNotOpen:
 		return true
 	default:
 		return false

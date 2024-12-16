@@ -14,6 +14,7 @@ const (
 	MPPeriodStatusOpen     MPPPeriodStatus = "open"
 	MPPeriodStatusClose    MPPPeriodStatus = "close"
 	MPPeriodStatusComplete MPPPeriodStatus = "complete"
+	MPPPeriodStatusDraft   MPPPeriodStatus = "draft"
 )
 
 type MPPPeriod struct {
