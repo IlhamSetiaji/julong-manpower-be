@@ -46,16 +46,16 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.GET("/mpp-periods", c.MPPPeriodHandler.FindAllPaginated)
 			apiRoute.GET("/mpp-periods/current", c.MPPPeriodHandler.FindByCurrentDateAndStatus)
 			apiRoute.GET("/mpp-periods/:id", c.MPPPeriodHandler.FindById)
-			apiRoute.POST("/mpp-periods/", c.MPPPeriodHandler.Create)
-			apiRoute.PUT("/mpp-periods/", c.MPPPeriodHandler.Update)
+			apiRoute.POST("/mpp-periods", c.MPPPeriodHandler.Create)
+			apiRoute.PUT("/mpp-periods", c.MPPPeriodHandler.Update)
 			apiRoute.DELETE("/mpp-periods/:id", c.MPPPeriodHandler.Delete)
 
 			// job plafon
 			apiRoute.GET("/job-plafons", c.JobPlafonHandler.FindAllPaginated)
 			apiRoute.GET("/job-plafons/:id", c.JobPlafonHandler.FindById)
 			apiRoute.GET("/job-plafons/job/:job_id", c.JobPlafonHandler.FindByJobId)
-			apiRoute.POST("/job-plafons/", c.JobPlafonHandler.Create)
-			apiRoute.PUT("/job-plafons/", c.JobPlafonHandler.Update)
+			apiRoute.POST("/job-plafons", c.JobPlafonHandler.Create)
+			apiRoute.PUT("/job-plafons", c.JobPlafonHandler.Update)
 			apiRoute.DELETE("/job-plafons/:id", c.JobPlafonHandler.Delete)
 
 			// mp plannings
