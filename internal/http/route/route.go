@@ -22,91 +22,72 @@ type RouteConfig struct {
 }
 
 func (c *RouteConfig) SetupRoutes() {
-	c.App.GET("/", func(ctx *gin.Context) {
-		ctx.JSON(200, gin.H{
-			"message": "Welcome to Julong Manpower",
-		})
-	})
-	c.SetupMPPPeriodRoutes()
-	c.SetupJobPlafonRoutes()
-	c.SetupMPPlanningRoutes()
-	c.SetupRequestCategoryRoutes()
-	c.SetupMajorRoutes()
-	c.SetupMPRequestRoutes()
+	// c.App.GET("/", func(ctx *gin.Context) {
+	// 	ctx.JSON(200, gin.H{
+	// 		"message": "Welcome to Julong Manpower",
+	// 	})
+	// })
+
+	c.SetupAPIRoutes()
+	// c.SetupMPPPeriodRoutes()
+	// c.SetupJobPlafonRoutes()
+	// c.SetupMPPlanningRoutes()
+	// c.SetupRequestCategoryRoutes()
+	// c.SetupMajorRoutes()
+	// c.SetupMPRequestRoutes()
 }
 
-func (c *RouteConfig) SetupMPPPeriodRoutes() {
-	mppPeriod := c.App.Group("/api/mpp-periods")
+func (c *RouteConfig) SetupAPIRoutes() {
+	apiRoute := c.App.Group("/api")
 	{
-		mppPeriod.Use(c.AuthMiddleware)
-		mppPeriod.GET("/", c.MPPPeriodHandler.FindAllPaginated)
-		mppPeriod.GET("/current", c.MPPPeriodHandler.FindByCurrentDateAndStatus)
-		mppPeriod.GET("/:id", c.MPPPeriodHandler.FindById)
-		mppPeriod.POST("/", c.MPPPeriodHandler.Create)
-		mppPeriod.PUT("/", c.MPPPeriodHandler.Update)
-		mppPeriod.DELETE("/:id", c.MPPPeriodHandler.Delete)
-	}
-}
+		apiRoute.Use(c.AuthMiddleware)
+		{
+			apiRoute.Use(c.AuthMiddleware)
+			apiRoute.GET("/mpp-periods", c.MPPPeriodHandler.FindAllPaginated)
+			apiRoute.GET("/mpp-periods/current", c.MPPPeriodHandler.FindByCurrentDateAndStatus)
+			apiRoute.GET("/mpp-periods/:id", c.MPPPeriodHandler.FindById)
+			apiRoute.POST("/mpp-periods/", c.MPPPeriodHandler.Create)
+			apiRoute.PUT("/mpp-periods/", c.MPPPeriodHandler.Update)
+			apiRoute.DELETE("/mpp-periods/:id", c.MPPPeriodHandler.Delete)
 
-func (c *RouteConfig) SetupJobPlafonRoutes() {
-	jobPlafon := c.App.Group("/api/job-plafons")
-	{
-		jobPlafon.Use(c.AuthMiddleware)
-		jobPlafon.GET("/", c.JobPlafonHandler.FindAllPaginated)
-		jobPlafon.GET("/:id", c.JobPlafonHandler.FindById)
-		jobPlafon.GET("/job/:job_id", c.JobPlafonHandler.FindByJobId)
-		jobPlafon.POST("/", c.JobPlafonHandler.Create)
-		jobPlafon.PUT("/", c.JobPlafonHandler.Update)
-		jobPlafon.DELETE("/:id", c.JobPlafonHandler.Delete)
-	}
-}
+			// job plafon
+			apiRoute.GET("/job-plafons", c.JobPlafonHandler.FindAllPaginated)
+			apiRoute.GET("/job-plafons/:id", c.JobPlafonHandler.FindById)
+			apiRoute.GET("/job-plafons/job/:job_id", c.JobPlafonHandler.FindByJobId)
+			apiRoute.POST("/job-plafons/", c.JobPlafonHandler.Create)
+			apiRoute.PUT("/job-plafons/", c.JobPlafonHandler.Update)
+			apiRoute.DELETE("/job-plafons/:id", c.JobPlafonHandler.Delete)
 
-func (c *RouteConfig) SetupMPPlanningRoutes() {
-	mpPlanning := c.App.Group("/api/mp-plannings")
-	{
-		mpPlanning.Use(c.AuthMiddleware)
-		mpPlanning.GET("/", c.MPPlanningHandler.FindAllHeadersPaginated)
-		mpPlanning.GET("/document-number", c.MPPlanningHandler.GenerateDocumentNumber)
-		mpPlanning.GET("/requestor", c.MPPlanningHandler.FindAllHeadersByRequestorIDPaginated)
-		mpPlanning.GET("/mpp-period/:mpp_period_id", c.MPPlanningHandler.FindHeaderByMPPPeriodId)
-		mpPlanning.GET("/:id", c.MPPlanningHandler.FindById)
-		mpPlanning.POST("/", c.MPPlanningHandler.Create)
-		mpPlanning.PUT("/", c.MPPlanningHandler.Update)
-		mpPlanning.PUT("/update-status", c.MPPlanningHandler.UpdateStatusMPPPlanningHeader)
-		mpPlanning.DELETE("/:id", c.MPPlanningHandler.Delete)
+			// mp plannings
+			apiRoute.GET("/mp-plannings", c.MPPlanningHandler.FindAllHeadersPaginated)
+			apiRoute.GET("/mp-plannings/document-number", c.MPPlanningHandler.GenerateDocumentNumber)
+			apiRoute.GET("/mp-plannings/requestor", c.MPPlanningHandler.FindAllHeadersByRequestorIDPaginated)
+			apiRoute.GET("/mp-plannings/mpp-period/:mpp_period_id", c.MPPlanningHandler.FindHeaderByMPPPeriodId)
+			apiRoute.GET("/mp-plannings/:id", c.MPPlanningHandler.FindById)
+			apiRoute.POST("/mp-plannings", c.MPPlanningHandler.Create)
+			apiRoute.PUT("/mp-plannings", c.MPPlanningHandler.Update)
+			apiRoute.PUT("/mp-plannings/update-status", c.MPPlanningHandler.UpdateStatusMPPPlanningHeader)
+			apiRoute.DELETE("/mp-plannings/:id", c.MPPlanningHandler.Delete)
 
-		mpPlanning.GET("/lines/find/:id", c.MPPlanningHandler.FindLineById)
-		mpPlanning.GET("/lines/:header_id", c.MPPlanningHandler.FindAllLinesByHeaderIdPaginated)
-		mpPlanning.POST("/lines/store", c.MPPlanningHandler.CreateLine)
-		mpPlanning.PUT("/lines/update", c.MPPlanningHandler.UpdateLine)
-		mpPlanning.DELETE("/lines/delete/:id", c.MPPlanningHandler.DeleteLine)
-		mpPlanning.POST("/lines/batch/store", c.MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines)
-	}
-}
+			// mp planning lines
+			apiRoute.GET("/mp-plannings/lines/find/:id", c.MPPlanningHandler.FindLineById)
+			apiRoute.GET("/mp-plannings/lines/:header_id", c.MPPlanningHandler.FindAllLinesByHeaderIdPaginated)
+			apiRoute.POST("/mp-plannings/lines/store", c.MPPlanningHandler.CreateLine)
+			apiRoute.PUT("/mp-plannings/lines/update", c.MPPlanningHandler.UpdateLine)
+			apiRoute.DELETE("/mp-plannings/lines/delete/:id", c.MPPlanningHandler.DeleteLine)
+			apiRoute.POST("/mp-plannings/lines/batch/store", c.MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines)
 
-func (c *RouteConfig) SetupRequestCategoryRoutes() {
-	requestCategory := c.App.Group("/api/request-categories")
-	{
-		requestCategory.Use(c.AuthMiddleware)
-		requestCategory.GET("/", c.RequestCategoryHandler.FindAll)
-		requestCategory.GET("/:id", c.RequestCategoryHandler.FindById)
-	}
-}
+			// request categories
+			apiRoute.GET("/request-categories/", c.RequestCategoryHandler.FindAll)
+			apiRoute.GET("/request-categories/:id", c.RequestCategoryHandler.FindById)
 
-func (c *RouteConfig) SetupMajorRoutes() {
-	major := c.App.Group("/api/majors")
-	{
-		major.Use(c.AuthMiddleware)
-		major.GET("/", c.MajorHandler.FindAll)
-		major.GET("/:id", c.MajorHandler.FindById)
-	}
-}
+			// majors
+			apiRoute.GET("/majors/", c.MajorHandler.FindAll)
+			apiRoute.GET("/majors/:id", c.MajorHandler.FindById)
 
-func (c *RouteConfig) SetupMPRequestRoutes() {
-	mpRequest := c.App.Group("/api/mp-requests")
-	{
-		mpRequest.Use(c.AuthMiddleware)
-		mpRequest.POST("/", c.MPRequestHandler.Create)
+			// mp requests
+			apiRoute.POST("/mp-requests", c.MPRequestHandler.Create)
+		}
 	}
 }
 
