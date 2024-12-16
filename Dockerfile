@@ -14,7 +14,7 @@ RUN go mod download
 COPY . .
 
 # Build the Go application
-RUN go build -o main .
+RUN go build -ldflags "-s -w" -o main .
 
 # Use the official Golang image as the base image for the final stage
 FROM golang:1.23
