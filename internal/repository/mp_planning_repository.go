@@ -53,13 +53,13 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 	}
 
 	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppHeaders).Error; err != nil {
-		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated] test " + err.Error())
-		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated] test " + err.Error())
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated - pagination side] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated - pagination side] " + err.Error())
 	}
 
 	if err := query.Count(&total).Error; err != nil {
-		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated] " + err.Error())
-		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated] test " + err.Error())
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
 	}
 
 	return &mppHeaders, total, nil
