@@ -323,18 +323,22 @@ func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateSta
 		return errors.New("Employee not found")
 	}
 
-	approvalHistory := &entity.MPPlanningApprovalHistory{
-		MPPlanningHeaderID: uuid.MustParse(req.ID),
-		ApproverID:         req.ApproverID,
-		ApproverName:       messageEmployeeResponse.Name,
-		Notes:              req.Notes,
-		Level:              string(req.Level),
-		Status: func() entity.MPPlanningApprovalHistoryStatus {
-			if req.Status == entity.MPPlaningStatusReject {
-				return entity.MPPlanningApprovalHistoryStatusRejected
-			}
-			return entity.MPPlanningApprovalHistoryStatusApproved
-		}(),
+	var approvalHistory *entity.MPPlanningApprovalHistory
+
+	if req.Status != entity.MPPlaningStatusSubmit && req.Status != entity.MPPlaningStatusDraft && req.Status != entity.MPPlaningStatusComplete {
+		approvalHistory = &entity.MPPlanningApprovalHistory{
+			MPPlanningHeaderID: uuid.MustParse(req.ID),
+			ApproverID:         req.ApproverID,
+			ApproverName:       messageEmployeeResponse.Name,
+			Notes:              req.Notes,
+			Level:              string(req.Level),
+			Status: func() entity.MPPlanningApprovalHistoryStatus {
+				if req.Status == entity.MPPlaningStatusReject {
+					return entity.MPPlanningApprovalHistoryStatusRejected
+				}
+				return entity.MPPlanningApprovalHistoryStatusApproved
+			}(),
+		}
 	}
 
 	err = uc.MPPlanningRepository.UpdateStatusHeader(uuid.MustParse(req.ID), string(req.Status), req.ApprovedBy, approvalHistory)
