@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
@@ -17,6 +18,7 @@ import (
 type IRequestCategoryHandler interface {
 	FindAll(ctx *gin.Context)
 	FindById(ctx *gin.Context)
+	GetByIsReplacement(ctx *gin.Context)
 }
 
 type RequestCategoryHandler struct {
@@ -62,6 +64,31 @@ func (h *RequestCategoryHandler) FindById(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "Find Request Category By ID Success", requestCategory)
+}
+
+func (h *RequestCategoryHandler) GetByIsReplacement(ctx *gin.Context) {
+	isReplacementStr := ctx.Query("is_replacement")
+	var isReplacement bool
+	var err error
+
+	if isReplacementStr == "" {
+		isReplacement = true
+	} else {
+		isReplacement, err = strconv.ParseBool(isReplacementStr)
+		if err != nil {
+			utils.ErrorResponse(ctx, http.StatusBadRequest, "Bad Request", "Is Replacement must be a boolean")
+			return
+		}
+	}
+
+	requestCategories, err := h.Uc.GetByIsReplacement(isReplacement)
+	if err != nil {
+		h.Log.Errorf("[RequestCategoryHandler.GetByIsReplacement] error: %s", err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Internal Server Error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "Get Request Categories By Is Replacement Success", requestCategories)
 }
 
 func RequestCategoryHandlerFactory(log *logrus.Logger, viper *viper.Viper) IRequestCategoryHandler {

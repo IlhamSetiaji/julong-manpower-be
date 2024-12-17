@@ -13,6 +13,7 @@ import (
 type IRequestCategoryRepository interface {
 	FindAll() (*[]entity.RequestCategory, error)
 	FindById(id uuid.UUID) (*entity.RequestCategory, error)
+	GetByIsReplacement(isReplacement bool) (*[]entity.RequestCategory, error)
 }
 
 type RequestCategoryRepository struct {
@@ -45,6 +46,15 @@ func (r *RequestCategoryRepository) FindById(id uuid.UUID) (*entity.RequestCateg
 		}
 	}
 	return &requestCategory, nil
+}
+
+func (r *RequestCategoryRepository) GetByIsReplacement(isReplacement bool) (*[]entity.RequestCategory, error) {
+	var requestCategories []entity.RequestCategory
+	if err := r.DB.Where("is_replacement = ?", isReplacement).Find(&requestCategories).Error; err != nil {
+		r.Log.Errorf("[RequestCategoryRepository.GetByIsReplacement] %s", err.Error())
+		return nil, errors.New("[RequestCategoryRepository.GetByIsReplacement] Internal server error")
+	}
+	return &requestCategories, nil
 }
 
 func RequestCategoryRepositoryFactory(log *logrus.Logger) IRequestCategoryRepository {

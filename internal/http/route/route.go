@@ -81,6 +81,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 
 			// request categories
 			apiRoute.GET("/request-categories/", c.RequestCategoryHandler.FindAll)
+			apiRoute.GET("/request-categories/is-replacement", c.RequestCategoryHandler.GetByIsReplacement)
 			apiRoute.GET("/request-categories/:id", c.RequestCategoryHandler.FindById)
 
 			// majors

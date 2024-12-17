@@ -12,6 +12,7 @@ import (
 type IRequestCategoryUseCase interface {
 	FindAll() (*[]response.RequestCategoryResponse, error)
 	FindById(request *request.FindByIdRequestCategoryRequest) (*response.RequestCategoryResponse, error)
+	GetByIsReplacement(isReplacement bool) (*[]response.RequestCategoryResponse, error)
 }
 
 type RequestCategoryUseCase struct {
@@ -62,6 +63,26 @@ func (u *RequestCategoryUseCase) FindById(req *request.FindByIdRequestCategoryRe
 	}
 
 	return &responseCategory, nil
+}
+
+func (u *RequestCategoryUseCase) GetByIsReplacement(isReplacement bool) (*[]response.RequestCategoryResponse, error) {
+	requestCategories, err := u.Repo.GetByIsReplacement(isReplacement)
+	if err != nil {
+		return nil, err
+	}
+
+	var responseCategories []response.RequestCategoryResponse
+	for _, requestCategory := range *requestCategories {
+		responseCategories = append(responseCategories, response.RequestCategoryResponse{
+			ID:            requestCategory.ID,
+			Name:          requestCategory.Name,
+			IsReplacement: requestCategory.IsReplacement,
+			CreatedAt:     requestCategory.CreatedAt,
+			UpdatedAt:     requestCategory.UpdatedAt,
+		})
+	}
+
+	return &responseCategories, nil
 }
 
 func RequestCategoryUseCaseFactory(log *logrus.Logger) IRequestCategoryUseCase {
