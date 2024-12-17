@@ -40,13 +40,14 @@ type MPPlanningUseCase struct {
 	Viper                *viper.Viper
 	Log                  *logrus.Logger
 	MPPlanningRepository repository.IMPPlanningRepository
+	JobPlafonRepository  repository.IJobPlafonRepository
 	OrganizationMessage  messaging.IOrganizationMessage
 	JobPlafonMessage     messaging.IJobPlafonMessage
 	UserMessage          messaging.IUserMessage
 	EmployeeMessage      messaging.IEmployeeMessage
 }
 
-func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage) IMPPlanningUseCase {
+func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage, jpr repository.IJobPlafonRepository) IMPPlanningUseCase {
 	return &MPPlanningUseCase{
 		Viper:                viper,
 		Log:                  log,
@@ -55,6 +56,7 @@ func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repositor
 		JobPlafonMessage:     jpm,
 		UserMessage:          um,
 		EmployeeMessage:      em,
+		JobPlafonRepository:  jpr,
 	}
 }
 
@@ -738,6 +740,16 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		mpPlanningHeader.MPPlanningLines[i] = line
 	}
 
+	// find job plafon by job id
+	jobPlafon, err := uc.JobPlafonRepository.FindByJobId(*mpPlanningHeader.JobID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindById] " + err.Error())
+		return nil, err
+	}
+
+	jobPlafon.JobName = messageJobResposne.Name
+	jobPlafon.OrganizationName = message2Response.Name
+
 	return &response.FindByIdMPPlanningResponse{
 		ID:                       mpPlanningHeader.ID,
 		MPPPeriodID:              mpPlanningHeader.MPPPeriodID,
@@ -758,6 +770,7 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		EmpOrganizationName:      mpPlanningHeader.EmpOrganizationName,
 		JobName:                  mpPlanningHeader.JobName,
 		RequestorName:            mpPlanningHeader.RequestorName,
+		JobPlafon:                jobPlafon,
 		OrganizationLocationID:   mpPlanningHeader.OrganizationLocationID,
 		OrganizationLocationName: mpPlanningHeader.OrganizationLocationName,
 		CreatedAt:                mpPlanningHeader.CreatedAt,
@@ -1682,5 +1695,6 @@ func MPPlanningUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPPlannin
 	jpm := messaging.JobPlafonMessageFactory(log)
 	um := messaging.UserMessageFactory(log)
 	em := messaging.EmployeeMessageFactory(log)
-	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em)
+	jpr := repository.JobPlafonRepositoryFactory(log)
+	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em, jpr)
 }

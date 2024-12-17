@@ -132,6 +132,7 @@ type FindByIdMPPlanningResponse struct {
 	CreatedAt              time.Time              `json:"created_at"`
 	UpdatedAt              time.Time              `json:"updated_at"`
 	DeletedAt              *time.Time             `json:"deleted_at"`
+	JobPlafon              *entity.JobPlafon      `json:"job_plafon"`
 
 	OrganizationName         string                    `json:"organization_name" gorm:"-"`
 	EmpOrganizationName      string                    `json:"emp_organization_name" gorm:"-"`
