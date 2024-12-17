@@ -32,6 +32,7 @@ type IMPPlanningRepository interface {
 	DeleteLine(id uuid.UUID) error
 	DeleteLineIfNotInIDs(ids []uuid.UUID) error
 	DeleteAllLinesByHeaderID(headerID uuid.UUID) error
+	DeleteLinesByIDs(ids []uuid.UUID) error
 }
 
 type MPPlanningRepository struct {
@@ -512,6 +513,31 @@ func (r *MPPlanningRepository) DeleteAllLinesByHeaderID(headerID uuid.UUID) erro
 	}
 
 	r.Log.Infof("[MPPlanningRepository.DeleteAllLinesByHeaderID] Successfully deleted all lines by header ID")
+
+	return nil
+}
+
+func (r *MPPlanningRepository) DeleteLinesByIDs(ids []uuid.UUID) error {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.DeleteLinesByIDs] " + tx.Error.Error())
+		return errors.New("[MPPlanningRepository.DeleteLinesByIDs] " + tx.Error.Error())
+	}
+
+	if err := tx.Where("id IN ?", ids).Delete(&entity.MPPlanningLine{}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteLinesByIDs] " + err.Error())
+		return errors.New("[MPPlanningRepository.DeleteLinesByIDs] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteLinesByIDs] " + err.Error())
+		return errors.New("[MPPlanningRepository.DeleteLinesByIDs] " + err.Error())
+	}
+
+	r.Log.Infof("[MPPlanningRepository.DeleteLinesByIDs] Successfully deleted lines by IDs")
 
 	return nil
 }

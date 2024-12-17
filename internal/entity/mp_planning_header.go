@@ -10,10 +10,12 @@ import (
 type MPPlaningStatus string
 
 const (
-	MPPlaningStatusDraft    MPPlaningStatus = "DRAFT"
-	MPPlaningStatusReject   MPPlaningStatus = "REJECT"
-	MPPlaningStatusSubmit   MPPlaningStatus = "SUBMIT"
-	MPPlaningStatusComplete MPPlaningStatus = "COMPLETE"
+	MPPlaningStatusDraft       MPPlaningStatus = "DRAFTED"
+	MPPlaningStatusReject      MPPlaningStatus = "REJECTED"
+	MPPlaningStatusSubmit      MPPlaningStatus = "SUBMITTED"
+	MPPlaningStatusApproved    MPPlaningStatus = "APPROVED"
+	MPPlaningStatusComplete    MPPlaningStatus = "COMPLETED"
+	MPPlanningStatusInProgress MPPlaningStatus = "IN_PROGRESS"
 )
 
 type MPPlanningHeader struct {

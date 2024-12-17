@@ -1545,7 +1545,9 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 	var mpPlanningLineIds []uuid.UUID
 	for _, line := range req.MPPlanningLines {
 		// append mp planning line id
-		mpPlanningLineIds = append(mpPlanningLineIds, line.ID)
+		if line.IsCreate {
+			mpPlanningLineIds = append(mpPlanningLineIds, line.ID)
+		}
 
 		if line.OrganizationLocationID != uuid.Nil {
 			// Check if organization location exist
@@ -1669,22 +1671,34 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 	}
 
 	uc.Log.Infof("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] mpPlanningLineIds: %v", mpPlanningLineIds)
-
-	if len(mpPlanningLineIds) == 0 {
-		// delete all line
-		err := uc.MPPlanningRepository.DeleteAllLinesByHeaderID(req.MPPlanningHeaderID)
-		if err != nil {
-			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
-			return err
-		}
-	} else {
+	if len(req.DeletedLineIDs) > 0 {
 		// delete all line that not in mpPlanningLineIds
-		err := uc.MPPlanningRepository.DeleteLineIfNotInIDs(mpPlanningLineIds)
+		var deletedLineUUIDs []uuid.UUID
+		for _, id := range req.DeletedLineIDs {
+			deletedLineUUIDs = append(deletedLineUUIDs, uuid.MustParse(id))
+		}
+		err := uc.MPPlanningRepository.DeleteLinesByIDs(deletedLineUUIDs)
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
 			return err
 		}
 	}
+
+	// if len(mpPlanningLineIds) == 0 {
+	// 	// delete all line
+	// 	err := uc.MPPlanningRepository.DeleteAllLinesByHeaderID(req.MPPlanningHeaderID)
+	// 	if err != nil {
+	// 		uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+	// 		return err
+	// 	}
+	// } else {
+	// 	// delete all line that not in mpPlanningLineIds
+	// 	err := uc.MPPlanningRepository.DeleteLineIfNotInIDs(mpPlanningLineIds)
+	// 	if err != nil {
+	// 		uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+	// 		return err
+	// 	}
+	// }
 
 	return nil
 }

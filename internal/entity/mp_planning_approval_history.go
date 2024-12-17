@@ -10,8 +10,8 @@ import (
 type MPPlanningApprovalHistoryStatus string
 
 const (
-	MPPlanningApprovalHistoryStatusApproved MPPlanningApprovalHistoryStatus = "Approved"
-	MPPlanningApprovalHistoryStatusRejected MPPlanningApprovalHistoryStatus = "Rejected"
+	MPPlanningApprovalHistoryStatusApproved MPPlanningApprovalHistoryStatus = "APPROVED"
+	MPPlanningApprovalHistoryStatusRejected MPPlanningApprovalHistoryStatus = "REJECTED"
 )
 
 type MPPlanningApprovalHistoryLevel string

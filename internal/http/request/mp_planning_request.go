@@ -120,9 +120,11 @@ type CreateOrUpdateBatchLineMPPlanningLinesRequest struct {
 		Total                  int       `json:"total" validate:"required"`
 		RecruitPH              int       `json:"recruit_ph" validate:"required"`
 		RecruitMT              int       `json:"recruit_mt" validate:"required"`
+		IsCreate               bool      `json:"is_create" validate:"omitempty"`
 		// RemainingBalancePH     int       `json:"remaining_balance_ph" validate:"required"`
 		// RemainingBalanceMT     int       `json:"remaining_balance_mt" validate:"required"`
 	} `json:"mp_planning_lines" validate:"required"`
+	DeletedLineIDs []string `json:"deleted_line_ids" validate:"omitempty,dive"`
 }
 
 type UpdateLineMPPlanningLineRequest struct {
