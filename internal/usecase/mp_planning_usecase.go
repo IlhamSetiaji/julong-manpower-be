@@ -753,6 +753,14 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 	jobPlafon.JobName = messageJobResposne.Name
 	jobPlafon.OrganizationName = message2Response.Name
 
+	// check current approval
+	var currentApproval string
+	if mpPlanningHeader.ApproverManagerID != nil {
+		currentApproval = "Level HRD Unit"
+	} else if mpPlanningHeader.ApproverRecruitmentID != nil {
+		currentApproval = "Level Direktur Unit"
+	}
+
 	return &response.FindByIdMPPlanningResponse{
 		ID:                       mpPlanningHeader.ID,
 		MPPPeriodID:              mpPlanningHeader.MPPPeriodID,
@@ -778,6 +786,7 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		OrganizationLocationName: mpPlanningHeader.OrganizationLocationName,
 		CreatedAt:                mpPlanningHeader.CreatedAt,
 		UpdatedAt:                mpPlanningHeader.UpdatedAt,
+		CurrentApproval:          currentApproval,
 		MPPPeriod: &response.MPPeriodResponse{
 			ID:              mpPlanningHeader.MPPPeriod.ID,
 			Title:           mpPlanningHeader.MPPPeriod.Title,

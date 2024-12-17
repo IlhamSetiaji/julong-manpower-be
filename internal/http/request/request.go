@@ -119,7 +119,7 @@ func MPPlanningApprovalHistoryLevelValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.MPPlanningApprovalHistoryLevel(status) {
-	case entity.MPPlanningApprovalHistoryLevelManager, entity.MPPlanningApprovalHistoryLevelRecruitment:
+	case entity.MPPlanningApprovalHistoryLevelHRDUnit, entity.MPPlanningApprovalHistoryLevelDirekturUnit, entity.MPPlanningApprovalHistoryLevelRecruitment, entity.MPPlanningApprovalHistoryLevelCEO:
 		return true
 	default:
 		return false

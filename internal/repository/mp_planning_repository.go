@@ -69,7 +69,7 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 
 	countQuery := query.Session(&gorm.Session{})
 	if err := countQuery.Count(&total).Error; err != nil {
-		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersPaginated - count  side] " + err.Error())
 		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersPaginated - count side] " + err.Error())
 	}
 
@@ -145,10 +145,10 @@ func (r *MPPlanningRepository) UpdateStatusHeader(id uuid.UUID, status string, a
 	}
 
 	if approvalHistory != nil {
-		if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelManager) {
+		if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelHRDUnit) {
 			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
-				Status:            entity.MPPlaningStatus(status),
-				ApprovedBy:        approvedBy,
+				Status: entity.MPPlaningStatus(status),
+				// ApprovedBy:        approvedBy,
 				ApproverManagerID: &approvalHistory.ApproverID,
 				NotesManager:      approvalHistory.Notes,
 			}).Error; err != nil {
@@ -156,12 +156,29 @@ func (r *MPPlanningRepository) UpdateStatusHeader(id uuid.UUID, status string, a
 				r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
 				return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
 			}
-		} else {
+		} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelDirekturUnit) {
 			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
-				Status:                entity.MPPlaningStatus(status),
-				ApprovedBy:            approvedBy,
+				Status: entity.MPPlaningStatus(status),
+				// ApprovedBy:            approvedBy,
 				ApproverRecruitmentID: &approvalHistory.ApproverID,
 				NotesRecruitment:      approvalHistory.Notes,
+			}).Error; err != nil {
+				tx.Rollback()
+				r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+				return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+			}
+		} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelCEO) {
+			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
+				Status:     entity.MPPlaningStatus(status),
+				ApprovedBy: approvedBy,
+			}).Error; err != nil {
+				tx.Rollback()
+				r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+				return errors.New("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())
+			}
+		} else {
+			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
+				Status: entity.MPPlaningStatus(status),
 			}).Error; err != nil {
 				tx.Rollback()
 				r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())

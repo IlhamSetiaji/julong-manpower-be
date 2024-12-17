@@ -17,8 +17,10 @@ const (
 type MPPlanningApprovalHistoryLevel string
 
 const (
-	MPPlanningApprovalHistoryLevelManager     MPPlanningApprovalHistoryLevel = "Level Manager"
-	MPPlanningApprovalHistoryLevelRecruitment MPPlanningApprovalHistoryLevel = "Level Recruitment"
+	MPPlanningApprovalHistoryLevelHRDUnit      MPPlanningApprovalHistoryLevel = "Level HRD Unit"
+	MPPlanningApprovalHistoryLevelDirekturUnit MPPlanningApprovalHistoryLevel = "Level Direktur Unit"
+	MPPlanningApprovalHistoryLevelRecruitment  MPPlanningApprovalHistoryLevel = "Level Recruitment"
+	MPPlanningApprovalHistoryLevelCEO          MPPlanningApprovalHistoryLevel = "Level CEO"
 )
 
 type MPPlanningApprovalHistory struct {
