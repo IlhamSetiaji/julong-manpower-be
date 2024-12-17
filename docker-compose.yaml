@@ -9,7 +9,7 @@ services:
       - "5502:8080"
     environment:
       - APP_ENV=production
-      - APP_URL=https://julong-portal.avolut.com
+      - APP_URL=https://julong-portal.avolut.com/
       - APP_DOMAIN=avolut.com
       - APP_SECRET=jancok
       - FRONTEND_URL=http://localhost:3000,https://julong-mpp.avolut.com
