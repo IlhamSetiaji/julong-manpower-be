@@ -132,12 +132,13 @@ type FindByIdMPPlanningResponse struct {
 	UpdatedAt         time.Time              `json:"updated_at"`
 	DeletedAt         *time.Time             `json:"deleted_at"`
 
-	OrganizationName    string                    `json:"organization_name" gorm:"-"`
-	EmpOrganizationName string                    `json:"emp_organization_name" gorm:"-"`
-	JobName             string                    `json:"job_name" gorm:"-"`
-	RequestorName       string                    `json:"requestor_name" gorm:"-"`
-	MPPPeriod           *MPPeriodResponse         `json:"mpp_period"`
-	MPPlanningLines     []*MPPlanningLineResponse `json:"mp_planning_lines"`
+	OrganizationName         string                    `json:"organization_name" gorm:"-"`
+	EmpOrganizationName      string                    `json:"emp_organization_name" gorm:"-"`
+	OrganizationLocationName string                    `json:"organization_location_name" gorm:"-"`
+	JobName                  string                    `json:"job_name" gorm:"-"`
+	RequestorName            string                    `json:"requestor_name" gorm:"-"`
+	MPPPeriod                *MPPeriodResponse         `json:"mpp_period"`
+	MPPlanningLines          []*MPPlanningLineResponse `json:"mp_planning_lines"`
 }
 
 type CreateMPPlanningResponse struct {

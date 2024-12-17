@@ -695,6 +695,15 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		mpPlanningHeader.RequestorName = messageEmployeeResponse.Name
 	}
 
+	messageOrgLocResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+		ID: mpPlanningHeader.OrganizationLocationID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+		return nil, err
+	}
+	mpPlanningHeader.OrganizationLocationName = messageOrgLocResponse.Name
+
 	for i, line := range *&mpPlanningHeader.MPPlanningLines {
 		// Fetch organization location names using RabbitMQ
 		messageResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
@@ -730,27 +739,28 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 	}
 
 	return &response.FindByIdMPPlanningResponse{
-		ID:                  mpPlanningHeader.ID,
-		MPPPeriodID:         mpPlanningHeader.MPPPeriodID,
-		OrganizationID:      mpPlanningHeader.OrganizationID,
-		EmpOrganizationID:   mpPlanningHeader.EmpOrganizationID,
-		JobID:               mpPlanningHeader.JobID,
-		DocumentNumber:      mpPlanningHeader.DocumentNumber,
-		DocumentDate:        mpPlanningHeader.DocumentDate,
-		Notes:               mpPlanningHeader.Notes,
-		TotalRecruit:        mpPlanningHeader.TotalRecruit,
-		TotalPromote:        mpPlanningHeader.TotalPromote,
-		Status:              mpPlanningHeader.Status,
-		RecommendedBy:       mpPlanningHeader.RecommendedBy,
-		ApprovedBy:          mpPlanningHeader.ApprovedBy,
-		RequestorID:         mpPlanningHeader.RequestorID,
-		NotesAttach:         mpPlanningHeader.NotesAttach,
-		OrganizationName:    mpPlanningHeader.OrganizationName,
-		EmpOrganizationName: mpPlanningHeader.EmpOrganizationName,
-		JobName:             mpPlanningHeader.JobName,
-		RequestorName:       mpPlanningHeader.RequestorName,
-		CreatedAt:           mpPlanningHeader.CreatedAt,
-		UpdatedAt:           mpPlanningHeader.UpdatedAt,
+		ID:                       mpPlanningHeader.ID,
+		MPPPeriodID:              mpPlanningHeader.MPPPeriodID,
+		OrganizationID:           mpPlanningHeader.OrganizationID,
+		EmpOrganizationID:        mpPlanningHeader.EmpOrganizationID,
+		JobID:                    mpPlanningHeader.JobID,
+		DocumentNumber:           mpPlanningHeader.DocumentNumber,
+		DocumentDate:             mpPlanningHeader.DocumentDate,
+		Notes:                    mpPlanningHeader.Notes,
+		TotalRecruit:             mpPlanningHeader.TotalRecruit,
+		TotalPromote:             mpPlanningHeader.TotalPromote,
+		Status:                   mpPlanningHeader.Status,
+		RecommendedBy:            mpPlanningHeader.RecommendedBy,
+		ApprovedBy:               mpPlanningHeader.ApprovedBy,
+		RequestorID:              mpPlanningHeader.RequestorID,
+		NotesAttach:              mpPlanningHeader.NotesAttach,
+		OrganizationName:         mpPlanningHeader.OrganizationName,
+		EmpOrganizationName:      mpPlanningHeader.EmpOrganizationName,
+		JobName:                  mpPlanningHeader.JobName,
+		RequestorName:            mpPlanningHeader.RequestorName,
+		OrganizationLocationName: mpPlanningHeader.OrganizationLocationName,
+		CreatedAt:                mpPlanningHeader.CreatedAt,
+		UpdatedAt:                mpPlanningHeader.UpdatedAt,
 		MPPPeriod: &response.MPPeriodResponse{
 			ID:        mpPlanningHeader.MPPPeriod.ID,
 			Title:     mpPlanningHeader.MPPPeriod.Title,
