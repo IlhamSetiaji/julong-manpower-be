@@ -758,16 +758,20 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		EmpOrganizationName:      mpPlanningHeader.EmpOrganizationName,
 		JobName:                  mpPlanningHeader.JobName,
 		RequestorName:            mpPlanningHeader.RequestorName,
+		OrganizationLocationID:   mpPlanningHeader.OrganizationLocationID,
 		OrganizationLocationName: mpPlanningHeader.OrganizationLocationName,
 		CreatedAt:                mpPlanningHeader.CreatedAt,
 		UpdatedAt:                mpPlanningHeader.UpdatedAt,
 		MPPPeriod: &response.MPPeriodResponse{
-			ID:        mpPlanningHeader.MPPPeriod.ID,
-			Title:     mpPlanningHeader.MPPPeriod.Title,
-			StartDate: mpPlanningHeader.MPPPeriod.StartDate.Format("2006-01-02"),
-			EndDate:   mpPlanningHeader.MPPPeriod.EndDate.Format("2006-01-02"),
-			CreatedAt: mpPlanningHeader.MPPPeriod.CreatedAt,
-			UpdatedAt: mpPlanningHeader.MPPPeriod.UpdatedAt,
+			ID:              mpPlanningHeader.MPPPeriod.ID,
+			Title:           mpPlanningHeader.MPPPeriod.Title,
+			StartDate:       mpPlanningHeader.MPPPeriod.StartDate.Format("2006-01-02"),
+			EndDate:         mpPlanningHeader.MPPPeriod.EndDate.Format("2006-01-02"),
+			BudgetStartDate: mpPlanningHeader.MPPPeriod.BudgetStartDate.Format("2006-01-02"),
+			BudgetEndDate:   mpPlanningHeader.MPPPeriod.BudgetEndDate.Format("2006-01-02"),
+			Status:          mpPlanningHeader.MPPPeriod.Status,
+			CreatedAt:       mpPlanningHeader.MPPPeriod.CreatedAt,
+			UpdatedAt:       mpPlanningHeader.MPPPeriod.UpdatedAt,
 		},
 		MPPlanningLines: func() []*response.MPPlanningLineResponse {
 			var lines []*response.MPPlanningLineResponse
@@ -1513,7 +1517,23 @@ func (uc *MPPlanningUseCase) DeleteLine(req *request.DeleteLineMPPlanningLineReq
 }
 
 func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request.CreateOrUpdateBatchLineMPPlanningLinesRequest) error {
+	// check if header exists
+	headerExist, err := uc.MPPlanningRepository.FindHeaderById(req.MPPlanningHeaderID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+		return err
+	}
+
+	if headerExist == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] MP Planning Header not found")
+		return errors.New("MP Planning Header not found")
+	}
+
+	var mpPlanningLineIds []uuid.UUID
 	for _, line := range req.MPPlanningLines {
+		// append mp planning line id
+		mpPlanningLineIds = append(mpPlanningLineIds, line.ID)
+
 		if line.OrganizationLocationID != uuid.Nil {
 			// Check if organization location exist
 			orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
@@ -1634,6 +1654,25 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 		}
 
 	}
+
+	uc.Log.Infof("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] mpPlanningLineIds: %v", mpPlanningLineIds)
+
+	if len(mpPlanningLineIds) == 0 {
+		// delete all line
+		err := uc.MPPlanningRepository.DeleteAllLinesByHeaderID(req.MPPlanningHeaderID)
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+			return err
+		}
+	} else {
+		// delete all line that not in mpPlanningLineIds
+		err := uc.MPPlanningRepository.DeleteLineIfNotInIDs(mpPlanningLineIds)
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+			return err
+		}
+	}
+
 	return nil
 }
 

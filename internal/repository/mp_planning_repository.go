@@ -30,6 +30,8 @@ type IMPPlanningRepository interface {
 	CreateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	UpdateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	DeleteLine(id uuid.UUID) error
+	DeleteLineIfNotInIDs(ids []uuid.UUID) error
+	DeleteAllLinesByHeaderID(headerID uuid.UUID) error
 }
 
 type MPPlanningRepository struct {
@@ -462,6 +464,54 @@ func (r *MPPlanningRepository) DeleteLine(id uuid.UUID) error {
 		r.Log.Errorf("[MPPlanningRepository.DeleteLine] " + err.Error())
 		return errors.New("[MPPlanningRepository.DeleteLine] " + err.Error())
 	}
+
+	return nil
+}
+
+func (r *MPPlanningRepository) DeleteLineIfNotInIDs(ids []uuid.UUID) error {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.DeleteLineIfNotInIDs] " + tx.Error.Error())
+		return errors.New("[MPPlanningRepository.DeleteLineIfNotInIDs] " + tx.Error.Error())
+	}
+
+	if err := tx.Where("id NOT IN ?", ids).Delete(&entity.MPPlanningLine{}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteLineIfNotInIDs] " + err.Error())
+		return errors.New("[MPPlanningRepository.DeleteLineIfNotInIDs] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteLineIfNotInIDs] " + err.Error())
+		return errors.New("[MPPlanningRepository.DeleteLineIfNotInIDs] " + err.Error())
+	}
+
+	return nil
+}
+
+func (r *MPPlanningRepository) DeleteAllLinesByHeaderID(headerID uuid.UUID) error {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.DeleteAllLinesByHeaderID] " + tx.Error.Error())
+		return errors.New("[MPPlanningRepository.DeleteAllLinesByHeaderID] " + tx.Error.Error())
+	}
+
+	if err := tx.Where("mp_planning_header_id = ?", headerID).Delete(&entity.MPPlanningLine{}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteAllLinesByHeaderID] " + err.Error())
+		return errors.New("[MPPlanningRepository.DeleteAllLinesByHeaderID] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.DeleteAllLinesByHeaderID] " + err.Error())
+		return errors.New("[MPPlanningRepository.DeleteAllLinesByHeaderID] " + err.Error())
+	}
+
+	r.Log.Infof("[MPPlanningRepository.DeleteAllLinesByHeaderID] Successfully deleted all lines by header ID")
 
 	return nil
 }

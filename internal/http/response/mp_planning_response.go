@@ -113,24 +113,25 @@ type FindAllHeadersPaginatedMPPlanningResponse struct {
 type FindByIdMPPlanningResponse struct {
 	// MPPlanningHeader *entity.MPPlanningHeader `json:"mp_planning_header"`
 	// MPPlanningHeader *MPPlanningHeaderResponse `json:"mp_planning_header"`
-	ID                uuid.UUID              `json:"id"`
-	MPPPeriodID       uuid.UUID              `json:"mpp_period_id"`
-	OrganizationID    *uuid.UUID             `json:"organization_id"`
-	EmpOrganizationID *uuid.UUID             `json:"emp_organization_id"`
-	JobID             *uuid.UUID             `json:"job_id"` // job_id
-	DocumentNumber    string                 `json:"document_number"`
-	DocumentDate      time.Time              `json:"document_date"`
-	Notes             string                 `json:"notes"`
-	TotalRecruit      float64                `json:"total_recruit"`
-	TotalPromote      float64                `json:"total_promote"`
-	Status            entity.MPPlaningStatus `json:"status"`
-	RecommendedBy     string                 `json:"recommended_by"` // free text
-	ApprovedBy        string                 `json:"approved_by"`    // free text
-	RequestorID       *uuid.UUID             `json:"requestor_id"`   // user_id
-	NotesAttach       string                 `json:"notes_attach"`
-	CreatedAt         time.Time              `json:"created_at"`
-	UpdatedAt         time.Time              `json:"updated_at"`
-	DeletedAt         *time.Time             `json:"deleted_at"`
+	ID                     uuid.UUID              `json:"id"`
+	MPPPeriodID            uuid.UUID              `json:"mpp_period_id"`
+	OrganizationID         *uuid.UUID             `json:"organization_id"`
+	EmpOrganizationID      *uuid.UUID             `json:"emp_organization_id"`
+	JobID                  *uuid.UUID             `json:"job_id"` // job_id
+	DocumentNumber         string                 `json:"document_number"`
+	DocumentDate           time.Time              `json:"document_date"`
+	Notes                  string                 `json:"notes"`
+	TotalRecruit           float64                `json:"total_recruit"`
+	TotalPromote           float64                `json:"total_promote"`
+	Status                 entity.MPPlaningStatus `json:"status"`
+	RecommendedBy          string                 `json:"recommended_by"` // free text
+	OrganizationLocationID *uuid.UUID             `json:"organization_location_id"`
+	ApprovedBy             string                 `json:"approved_by"`  // free text
+	RequestorID            *uuid.UUID             `json:"requestor_id"` // user_id
+	NotesAttach            string                 `json:"notes_attach"`
+	CreatedAt              time.Time              `json:"created_at"`
+	UpdatedAt              time.Time              `json:"updated_at"`
+	DeletedAt              *time.Time             `json:"deleted_at"`
 
 	OrganizationName         string                    `json:"organization_name" gorm:"-"`
 	EmpOrganizationName      string                    `json:"emp_organization_name" gorm:"-"`
