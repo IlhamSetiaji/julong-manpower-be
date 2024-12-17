@@ -11,7 +11,7 @@ import (
 )
 
 type IMPPlanningRepository interface {
-	FindAllHeadersPaginated(page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
+	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
@@ -48,14 +48,23 @@ func NewMPPlanningRepository(log *logrus.Logger, db *gorm.DB) IMPPlanningReposit
 	}
 }
 
-func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error) {
+func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string) (*[]entity.MPPlanningHeader, int64, error) {
 	var mppHeaders []entity.MPPlanningHeader
 	var total int64
 
 	query := r.DB.Model(&entity.MPPlanningHeader{}).Preload("MPPlanningLines").Preload("MPPPeriod")
 
 	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
+		query = query.Where("document_number LIKE ?", "%"+search+"%")
+	}
+
+	if approverType != "" {
+		if approverType == "manager" {
+			r.Log.Info("Approver Type: Manager")
+			query = query.Where("approver_manager_id IS NOT NULL")
+		} else {
+			query = query.Where("approver_recruitment_id IS NOT NULL")
+		}
 	}
 
 	countQuery := query.Session(&gorm.Session{})

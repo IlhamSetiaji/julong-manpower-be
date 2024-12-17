@@ -72,7 +72,7 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 		page = 1
 	}
 
-	pageSize, err := strconv.Atoi(ctx.Query("pageSize"))
+	pageSize, err := strconv.Atoi(ctx.Query("page_size"))
 	if err != nil || pageSize < 1 {
 		pageSize = 10
 	}
@@ -82,10 +82,18 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 		search = ""
 	}
 
+	approverType := ctx.Query("approver_type")
+	if approverType == "" {
+		approverType = ""
+	}
+
+	h.Log.Infof("approver type: %s", approverType)
+
 	req := request.FindAllHeadersPaginatedMPPlanningRequest{
-		Page:     page,
-		PageSize: pageSize,
-		Search:   search,
+		Page:         page,
+		PageSize:     pageSize,
+		Search:       search,
+		ApproverType: approverType,
 	}
 
 	resp, err := h.UseCase.FindAllHeadersPaginated(&req)

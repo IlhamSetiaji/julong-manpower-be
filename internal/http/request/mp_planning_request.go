@@ -6,9 +6,10 @@ import (
 )
 
 type FindAllHeadersPaginatedMPPlanningRequest struct {
-	Page     int    `json:"page" binding:"required"`
-	PageSize int    `json:"pageSize" binding:"required"`
-	Search   string `json:"search"`
+	Page         int    `json:"page" binding:"required"`
+	PageSize     int    `json:"pageSize" binding:"required"`
+	Search       string `json:"search"`
+	ApproverType string `json:"approver_type"`
 }
 
 type FindHeaderByIdMPPlanningRequest struct {
