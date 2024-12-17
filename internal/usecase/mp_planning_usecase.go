@@ -354,22 +354,16 @@ func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateSta
 		for _, attachment := range req.Attachments {
 			attachmentLength++
 			_, err := uc.MPPlanningRepository.StoreAttachmentToApprovalHistory(approvalHistory, entity.ManpowerAttachment{
-				FileName: attachment.FileName,
-				FilePath: attachment.FilePath,
-				FileType: attachment.FileType,
+				FileName:  attachment.FileName,
+				FilePath:  attachment.FilePath,
+				FileType:  attachment.FileType,
+				OwnerType: "mp_planning_approval_histories",
+				OwnerID:   approvalHistory.ID,
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] " + err.Error())
 				return err
 			}
-
-			// fullURL := uc.Viper.GetString("app.url") + attachment.FilePath
-
-			// attachments = append(attachments, response.ManpowerAttachmentResponse{
-			// 	FileName: attachment.FileName,
-			// 	FilePath: fullURL,
-			// 	FileType: attachment.FileType,
-			// })
 		}
 	}
 

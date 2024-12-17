@@ -20,6 +20,7 @@ type IMPPlanningRepository interface {
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPPlanningApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPPlanningApprovalHistory, error)
+	StoreAttachmentsToApprovalHistory(mppApprovalHistories *entity.MPPlanningApprovalHistory, attachments []entity.ManpowerAttachment) (*entity.MPPlanningApprovalHistory, error)
 	GetPlanningApprovalHistoryByHeaderId(headerId uuid.UUID) (*[]entity.MPPlanningApprovalHistory, error)
 	GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryId uuid.UUID) (*[]entity.ManpowerAttachment, error)
 	DeleteAttachmentFromHeader(mppHeader *entity.MPPlanningHeader, attachmentID uuid.UUID) (*entity.MPPlanningHeader, error)
@@ -262,11 +263,17 @@ func (r *MPPlanningRepository) StoreAttachmentToApprovalHistory(mppApprovalHisto
 		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + tx.Error.Error())
 	}
 
-	if err := tx.Model(mppApprovalHistory).Association("ManpowerAttachments").Append(&attachment); err != nil {
+	if err := tx.Create(&attachment).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
 		return nil, errors.New("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
 	}
+
+	// if err := tx.Model(mppApprovalHistory).Association("ManpowerAttachments").Append(&attachment); err != nil {
+	// 	tx.Rollback()
+	// 	r.Log.Errorf("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
+	// 	return nil, errors.New("[MPPlanningRepository.StoreAttachmentToApprovalHistory] " + err.Error())
+	// }
 
 	if err := tx.Commit().Error; err != nil {
 		tx.Rollback()
@@ -275,6 +282,29 @@ func (r *MPPlanningRepository) StoreAttachmentToApprovalHistory(mppApprovalHisto
 	}
 
 	return mppApprovalHistory, nil
+}
+
+func (r *MPPlanningRepository) StoreAttachmentsToApprovalHistory(mppApprovalHistories *entity.MPPlanningApprovalHistory, attachments []entity.ManpowerAttachment) (*entity.MPPlanningApprovalHistory, error) {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentsToApprovalHistory] " + tx.Error.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentsToApprovalHistory] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(mppApprovalHistories).Association("ManpowerAttachments").Append(&attachments); err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentsToApprovalHistory] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentsToApprovalHistory] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.StoreAttachmentsToApprovalHistory] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.StoreAttachmentsToApprovalHistory] " + err.Error())
+	}
+
+	return mppApprovalHistories, nil
 }
 
 func (r *MPPlanningRepository) GetPlanningApprovalHistoryByHeaderId(headerId uuid.UUID) (*[]entity.MPPlanningApprovalHistory, error) {
