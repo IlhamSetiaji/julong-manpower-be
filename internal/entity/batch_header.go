@@ -15,11 +15,12 @@ const (
 )
 
 type BatchHeader struct {
-	gorm.Model   `json:"-"`
-	ID           uuid.UUID                 `json:"id" gorm:"type:char(36);primaryKey;"`
-	ApproverID   *uuid.UUID                `json:"approver_id" gorm:"type:char(36);default:null;"`
-	ApproverName string                    `json:"approver_name" gorm:"type:varchar(255);default:null;"`
-	Status       BatchHeaderApprovalStatus `json:"status" gorm:"default:null"`
+	gorm.Model     `json:"-"`
+	ID             uuid.UUID                 `json:"id" gorm:"type:char(36);primaryKey;"`
+	DocumentNumber string                    `json:"document_number" gorm:"type:varchar(255);not null;"`
+	ApproverID     *uuid.UUID                `json:"approver_id" gorm:"type:char(36);default:null;"`
+	ApproverName   string                    `json:"approver_name" gorm:"type:varchar(255);default:null;"`
+	Status         BatchHeaderApprovalStatus `json:"status" gorm:"default:null"`
 
 	BatchLines []BatchLine `json:"batch_lines" gorm:"foreignKey:BatchHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

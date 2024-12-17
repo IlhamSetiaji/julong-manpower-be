@@ -17,6 +17,7 @@ func NewValidator(viper *viper.Viper) *validator.Validate {
 	validate.RegisterValidation("MPRequestTypeEnumValidation", request.MPRequestTypeEnumValidation)
 	validate.RegisterValidation("RecruitmentTypeEnumValidation", request.RecruitmentTypeEnumValidation)
 	validate.RegisterValidation("MPPlanningApprovalHistoryLevelValidation", request.MPPlanningApprovalHistoryLevelValidation)
+	validate.RegisterValidation("BatchHeaderApprovalStatusValidation", request.BatchHeaderApprovalStatusValidation)
 	validate.RegisterValidation("date_today_or_later", request.ValidateDateMoreThanEqualToday)
 	return validate
 }

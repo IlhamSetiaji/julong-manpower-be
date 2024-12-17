@@ -18,6 +18,7 @@ type RouteConfig struct {
 	RequestCategoryHandler handler.IRequestCategoryHandler
 	MajorHandler           handler.IMajorHandler
 	MPRequestHandler       handler.IMPRequestHandler
+	BatchHandler           handler.IBatchHandler
 	AuthMiddleware         gin.HandlerFunc
 }
 
@@ -90,6 +91,9 @@ func (c *RouteConfig) SetupAPIRoutes() {
 
 			// mp requests
 			apiRoute.POST("/mp-requests", c.MPRequestHandler.Create)
+
+			// batch
+			apiRoute.POST("/batch/create", c.BatchHandler.CreateBatchHeaderAndLines)
 		}
 	}
 }
@@ -102,6 +106,7 @@ func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *Ro
 	requestCategoryHandler := handler.RequestCategoryHandlerFactory(log, viper)
 	majorHandler := handler.MajorHandlerFactory(log, viper)
 	mpRequestHandler := handler.MPRequestHandlerFactory(log, viper)
+	batchHandler := handler.BatchHandlerFactory(log, viper)
 
 	// facroty middleware
 	authMiddleware := middleware.NewAuth(viper)
@@ -114,5 +119,6 @@ func NewRouteConfig(app *gin.Engine, viper *viper.Viper, log *logrus.Logger) *Ro
 		RequestCategoryHandler: requestCategoryHandler,
 		MajorHandler:           majorHandler,
 		MPRequestHandler:       mpRequestHandler,
+		BatchHandler:           batchHandler,
 	}
 }

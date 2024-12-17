@@ -126,6 +126,19 @@ func MPPlanningApprovalHistoryLevelValidation(fl validator.FieldLevel) bool {
 	}
 }
 
+func BatchHeaderApprovalStatusValidation(fl validator.FieldLevel) bool {
+	status := fl.Field().String()
+	if status == "" {
+		return true
+	}
+	switch entity.BatchHeaderApprovalStatus(status) {
+	case entity.BatchHeaderApprovalStatusApproved, entity.BatchHeaderApprovalStatusRejected:
+		return true
+	default:
+		return false
+	}
+}
+
 func ValidateDateMoreThanEqualToday(fl validator.FieldLevel) bool {
 	startDateStr := fl.Field().String()
 	startDate, err := time.Parse("2006-01-02", startDateStr)
