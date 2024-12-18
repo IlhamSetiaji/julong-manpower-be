@@ -9,6 +9,7 @@ import (
 type BatchResponse struct {
 	ID             uuid.UUID            `json:"id"`
 	DocumentNumber string               `json:"document_number"`
+	DocumentDate   time.Time            `json:"document_date"`
 	ApproverID     *uuid.UUID           `json:"approver_id"`
 	ApproverName   string               `json:"approver_name"`
 	Status         string               `json:"status"`

@@ -26,6 +26,7 @@ func NewBatchLineDTO(log *logrus.Logger, mpHeaderDTO IMPPlanningDTO) IBatchLineD
 func (d *BatchLineDTO) ConvertBatchLineEntityToResponse(batch *entity.BatchLine) *response.BatchLineResponse {
 	return &response.BatchLineResponse{
 		ID:                       batch.ID,
+		BatchHeaderID:            batch.BatchHeaderID,
 		MPPlanningHeaderID:       batch.MPPlanningHeaderID,
 		OrganizationID:           *batch.OrganizationID,
 		OrganizationLocationID:   *batch.OrganizationLocationID,

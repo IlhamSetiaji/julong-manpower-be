@@ -61,3 +61,4 @@ func ConvertInterfaceToJobResponse(job map[string]interface{}) *response.JobResp
 		Children: childrenResponse,
 	}
 }
+ 

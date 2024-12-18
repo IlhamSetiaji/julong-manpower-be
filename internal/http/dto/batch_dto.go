@@ -26,6 +26,7 @@ func (d *BatchDTO) ConvertBatchHeaderEntityToResponse(batch *entity.BatchHeader)
 	return &response.BatchResponse{
 		ID:             batch.ID,
 		DocumentNumber: batch.DocumentNumber,
+		DocumentDate:   batch.DocumentDate,
 		Status:         string(batch.Status),
 		CreatedAt:      batch.CreatedAt,
 		UpdatedAt:      batch.UpdatedAt,

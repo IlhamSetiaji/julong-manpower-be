@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/dto"
@@ -41,9 +43,35 @@ func NewBatchUsecase(viper *viper.Viper, log *logrus.Logger, repo repository.IBa
 }
 
 func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeaderAndLinesRequest) (*response.BatchResponse, error) {
-	batchHeader := &entity.BatchHeader{
-		DocumentNumber: req.DocumentNumber,
-		Status:         req.Status,
+	dateNow := time.Now()
+	documentNumber := "MPP/BATCH/" + dateNow.Format("20060102") + "/001"
+
+	foundBatchHeader, err := uc.Repo.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.GenerateDocumentNumber] " + err.Error())
+		return nil, err
+	}
+
+	if foundBatchHeader == nil {
+		documentNumber = "MPP/BATCH/" + dateNow.Format("20060102") + "/001"
+	} else {
+		documentNumber = "MPP/BATCH/" + dateNow.Format("20060102") + "/" + fmt.Sprintf("%03d", len(*&foundBatchHeader)+1)
+	}
+
+	var batchHeader *entity.BatchHeader
+
+	if req.DocumentNumber != "" {
+		batchHeader = &entity.BatchHeader{
+			DocumentNumber: req.DocumentNumber,
+			DocumentDate:   dateNow,
+			Status:         req.Status,
+		}
+	} else {
+		batchHeader = &entity.BatchHeader{
+			DocumentNumber: documentNumber,
+			DocumentDate:   dateNow,
+			Status:         entity.BatchHeaderApprovalStatusNeedApproval,
+		}
 	}
 
 	batchLines := make([]entity.BatchLine, len(req.BatchLines))

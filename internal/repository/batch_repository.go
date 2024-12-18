@@ -11,6 +11,7 @@ type IBatchRepository interface {
 	CreateBatchHeaderAndLines(batchHeader *entity.BatchHeader, batchLines []entity.BatchLine) (*entity.BatchHeader, error)
 	FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 	FindById(id string) (*entity.BatchHeader, error)
+	GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error)
 }
 
 type BatchRepository struct {
@@ -84,6 +85,16 @@ func (r *BatchRepository) FindById(id string) (*entity.BatchHeader, error) {
 	}
 
 	return &batchHeader, nil
+}
+
+func (r *BatchRepository) GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error) {
+	var batchHeaders []entity.BatchHeader
+	if err := r.DB.Where("document_date = ?", documentDate).Find(&batchHeaders).Error; err != nil {
+		r.Log.Error(err)
+		return nil, err
+	}
+
+	return batchHeaders, nil
 }
 
 func BatchRepositoryFactory(log *logrus.Logger) IBatchRepository {
