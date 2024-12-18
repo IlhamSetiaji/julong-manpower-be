@@ -18,6 +18,7 @@ type SendFindJobByIDMessageResponse struct {
 type SendFindJobLevelByIDMessageResponse struct {
 	JobLevelID uuid.UUID `json:"job_level_id"`
 	Name       string    `json:"name"`
+	Level      float64   `json:"level"`
 }
 
 type FindAllPaginatedJobPlafonResponse struct {

@@ -1,42 +1,93 @@
 package dto
 
 import (
+	"strconv"
+
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/repository"
 	"github.com/sirupsen/logrus"
 )
 
 type IBatchDTO interface {
 	ConvertBatchHeaderEntityToResponse(batch *entity.BatchHeader) *response.BatchResponse
 	ConvertToDocumentBatchResponse(batch *entity.BatchHeader, operatingUnit string) *response.DocumentBatchResponse
-	ConvertToDocumentCalculationBatchResponse(mpPlanningLine entity.MPPlanningLine, isTotal bool) *response.DocumentCalculationBatchResponse
+	ConvertToDocumentCalculationBatchResponse(mpPlanningLine entity.MPPlanningLine, isTotal bool, planningLines *[]entity.MPPlanningLine) *response.DocumentCalculationBatchResponse
 	ConvertDocumentCalculationBatchResponses(mpPlanningLines []entity.MPPlanningLine) []response.DocumentCalculationBatchResponse
-	// ConvertRealDocumentBatchResponse(batch *entity.BatchHeader) *response.RealDocumentBatchResponse
+	ConvertRealDocumentBatchResponse(batch *entity.BatchHeader) *response.RealDocumentBatchResponse
 }
 
 type BatchDTO struct {
-	log          *logrus.Logger
-	batchLineDTO IBatchLineDTO
+	Log              *logrus.Logger
+	BatchLineDTO     IBatchLineDTO
+	JobPlafonMessage messaging.IJobPlafonMessage
+	OrgMessage       messaging.IOrganizationMessage
+	mppPeriodRepo    repository.IMPPPeriodRepository
 }
 
-func NewBatchDTO(log *logrus.Logger, batchLineDTO IBatchLineDTO) IBatchDTO {
+func NewBatchDTO(log *logrus.Logger, batchLineDTO IBatchLineDTO, jpm messaging.IJobPlafonMessage, orgMessage messaging.IOrganizationMessage, mppPeriodRepo repository.IMPPPeriodRepository) IBatchDTO {
 	return &BatchDTO{
-		log:          log,
-		batchLineDTO: batchLineDTO,
+		Log:              log,
+		BatchLineDTO:     batchLineDTO,
+		JobPlafonMessage: jpm,
+		OrgMessage:       orgMessage,
+		mppPeriodRepo:    mppPeriodRepo,
 	}
 }
 
-// func (d *BatchDTO) ConvertRealDocumentBatchResponse(batch *entity.BatchHeader) *response.RealDocumentBatchResponse {
-// 	return &response.RealDocumentBatchResponse{
-// 		Overall: *d.ConvertToDocumentBatchResponse(batch, "Julong"),
-// 		OrganizationOverall: func() []response.OrganizationOverallResponse {
-// 			var organizationOverall []response.OrganizationOverallResponse
-// 			for _, bl := range batch.BatchLines {
-
-// 			return organizationOverall
-// 		}(),
-// 	}
-// }
+func (d *BatchDTO) ConvertRealDocumentBatchResponse(batch *entity.BatchHeader) *response.RealDocumentBatchResponse {
+	return &response.RealDocumentBatchResponse{
+		Overall: *d.ConvertToDocumentBatchResponse(batch, "Julong"),
+		OrganizationOverall: func() []response.OrganizationOverallResponse {
+			var organizationOverall []response.OrganizationOverallResponse
+			// group batch lines by organization id
+			groupedBatchLines := make(map[string][]entity.BatchLine)
+			for _, bl := range batch.BatchLines {
+				groupedBatchLines[bl.OrganizationID.String()] = append(groupedBatchLines[bl.OrganizationID.String()], bl)
+			}
+			for orgID, bls := range groupedBatchLines {
+				// check org name
+				messageResponse, err := d.OrgMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+					ID: orgID,
+				})
+				if err != nil {
+					d.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+				}
+				orgName := messageResponse.Name
+				organizationOverall = append(organizationOverall, response.OrganizationOverallResponse{
+					Overall: *d.ConvertToDocumentBatchResponse(&entity.BatchHeader{
+						BatchLines: bls,
+					}, orgName),
+					LocationOverall: func() []response.DocumentBatchResponse {
+						var locationOverall []response.DocumentBatchResponse
+						// group batch lines by organization location id
+						groupedBatchLines := make(map[string][]entity.BatchLine)
+						for _, bl := range bls {
+							groupedBatchLines[bl.OrganizationLocationID.String()] = append(groupedBatchLines[bl.OrganizationLocationID.String()], bl)
+						}
+						for locID, bls := range groupedBatchLines {
+							// check location name
+							messageResponse, err := d.OrgMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+								ID: locID,
+							})
+							if err != nil {
+								d.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+							}
+							orgLocationName := messageResponse.Name
+							locationOverall = append(locationOverall, *d.ConvertToDocumentBatchResponse(&entity.BatchHeader{
+								BatchLines: bls,
+							}, orgLocationName))
+						}
+						return locationOverall
+					}(),
+				})
+			}
+			return organizationOverall
+		}(),
+	}
+}
 
 func (d *BatchDTO) ConvertBatchHeaderEntityToResponse(batch *entity.BatchHeader) *response.BatchResponse {
 	return &response.BatchResponse{
@@ -46,21 +97,38 @@ func (d *BatchDTO) ConvertBatchHeaderEntityToResponse(batch *entity.BatchHeader)
 		Status:         string(batch.Status),
 		CreatedAt:      batch.CreatedAt,
 		UpdatedAt:      batch.UpdatedAt,
-		BatchLines:     d.batchLineDTO.ConvertBatchLineEntitiesToResponse(&batch.BatchLines),
+		BatchLines:     d.BatchLineDTO.ConvertBatchLineEntitiesToResponse(&batch.BatchLines),
 	}
 }
 
 func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, operatingUnit string) *response.DocumentBatchResponse {
+	currentMppPeriod, err := d.mppPeriodRepo.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+	if err != nil {
+		d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
+	}
+	var budgetYear string = "2024"
+	if currentMppPeriod != nil {
+		budgetYear = currentMppPeriod.BudgetStartDate.Format("2006") + "/" + currentMppPeriod.BudgetEndDate.Format("2006")
+	}
 	return &response.DocumentBatchResponse{
 		OperatingUnit: operatingUnit,
-		BudgetYear:    batch.DocumentDate.Format("2006"),
+		BudgetYear:    budgetYear,
 		Grade: response.GradeBatchResponse{
 			Executive: func() []response.DocumentCalculationBatchResponse {
 				var executive []response.DocumentCalculationBatchResponse
 				for _, bl := range batch.BatchLines {
 					for _, mpl := range bl.MPPlanningHeader.MPPlanningLines {
+						// check job level name
+						message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+							ID: mpl.JobLevelID.String(),
+						})
+						if err != nil {
+							d.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+						}
+						mpl.JobLevelName = message2Response.Name
+						mpl.JobLevel = int(message2Response.Level)
 						if mpl.JobLevel > 3 {
-							executive = append(executive, *d.ConvertToDocumentCalculationBatchResponse(mpl, false))
+							executive = append(executive, *d.ConvertToDocumentCalculationBatchResponse(mpl, false, &bl.MPPlanningHeader.MPPlanningLines))
 						}
 					}
 				}
@@ -70,8 +138,16 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 				var nonExecutive []response.DocumentCalculationBatchResponse
 				for _, bl := range batch.BatchLines {
 					for _, mpl := range bl.MPPlanningHeader.MPPlanningLines {
+						message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+							ID: mpl.JobLevelID.String(),
+						})
+						if err != nil {
+							d.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+						}
+						mpl.JobLevelName = message2Response.Name
+						mpl.JobLevel = int(message2Response.Level)
 						if mpl.JobLevel <= 3 {
-							nonExecutive = append(nonExecutive, *d.ConvertToDocumentCalculationBatchResponse(mpl, false))
+							nonExecutive = append(nonExecutive, *d.ConvertToDocumentCalculationBatchResponse(mpl, false, &bl.MPPlanningHeader.MPPlanningLines))
 						}
 					}
 				}
@@ -85,7 +161,26 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 						totalExisting += mpl.Existing
 						totalPromote += mpl.Promotion
 						totalRecruit += mpl.RecruitPH + mpl.RecruitMT
-						totalOverall += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT
+
+						message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+							ID: mpl.JobLevelID.String(),
+						})
+						if err != nil {
+							d.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+						}
+						mpl.JobLevelName = message2Response.Name
+						mpl.JobLevel = int(message2Response.Level)
+
+						previousMpPlanningLine, err := d.findPreviousMPPlanningLineByJobLevel(mpl.JobLevel+1, bl.MPPlanningHeader.MPPlanningLines)
+						if err != nil {
+							d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
+						}
+
+						if previousMpPlanningLine != nil {
+							totalOverall += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT - previousMpPlanningLine.Promotion
+						} else {
+							totalOverall += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT
+						}
 					}
 					total = append(total, response.DocumentCalculationBatchResponse{
 						JobLevelName: "Total",
@@ -102,13 +197,54 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 	}
 }
 
-func (d *BatchDTO) ConvertToDocumentCalculationBatchResponse(mpPlanningLine entity.MPPlanningLine, isTotal bool) *response.DocumentCalculationBatchResponse {
+func (d *BatchDTO) findPreviousMPPlanningLineByJobLevel(jobLevel int, mpPlanningLines []entity.MPPlanningLine) (*entity.MPPlanningLine, error) {
+	for _, mpl := range mpPlanningLines {
+		message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+			ID: mpl.JobLevelID.String(),
+		})
+		if err != nil {
+			d.Log.Errorf("[MPPlanningUseCase.findPreviousMPPlanningLineByJobLevel Message] " + err.Error())
+			return nil, err
+		}
+		mpl.JobLevelName = message2Response.Name
+		mpl.JobLevel = int(message2Response.Level)
+		if mpl.JobLevel == jobLevel {
+			return &mpl, nil
+		}
+	}
+	return nil, nil
+}
+
+func (d *BatchDTO) ConvertToDocumentCalculationBatchResponse(mpPlanningLine entity.MPPlanningLine, isTotal bool, planningLines *[]entity.MPPlanningLine) *response.DocumentCalculationBatchResponse {
+	message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+		ID: mpPlanningLine.JobLevelID.String(),
+	})
+	if err != nil {
+		d.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+	}
+	mpPlanningLine.JobLevelName = message2Response.Name
+	mpPlanningLine.JobLevel = int(message2Response.Level)
+
+	var totalOverall int = 0
+	if planningLines != nil {
+		previousMpPlanningLine, err := d.findPreviousMPPlanningLineByJobLevel(mpPlanningLine.JobLevel+1, *planningLines)
+		if err != nil {
+			d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
+		}
+		if previousMpPlanningLine != nil {
+			totalOverall += mpPlanningLine.Existing + mpPlanningLine.Promotion + mpPlanningLine.RecruitPH + mpPlanningLine.RecruitMT - previousMpPlanningLine.Promotion
+		} else {
+			totalOverall += mpPlanningLine.Existing + mpPlanningLine.Promotion + mpPlanningLine.RecruitPH + mpPlanningLine.RecruitMT
+		}
+	} else {
+		totalOverall += mpPlanningLine.Existing + mpPlanningLine.Promotion + mpPlanningLine.RecruitPH + mpPlanningLine.RecruitMT
+	}
 	return &response.DocumentCalculationBatchResponse{
-		JobLevelName: mpPlanningLine.JobLevelName,
+		JobLevelName: strconv.Itoa(mpPlanningLine.JobLevel),
 		Existing:     mpPlanningLine.Existing,
 		Promote:      mpPlanningLine.Promotion,
 		Recruit:      mpPlanningLine.RecruitPH + mpPlanningLine.RecruitMT,
-		Total:        mpPlanningLine.Existing + mpPlanningLine.Promotion + mpPlanningLine.RecruitPH + mpPlanningLine.RecruitMT,
+		Total:        totalOverall,
 		IsTotal:      isTotal,
 	}
 }
@@ -116,12 +252,15 @@ func (d *BatchDTO) ConvertToDocumentCalculationBatchResponse(mpPlanningLine enti
 func (d *BatchDTO) ConvertDocumentCalculationBatchResponses(mpPlanningLines []entity.MPPlanningLine) []response.DocumentCalculationBatchResponse {
 	var responses []response.DocumentCalculationBatchResponse
 	for _, mpPlanningLine := range mpPlanningLines {
-		responses = append(responses, *d.ConvertToDocumentCalculationBatchResponse(mpPlanningLine, false))
+		responses = append(responses, *d.ConvertToDocumentCalculationBatchResponse(mpPlanningLine, false, &mpPlanningLines))
 	}
 	return responses
 }
 
 func BatchDTOFactory(log *logrus.Logger) IBatchDTO {
 	batchLineDTO := BatchLineDTOFactory(log)
-	return NewBatchDTO(log, batchLineDTO)
+	jpm := messaging.JobPlafonMessageFactory(log)
+	orgMessage := messaging.OrganizationMessageFactory(log)
+	mppPeriodRepo := repository.MPPPeriodRepositoryFactory(log)
+	return NewBatchDTO(log, batchLineDTO, jpm, orgMessage, mppPeriodRepo)
 }

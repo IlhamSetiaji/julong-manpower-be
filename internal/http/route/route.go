@@ -95,7 +95,8 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			// batch
 			apiRoute.POST("/batch/create", c.BatchHandler.CreateBatchHeaderAndLines)
 			apiRoute.GET("/batch/find-by-status/:status", c.BatchHandler.FindByStatus)
-			apiRoute.GET("/batch/find-by-id/:id", c.BatchHandler.FindById)
+			apiRoute.GET("/batch/find-document/:id", c.BatchHandler.FindDocumentByID)
+			apiRoute.GET("/batch/:id", c.BatchHandler.FindById)
 		}
 	}
 }

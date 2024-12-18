@@ -19,6 +19,7 @@ type IBatchHandler interface {
 	CreateBatchHeaderAndLines(c *gin.Context)
 	FindByStatus(c *gin.Context)
 	FindById(c *gin.Context)
+	FindDocumentByID(c *gin.Context)
 }
 
 type BatchHandler struct {
@@ -86,6 +87,18 @@ func (h *BatchHandler) FindById(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Batch found", batch)
+}
+
+func (h *BatchHandler) FindDocumentByID(c *gin.Context) {
+	id := c.Param("id")
+	batch, err := h.UseCase.FindDocumentByID(id)
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find document by id", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Document found", batch)
 }
 
 func BatchHandlerFactory(log *logrus.Logger, viper *viper.Viper) IBatchHandler {
