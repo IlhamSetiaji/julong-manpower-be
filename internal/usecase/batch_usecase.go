@@ -25,22 +25,24 @@ type IBatchUsecase interface {
 }
 
 type BatchUsecase struct {
-	Viper      *viper.Viper
-	Log        *logrus.Logger
-	Repo       repository.IBatchRepository
-	OrgMessage messaging.IOrganizationMessage
-	EmpMessage messaging.IEmployeeMessage
-	batchDTO   dto.IBatchDTO
+	Viper          *viper.Viper
+	Log            *logrus.Logger
+	Repo           repository.IBatchRepository
+	OrgMessage     messaging.IOrganizationMessage
+	EmpMessage     messaging.IEmployeeMessage
+	batchDTO       dto.IBatchDTO
+	mpPlanningRepo repository.IMPPlanningRepository
 }
 
-func NewBatchUsecase(viper *viper.Viper, log *logrus.Logger, repo repository.IBatchRepository, orgMessage messaging.IOrganizationMessage, empMessage messaging.IEmployeeMessage, batchDTO dto.IBatchDTO) IBatchUsecase {
+func NewBatchUsecase(viper *viper.Viper, log *logrus.Logger, repo repository.IBatchRepository, orgMessage messaging.IOrganizationMessage, empMessage messaging.IEmployeeMessage, batchDTO dto.IBatchDTO, mpPlanningRepo repository.IMPPlanningRepository) IBatchUsecase {
 	return &BatchUsecase{
-		Viper:      viper,
-		Log:        log,
-		Repo:       repo,
-		OrgMessage: orgMessage,
-		EmpMessage: empMessage,
-		batchDTO:   batchDTO,
+		Viper:          viper,
+		Log:            log,
+		Repo:           repo,
+		OrgMessage:     orgMessage,
+		EmpMessage:     empMessage,
+		batchDTO:       batchDTO,
+		mpPlanningRepo: mpPlanningRepo,
 	}
 }
 
@@ -144,6 +146,13 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 			return nil, err
 		}
 
+		err = uc.updateMpPlanningHeaderStatus(batchLines, uuid.MustParse(req.ApproverID), req.ApproverName)
+
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] " + err.Error())
+			return nil, err
+		}
+
 		return uc.batchDTO.ConvertBatchHeaderEntityToResponse(findBatchHeader), nil
 	}
 
@@ -152,7 +161,35 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 		return nil, err
 	}
 
+	err = uc.updateMpPlanningHeaderStatus(batchLines, uuid.MustParse(req.ApproverID), req.ApproverName)
+
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] " + err.Error())
+		return nil, err
+	}
+
 	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(resp), nil
+}
+
+func (uc *BatchUsecase) updateMpPlanningHeaderStatus(batchLines []entity.BatchLine, approverID uuid.UUID, approverName string) error {
+	for _, bl := range batchLines {
+		approvalHistory := &entity.MPPlanningApprovalHistory{
+			MPPlanningHeaderID: bl.MPPlanningHeaderID,
+			ApproverID:         approverID,
+			ApproverName:       approverName,
+			Notes:              "",
+			Level:              string(entity.MPPlanningApprovalHistoryLevelRecruitment),
+			Status:             entity.MPPlanningApprovalHistoryStatusNeedApproval,
+		}
+
+		err := uc.mpPlanningRepo.UpdateStatusHeader(bl.MPPlanningHeaderID, string(entity.MPPlanningApprovalHistoryStatusNeedApproval), approverID.String(), approvalHistory)
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] " + err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (uc *BatchUsecase) FindByStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error) {
@@ -208,5 +245,6 @@ func BatchUsecaseFactory(viper *viper.Viper, log *logrus.Logger) IBatchUsecase {
 	orgMessage := messaging.OrganizationMessageFactory(log)
 	empMessage := messaging.EmployeeMessageFactory(log)
 	batchDTO := dto.BatchDTOFactory(log)
-	return NewBatchUsecase(viper, log, repo, orgMessage, empMessage, batchDTO)
+	mpPlanningRepo := repository.MPPlanningRepositoryFactory(log)
+	return NewBatchUsecase(viper, log, repo, orgMessage, empMessage, batchDTO, mpPlanningRepo)
 }
