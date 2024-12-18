@@ -117,6 +117,34 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 		}
 	}
 
+	batchHeaderExists, err := uc.Repo.FindByStatus(entity.BatchHeaderApprovalStatusNeedApproval)
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] " + err.Error())
+		return nil, err
+	}
+
+	if batchHeaderExists != nil {
+		err = uc.Repo.InsertLinesByBatchHeaderID(batchHeaderExists.ID.String(), batchLines)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] " + err.Error())
+			return nil, err
+		}
+
+		err = uc.Repo.DeleteLinesNotInBatchLines(batchHeaderExists.ID.String(), batchLines)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] " + err.Error())
+			return nil, err
+		}
+
+		findBatchHeader, err := uc.Repo.FindById(batchHeaderExists.ID.String())
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] " + err.Error())
+			return nil, err
+		}
+
+		return uc.batchDTO.ConvertBatchHeaderEntityToResponse(findBatchHeader), nil
+	}
+
 	resp, err := uc.Repo.CreateBatchHeaderAndLines(batchHeader, batchLines)
 	if err != nil {
 		return nil, err

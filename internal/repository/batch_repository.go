@@ -115,7 +115,7 @@ func (r *BatchRepository) FindByStatus(status entity.BatchHeaderApprovalStatus) 
 
 func (r *BatchRepository) FindById(id string) (*entity.BatchHeader, error) {
 	var batchHeader entity.BatchHeader
-	if err := r.DB.Where("id = ?", id).First(&batchHeader).Error; err != nil {
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("id = ?", id).First(&batchHeader).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			r.Log.Warnf("Batch header with id %s not found", id)
 			return nil, nil
