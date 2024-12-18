@@ -11,7 +11,7 @@ import (
 )
 
 type IMPPlanningRepository interface {
-	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string) (*[]entity.MPPlanningHeader, int64, error)
+	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
@@ -48,7 +48,7 @@ func NewMPPlanningRepository(log *logrus.Logger, db *gorm.DB) IMPPlanningReposit
 	}
 }
 
-func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string) (*[]entity.MPPlanningHeader, int64, error) {
+func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string) (*[]entity.MPPlanningHeader, int64, error) {
 	var mppHeaders []entity.MPPlanningHeader
 	var total int64
 
@@ -65,6 +65,14 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 		} else {
 			query = query.Where("approver_recruitment_id IS NOT NULL")
 		}
+	}
+
+	if orgLocationId != "" {
+		query = query.Where("organization_location_id = ?", orgLocationId)
+	}
+
+	if orgId != "" {
+		query = query.Where("organization_id = ?", orgId)
 	}
 
 	countQuery := query.Session(&gorm.Session{})

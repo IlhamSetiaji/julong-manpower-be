@@ -87,6 +87,16 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 		approverType = ""
 	}
 
+	orgLocationID := ctx.Query("org_location_id")
+	if orgLocationID == "" {
+		orgLocationID = ""
+	}
+
+	orgID := ctx.Query("org_id")
+	if orgID == "" {
+		orgID = ""
+	}
+
 	h.Log.Infof("approver type: %s", approverType)
 
 	req := request.FindAllHeadersPaginatedMPPlanningRequest{
