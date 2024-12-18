@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/google/uuid"
@@ -15,6 +17,7 @@ type IBatchRepository interface {
 	FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 	FindById(id string) (*entity.BatchHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error)
+	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 }
 
 type BatchRepository struct {
@@ -136,6 +139,22 @@ func (r *BatchRepository) GetHeadersByDocumentDate(documentDate string) ([]entit
 	}
 
 	return batchHeaders, nil
+}
+
+func (r *BatchRepository) FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error) {
+	var batchHeader entity.BatchHeader
+	dateNow := time.Now()
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ? AND document_date = ?", status, dateNow.Format("2006-01-02")).First(&batchHeader).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.Log.Warnf("Batch header with status %s and document date %s not found", status, dateNow.Format("2006-01-02"))
+			return nil, nil
+		} else {
+			r.Log.Error(err)
+			return nil, err
+		}
+	}
+
+	return &batchHeader, nil
 }
 
 func BatchRepositoryFactory(log *logrus.Logger) IBatchRepository {

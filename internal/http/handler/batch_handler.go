@@ -20,6 +20,7 @@ type IBatchHandler interface {
 	FindByStatus(c *gin.Context)
 	FindById(c *gin.Context)
 	FindDocumentByID(c *gin.Context)
+	FindByCurrentDocumentDateAndStatus(c *gin.Context)
 }
 
 type BatchHandler struct {
@@ -99,6 +100,19 @@ func (h *BatchHandler) FindDocumentByID(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Document found", batch)
+}
+
+func (h *BatchHandler) FindByCurrentDocumentDateAndStatus(c *gin.Context) {
+	status := c.Param("status")
+	approvalStatus := entity.BatchHeaderApprovalStatus(status)
+	batch, err := h.UseCase.FindByCurrentDocumentDateAndStatus(approvalStatus)
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find batch by current document date and status", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Batch found", batch)
 }
 
 func BatchHandlerFactory(log *logrus.Logger, viper *viper.Viper) IBatchHandler {
