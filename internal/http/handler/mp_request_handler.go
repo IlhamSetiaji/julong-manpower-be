@@ -1,8 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
+	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
@@ -17,6 +21,7 @@ import (
 type IMPRequestHandler interface {
 	Create(ctx *gin.Context)
 	FindAllPaginated(ctx *gin.Context)
+	UpdateStatusMPRequestHeader(ctx *gin.Context)
 }
 
 type MPRequestHandler struct {
@@ -121,4 +126,83 @@ func (h *MPRequestHandler) Create(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusCreated, "MP Request Header created", res)
+}
+
+func (h *MPRequestHandler) UpdateStatusMPRequestHeader(ctx *gin.Context) {
+	if err := ctx.Request.ParseMultipartForm(10 << 20); err != nil { // 10 MB max memory
+		h.Log.Errorf("[MPRequestHandler.UpdateStatusMPRequestHeader] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	// Get JSON payload
+	jsonData := ctx.Request.FormValue("payload")
+	if jsonData == "" {
+		h.Log.Errorf("[MPRequestHandler.UpdateStatusMPRequestHeader] error when get json payload")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "Invalid request body")
+		return
+	}
+
+	payload := new(request.UpdateMPRequestHeaderRequest)
+	if err := json.Unmarshal([]byte(jsonData), payload); err != nil {
+		h.Log.Errorf("[MPRequestHandler.UpdateStatusMPRequestHeader] error when unmarshal json payload: %v", err)
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	} else {
+		h.Log.Infof("[MPRequestHandler.UpdateStatusMPRequestHeader] payload: %v", payload)
+	}
+
+	if err := h.Validate.Struct(payload); err != nil {
+		h.Log.Errorf("[MPRequestHandler.UpdateStatusMPRequestHeader] error when validate request: %v", err)
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	// process attachments
+	form, err := ctx.MultipartForm()
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.UpdateStatusMPRequestHeader] error when get multipart form: %v", err)
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	files := form.File["attachments"]
+	var attachments []request.ManpowerAttachmentRequest
+	for _, file := range files {
+		// Generate a new file name with a timestamp
+		timestamp := time.Now().UnixNano()
+		extension := filepath.Ext(file.Filename)
+		newFileName := fmt.Sprintf("%d%s", timestamp, extension)
+		filePath := "storage/mp_request_header/attachments/" + newFileName
+
+		// save the file
+		if err := ctx.SaveUploadedFile(file, filePath); err != nil {
+			h.Log.Errorf("[MPRequestHandler.UpdateStatusMPRequestHeader] error when save uploaded file: %v", err)
+			utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+			return
+		} else {
+			h.Log.Infof("[MPRequestHandler.UpdateStatusMPRequestHeader] file saved to: %s", filePath)
+		}
+
+		// get the file type
+		fileType := file.Header.Get("Content-Type")
+
+		// add file information to the attachments
+		attachments = append(attachments, request.ManpowerAttachmentRequest{
+			FilePath: filePath,
+			FileType: fileType,
+			FileName: newFileName,
+		})
+	}
+
+	payload.Attachments = attachments
+
+	err = h.UseCase.UpdateStatusHeader(payload)
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.UpdateStatusMPRequestHeader] error when update status: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to update status", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Header status updated", nil)
 }

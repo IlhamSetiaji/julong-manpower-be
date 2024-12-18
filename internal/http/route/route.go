@@ -93,6 +93,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			// mp requests
 			apiRoute.GET("/mp-requests", c.MPRequestHandler.FindAllPaginated)
 			apiRoute.POST("/mp-requests", c.MPRequestHandler.Create)
+			apiRoute.PUT("/mp-requests/status", c.MPRequestHandler.UpdateStatusMPRequestHeader)
 
 			// batch
 			apiRoute.POST("/batch/create", c.BatchHandler.CreateBatchHeaderAndLines)

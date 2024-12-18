@@ -10,8 +10,19 @@ import (
 type MPRequestApprovalHistoryStatus string
 
 const (
-	MPRequestApprovalHistoryStatusApproved MPRequestApprovalHistoryStatus = "Approved"
-	MPRequestApprovalHistoryStatusRejected MPRequestApprovalHistoryStatus = "Rejected"
+	MPRequestApprovalHistoryStatusApproved     MPRequestApprovalHistoryStatus = "APPROVED"
+	MPRequestApprovalHistoryStatusRejected     MPRequestApprovalHistoryStatus = "REJECTED"
+	MPRequestApprovalHistoryStatusNeedApproval MPRequestApprovalHistoryStatus = "NEED APPROVAL"
+)
+
+type MPRequestApprovalHistoryLevel string
+
+const (
+	MPRequestApprovalHistoryLevelStaff    MPRequestApprovalHistoryLevel = "Level Staff"
+	MPRequestApprovalHistoryLevelHeadDept MPRequestApprovalHistoryLevel = "Level Head Department"
+	MPRequestApprovalHistoryLevelVP       MPRequestApprovalHistoryLevel = "Level VP"
+	MPRequestApprovalHistoryLevelCEO      MPRequestApprovalHistoryLevel = "Level CEO"
+	MPPRequestApprovalHistoryLevelHRDHO   MPRequestApprovalHistoryLevel = "Level HRD HO"
 )
 
 type MPRequestApprovalHistory struct {
@@ -21,6 +32,7 @@ type MPRequestApprovalHistory struct {
 	ApproverID        uuid.UUID                      `json:"approver_id" gorm:"type:char(36);"`
 	ApproverName      string                         `json:"approver_name" gorm:"type:varchar(255);"`
 	Notes             string                         `json:"notes" gorm:"type:text;"`
+	Level             string                         `json:"level" gorm:"type:varchar(255);"`
 	Status            MPRequestApprovalHistoryStatus `json:"status" gorm:"not null"`
 
 	MPRequestHeader     MPRequestHeader      `gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;"`

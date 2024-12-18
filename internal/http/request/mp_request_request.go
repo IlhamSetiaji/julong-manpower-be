@@ -46,3 +46,13 @@ type CreateMPRequestHeaderRequest struct {
 	EmpOrganizationID          *uuid.UUID                 `json:"emp_organization_id" validate:"omitempty,uuid"`
 	JobLevelID                 *uuid.UUID                 `json:"job_level_id" validate:"omitempty,uuid"`
 }
+
+type UpdateMPRequestHeaderRequest struct {
+	ID          string                               `json:"id" validate:"required"`
+	Status      entity.MPRequestStatus               `json:"status" validate:"required,MPRequestStatusValidation"`
+	Notes       string                               `json:"notes" validate:"omitempty"`
+	Level       entity.MPRequestApprovalHistoryLevel `json:"level" validate:"required,MPRequestApprovalHistoryLevelValidation"`
+	Attachments []ManpowerAttachmentRequest          `json:"attachments" validate:"omitempty,dive"`
+	ApprovedBy  string                               `json:"approved_by" validate:"required"`
+	ApproverID  uuid.UUID                            `json:"approver_id" validate:"required"`
+}

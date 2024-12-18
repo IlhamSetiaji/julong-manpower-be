@@ -9,6 +9,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/repository"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -16,6 +17,7 @@ import (
 type IMPRequestUseCase interface {
 	Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
+	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
 }
 
 type MPRequestUseCase struct {
@@ -446,6 +448,81 @@ func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search stri
 		MPRequestHeader: mpRequestHeaderResponses,
 		Total:           total,
 	}, nil
+}
+
+func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error {
+	// check if mp request header is exist
+	mpRequestHeader, err := uc.MPRequestRepository.FindById(uuid.MustParse(req.ID))
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when find mp request header by id: %v", err)
+		return err
+	}
+
+	if mpRequestHeader == nil {
+		uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] mp request header with id %s is not exist", req.ID)
+		return errors.New("mp request header is not exist")
+	}
+
+	// check if approver ID is exist
+	approverExist, err := uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+		ID: req.ApproverID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when send find employee by id message: %v", err)
+		return err
+	}
+	if approverExist == nil {
+		uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] approver with id %s is not exist", req.ApproverID.String())
+		return errors.New("approver is not exist")
+	}
+
+	var approvalHistory *entity.MPRequestApprovalHistory
+
+	if req.Status != entity.MPRequestStatusDraft && req.Status != entity.MPRequestStatusSubmitted && req.Status != entity.MPRequestStatusCompleted {
+		approvalHistory = &entity.MPRequestApprovalHistory{
+			MPRequestHeaderID: mpRequestHeader.ID,
+			ApproverID:        req.ApproverID,
+			ApproverName:      approverExist.Name,
+			Level:             string(req.Level),
+			Notes:             req.Notes,
+			Status: func() entity.MPRequestApprovalHistoryStatus {
+				if req.Status == entity.MPRequestStatusRejected {
+					return entity.MPRequestApprovalHistoryStatusRejected
+				} else if req.Status == entity.MPRequestStatusApproved {
+					return entity.MPRequestApprovalHistoryStatusApproved
+				} else if req.Status == entity.MPRequestStatusNeedApproval {
+					return entity.MPRequestApprovalHistoryStatusNeedApproval
+				}
+				return entity.MPRequestApprovalHistoryStatusRejected
+			}(),
+		}
+	}
+
+	err = uc.MPRequestRepository.UpdateStatusHeader(uuid.MustParse(req.ID), string(req.Status), req.ApproverID.String(), approvalHistory)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp request header: %v", err)
+		return err
+	}
+
+	if req.Attachments != nil {
+		for _, attachment := range req.Attachments {
+			_, err := uc.MPRequestRepository.StoreAttachmentToApprovalHistory(approvalHistory, entity.ManpowerAttachment{
+				FileName:  attachment.FileName,
+				FileType:  attachment.FileType,
+				FilePath:  attachment.FilePath,
+				OwnerType: "mp_request_approval_histories",
+				OwnerID:   approvalHistory.ID,
+			})
+
+			if err != nil {
+				uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when store attachment to approval history: %v", err)
+				return err
+			}
+		}
+	}
+
+	uc.Log.Infof("[MPRequestUseCase.UpdateStatusHeader] mp request header with id %s has been updated", string(req.ID))
+	return nil
 }
 
 func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestUseCase {

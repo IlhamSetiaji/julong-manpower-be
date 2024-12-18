@@ -80,7 +80,7 @@ func MPRequestStatusValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.MPRequestStatus(status) {
-	case entity.MPRequestStatusDraft, entity.MPRequestStatusSubmitted, entity.MPRequestStatusRejected, entity.MPRequestStatusApproved, entity.MPRequestStatusNeedApproval:
+	case entity.MPRequestStatusDraft, entity.MPRequestStatusSubmitted, entity.MPRequestStatusRejected, entity.MPRequestStatusApproved, entity.MPRequestStatusNeedApproval, entity.MPRequestStatusCompleted:
 		return true
 	default:
 		return false
@@ -133,6 +133,32 @@ func BatchHeaderApprovalStatusValidation(fl validator.FieldLevel) bool {
 	}
 	switch entity.BatchHeaderApprovalStatus(status) {
 	case entity.BatchHeaderApprovalStatusApproved, entity.BatchHeaderApprovalStatusRejected, entity.BatchHeaderApprovalStatusNeedApproval:
+		return true
+	default:
+		return false
+	}
+}
+
+func MPRequestApprovalHistoryStatusValidation(fl validator.FieldLevel) bool {
+	status := fl.Field().String()
+	if status == "" {
+		return true
+	}
+	switch entity.MPRequestApprovalHistoryStatus(status) {
+	case entity.MPRequestApprovalHistoryStatusApproved, entity.MPRequestApprovalHistoryStatusRejected, entity.MPRequestApprovalHistoryStatusNeedApproval:
+		return true
+	default:
+		return false
+	}
+}
+
+func MPRequestApprovalHistoryLevelValidation(fl validator.FieldLevel) bool {
+	status := fl.Field().String()
+	if status == "" {
+		return true
+	}
+	switch entity.MPRequestApprovalHistoryLevel(status) {
+	case entity.MPRequestApprovalHistoryLevelStaff, entity.MPRequestApprovalHistoryLevelHeadDept, entity.MPRequestApprovalHistoryLevelVP, entity.MPRequestApprovalHistoryLevelCEO, entity.MPPRequestApprovalHistoryLevelHRDHO:
 		return true
 	default:
 		return false

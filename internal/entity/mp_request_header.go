@@ -15,6 +15,7 @@ const (
 	MPRequestStatusRejected     MPRequestStatus = "REJECTED"
 	MPRequestStatusApproved     MPRequestStatus = "APPROVED"
 	MPRequestStatusNeedApproval MPRequestStatus = "NEED APPROVAL"
+	MPRequestStatusCompleted    MPRequestStatus = "COMPLETED"
 )
 
 type MaritalStatusEnum string
