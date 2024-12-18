@@ -99,6 +99,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.GET("/batch/find-document/:id", c.BatchHandler.FindDocumentByID)
 			apiRoute.GET("/batch/current-status/:status", c.BatchHandler.FindByCurrentDocumentDateAndStatus)
 			apiRoute.GET("/batch/:id", c.BatchHandler.FindById)
+			apiRoute.PUT("/batch/update-status", c.BatchHandler.UpdateStatusBatchHeader)
 		}
 	}
 }

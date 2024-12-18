@@ -22,6 +22,7 @@ type IBatchUsecase interface {
 	FindById(id string) (*response.BatchResponse, error)
 	FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error)
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
+	UpdateStatusBatchHeader(req *request.UpdateStatusBatchHeaderRequest) (*response.BatchResponse, error)
 }
 
 type BatchUsecase struct {
@@ -228,6 +229,34 @@ func (uc *BatchUsecase) FindById(id string) (*response.BatchResponse, error) {
 	}
 
 	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(resp), nil
+}
+
+func (uc *BatchUsecase) UpdateStatusBatchHeader(req *request.UpdateStatusBatchHeaderRequest) (*response.BatchResponse, error) {
+	batchHeader, err := uc.Repo.FindById(req.ID)
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.UpdateStatusBatchHeader] " + err.Error())
+		return nil, err
+	}
+
+	if batchHeader == nil {
+		return nil, errors.New("Batch not found")
+	}
+
+	if batchHeader.Status == entity.BatchHeaderApprovalStatusApproved {
+		return nil, errors.New("Batch already approved")
+	}
+
+	if batchHeader.Status == entity.BatchHeaderApprovalStatusRejected {
+		return nil, errors.New("Batch already rejected")
+	}
+
+	err = uc.Repo.UpdateStatusBatchHeader(batchHeader, req.Status, req.ApprovedBy, req.ApproverName)
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.UpdateStatusBatchHeader] " + err.Error())
+		return nil, err
+	}
+
+	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(batchHeader), nil
 }
 
 func (uc *BatchUsecase) FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error) {

@@ -21,6 +21,7 @@ type IBatchHandler interface {
 	FindById(c *gin.Context)
 	FindDocumentByID(c *gin.Context)
 	FindByCurrentDocumentDateAndStatus(c *gin.Context)
+	UpdateStatusBatchHeader(c *gin.Context)
 }
 
 type BatchHandler struct {
@@ -113,6 +114,30 @@ func (h *BatchHandler) FindByCurrentDocumentDateAndStatus(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Batch found", batch)
+}
+
+func (h *BatchHandler) UpdateStatusBatchHeader(c *gin.Context) {
+	var req request.UpdateStatusBatchHeaderRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	if err := h.Validate.Struct(req); err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	batchHeader, err := h.UseCase.UpdateStatusBatchHeader(&req)
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to update batch header status", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Batch header status updated", batchHeader)
 }
 
 func BatchHandlerFactory(log *logrus.Logger, viper *viper.Viper) IBatchHandler {

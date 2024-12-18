@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"errors"
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
@@ -18,6 +19,7 @@ type IBatchRepository interface {
 	FindById(id string) (*entity.BatchHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error)
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
+	UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
 }
 
 type BatchRepository struct {
@@ -155,6 +157,106 @@ func (r *BatchRepository) FindByCurrentDocumentDateAndStatus(status entity.Batch
 	}
 
 	return &batchHeader, nil
+}
+
+func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error {
+	tx := r.DB.Begin()
+	if err := tx.Model(&entity.BatchHeader{}).Where("id = ?", batchHeader.ID).Update("status", status).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+		return err
+	}
+
+	// loop through the batch lines and update the status
+	for _, bl := range batchHeader.BatchLines {
+		var approvalHistory *entity.MPPlanningApprovalHistory
+
+		approvalHistory = &entity.MPPlanningApprovalHistory{
+			MPPlanningHeaderID: bl.MPPlanningHeaderID,
+			ApproverID:         uuid.MustParse(approvedBy),
+			ApproverName:       approverName,
+			Notes:              "",
+			Level:              string(entity.MPPlanningApprovalHistoryLevelCEO),
+			Status:             entity.MPPlanningApprovalHistoryStatus(status),
+		}
+
+		if approvalHistory != nil {
+			if approvalHistory.Status != entity.MPPlanningApprovalHistoryStatusRejected {
+				if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelHRDUnit) {
+					if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+						Status: entity.MPPlaningStatus(status),
+						// ApprovedBy:        approvedBy,
+						ApproverManagerID: &approvalHistory.ApproverID,
+						NotesManager:      approvalHistory.Notes,
+					}).Error; err != nil {
+						tx.Rollback()
+						r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+						return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+					}
+				} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelDirekturUnit) {
+					if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+						Status: entity.MPPlaningStatus(status),
+						// ApprovedBy:            approvedBy,
+						ApproverRecruitmentID: &approvalHistory.ApproverID,
+						NotesRecruitment:      approvalHistory.Notes,
+					}).Error; err != nil {
+						tx.Rollback()
+						r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+						return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+					}
+				} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelCEO) {
+					if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+						Status:     entity.MPPlaningStatus(status),
+						ApprovedBy: approvedBy,
+					}).Error; err != nil {
+						tx.Rollback()
+						r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+						return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+					}
+				} else {
+					if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+						Status: entity.MPPlaningStatus(status),
+					}).Error; err != nil {
+						tx.Rollback()
+						r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+						return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+					}
+				}
+			} else {
+				if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+					Status: entity.MPPlaningStatus(status),
+				}).Error; err != nil {
+					tx.Rollback()
+					r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+					return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+				}
+			}
+		} else {
+			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+				Status: entity.MPPlaningStatus(status),
+			}).Error; err != nil {
+				tx.Rollback()
+				r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+				return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+			}
+		}
+
+		if approvalHistory != nil {
+			if err := tx.Create(approvalHistory).Error; err != nil {
+				tx.Rollback()
+				r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+				return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+		return err
+	}
+
+	return nil
 }
 
 func BatchRepositoryFactory(log *logrus.Logger) IBatchRepository {

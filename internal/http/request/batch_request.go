@@ -13,3 +13,10 @@ type CreateBatchHeaderAndLinesRequest struct {
 		OrganizationLocationID string `json:"organization_location_id" validate:"required"`
 	} `json:"batch_lines" validate:"required,dive"`
 }
+
+type UpdateStatusBatchHeaderRequest struct {
+	ID           string                           `json:"id" validate:"required"`
+	Status       entity.BatchHeaderApprovalStatus `json:"status" validate:"required,BatchHeaderApprovalStatusValidation"`
+	ApprovedBy   string                           `json:"approved_by" validate:"required"`
+	ApproverName string                           `json:"approver_name" validate:"required"`
+}
