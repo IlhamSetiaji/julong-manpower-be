@@ -30,3 +30,32 @@ type BatchLineResponse struct {
 	UpdatedAt                time.Time                 `json:"updated_at"`
 	MPPlanningHeader         *MPPlanningHeaderResponse `json:"mp_planning_header"`
 }
+
+type RealDocumentBatchResponse struct {
+	Overall             DocumentBatchResponse `json:"overall"`
+	OrganizationOverall []OrganizationOverall `json:"organization_overall"`
+}
+
+type OrganizationOverall struct {
+	Overall  DocumentBatchResponse `json:"overall"`
+	Children []OrganizationOverall `json:"children"`
+}
+
+type DocumentBatchResponse struct {
+	OperatingUnit string `json:"operating_unit"`
+	BudgetYear    string `json:"budget_year"`
+	Grade         struct {
+		Executive    DocumentCalculationBatchResponse `json:"executive"`
+		NonExecutive DocumentCalculationBatchResponse `json:"non_executive"`
+		Total        DocumentCalculationBatchResponse `json:"total"`
+	}
+}
+
+type DocumentCalculationBatchResponse struct {
+	JobLevelName string `json:"job_level_name"`
+	Existing     int    `json:"existing"`
+	Promote      int    `json:"promote"`
+	Recruit      int    `json:"recruit"`
+	Total        int    `json:"total"`
+	IsTotal      bool   `json:"is_total"`
+}

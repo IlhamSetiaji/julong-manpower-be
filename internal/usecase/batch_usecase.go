@@ -20,6 +20,7 @@ type IBatchUsecase interface {
 	CreateBatchHeaderAndLines(req *request.CreateBatchHeaderAndLinesRequest) (*response.BatchResponse, error)
 	FindByStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
 	FindById(id string) (*response.BatchResponse, error)
+	FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error)
 }
 
 type BatchUsecase struct {
@@ -169,6 +170,15 @@ func (uc *BatchUsecase) FindById(id string) (*response.BatchResponse, error) {
 	}
 
 	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(resp), nil
+}
+
+func (uc *BatchUsecase) FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error) {
+	resp, err := uc.Repo.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	return uc.batchDTO.ConvertDocumentBatchEntityToResponse(resp), nil
 }
 
 func BatchUsecaseFactory(viper *viper.Viper, log *logrus.Logger) IBatchUsecase {
