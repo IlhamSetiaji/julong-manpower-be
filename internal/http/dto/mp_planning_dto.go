@@ -2,11 +2,38 @@ package dto
 
 import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
+	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
 
-func ConvertMPPlanningApprovalHistoryToResponse(approvalHistories *entity.MPPlanningApprovalHistory, viper *viper.Viper) *response.MPPlanningApprovalHistoryResponse {
+type IMPPlanningDTO interface {
+	ConvertMPPlanningApprovalHistoryToResponse(approvalHistories *entity.MPPlanningApprovalHistory, viper *viper.Viper) *response.MPPlanningApprovalHistoryResponse
+	ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories *[]entity.MPPlanningApprovalHistory, viper *viper.Viper) []*response.MPPlanningApprovalHistoryResponse
+	ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader *entity.MPPlanningHeader) *response.MPPlanningHeaderResponse
+}
+
+type MPPlanningDTO struct {
+	log        *logrus.Logger
+	orgMessage messaging.IOrganizationMessage
+	jobMessage messaging.IJobMessage
+	jpMessage  messaging.IJobPlafonMessage
+	empMessage messaging.IEmployeeMessage
+}
+
+func NewMPPlanningDTO(log *logrus.Logger, orgMessage messaging.IOrganizationMessage, jobMessage messaging.IJobMessage, jpMessage messaging.IJobPlafonMessage, empMessage messaging.IEmployeeMessage) IMPPlanningDTO {
+	return &MPPlanningDTO{
+		log:        log,
+		orgMessage: orgMessage,
+		jobMessage: jobMessage,
+		jpMessage:  jpMessage,
+		empMessage: empMessage,
+	}
+}
+
+func (d *MPPlanningDTO) ConvertMPPlanningApprovalHistoryToResponse(approvalHistories *entity.MPPlanningApprovalHistory, viper *viper.Viper) *response.MPPlanningApprovalHistoryResponse {
 	return &response.MPPlanningApprovalHistoryResponse{
 		ID:                 approvalHistories.ID,
 		MPPlanningHeaderID: approvalHistories.MPPlanningHeaderID,
@@ -19,15 +46,65 @@ func ConvertMPPlanningApprovalHistoryToResponse(approvalHistories *entity.MPPlan
 	}
 }
 
-func ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories *[]entity.MPPlanningApprovalHistory, viper *viper.Viper) []*response.MPPlanningApprovalHistoryResponse {
+func (d *MPPlanningDTO) ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories *[]entity.MPPlanningApprovalHistory, viper *viper.Viper) []*response.MPPlanningApprovalHistoryResponse {
 	var response []*response.MPPlanningApprovalHistoryResponse
 	for _, approvalHistory := range *approvalHistories {
-		response = append(response, ConvertMPPlanningApprovalHistoryToResponse(&approvalHistory, viper))
+		response = append(response, d.ConvertMPPlanningApprovalHistoryToResponse(&approvalHistory, viper))
 	}
 	return response
 }
 
-func ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader *entity.MPPlanningHeader) *response.MPPlanningHeaderResponse {
+func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader *entity.MPPlanningHeader) *response.MPPlanningHeaderResponse {
+	if mpPlanningHeader.OrganizationName == "" {
+		organization, err := d.orgMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+			ID: mpPlanningHeader.OrganizationID.String(),
+		})
+		if err != nil {
+			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+		}
+		mpPlanningHeader.OrganizationName = organization.Name
+	}
+
+	if mpPlanningHeader.EmpOrganizationName == "" {
+		organization, err := d.orgMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+			ID: mpPlanningHeader.EmpOrganizationID.String(),
+		})
+		if err != nil {
+			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+		}
+		mpPlanningHeader.EmpOrganizationName = organization.Name
+	}
+
+	if mpPlanningHeader.JobName == "" {
+		job, err := d.jpMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+			ID: mpPlanningHeader.JobID.String(),
+		})
+		if err != nil {
+			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+		}
+		mpPlanningHeader.JobName = job.Name
+	}
+
+	if mpPlanningHeader.RequestorName == "" {
+		employee, err := d.empMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+			ID: mpPlanningHeader.RequestorID.String(),
+		})
+		if err != nil {
+			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+		}
+		mpPlanningHeader.RequestorName = employee.Name
+	}
+
+	if mpPlanningHeader.OrganizationLocationName == "" {
+		organizationLocation, err := d.orgMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: mpPlanningHeader.OrganizationLocationID.String(),
+		})
+		if err != nil {
+			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+		}
+		mpPlanningHeader.OrganizationLocationName = organizationLocation.Name
+	}
+
 	return &response.MPPlanningHeaderResponse{
 		ID:                       mpPlanningHeader.ID,
 		MPPPeriodID:              mpPlanningHeader.MPPPeriodID,
@@ -66,6 +143,36 @@ func ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader *entity.MPPlanning
 		MPPlanningLines: func() []*response.MPPlanningLineResponse {
 			var lines []*response.MPPlanningLineResponse
 			for _, line := range mpPlanningHeader.MPPlanningLines {
+				if line.JobName == "" {
+					job, err := d.jpMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+						ID: line.JobID.String(),
+					})
+					if err != nil {
+						d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+					}
+					line.JobName = job.Name
+				}
+
+				if line.JobLevelName == "" {
+					jobLevel, err := d.jpMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+						ID: line.JobLevelID.String(),
+					})
+					if err != nil {
+						d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+					}
+					line.JobLevelName = jobLevel.Name
+				}
+
+				if line.OrganizationLocationName == "" {
+					organizationLocation, err := d.orgMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+						ID: line.OrganizationLocationID.String(),
+					})
+					if err != nil {
+						d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+					}
+					line.OrganizationLocationName = organizationLocation.Name
+				}
+
 				lines = append(lines, &response.MPPlanningLineResponse{
 					ID:                       line.ID,
 					MPPlanningHeaderID:       line.MPPlanningHeaderID,
@@ -89,4 +196,12 @@ func ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader *entity.MPPlanning
 			return lines
 		}(),
 	}
+}
+
+func MPPlanningDTOFactory(log *logrus.Logger) IMPPlanningDTO {
+	orgMessage := messaging.OrganizationMessageFactory(log)
+	jobMessage := messaging.JobMessageFactory(log)
+	jpMessage := messaging.JobPlafonMessageFactory(log)
+	empMessage := messaging.EmployeeMessageFactory(log)
+	return NewMPPlanningDTO(log, orgMessage, jobMessage, jpMessage, empMessage)
 }

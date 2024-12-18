@@ -45,9 +45,10 @@ type MPPlanningUseCase struct {
 	JobPlafonMessage     messaging.IJobPlafonMessage
 	UserMessage          messaging.IUserMessage
 	EmployeeMessage      messaging.IEmployeeMessage
+	MPPlanningDTO        dto.IMPPlanningDTO
 }
 
-func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage, jpr repository.IJobPlafonRepository) IMPPlanningUseCase {
+func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage, jpr repository.IJobPlafonRepository, mpPlanningDTO dto.IMPPlanningDTO) IMPPlanningUseCase {
 	return &MPPlanningUseCase{
 		Viper:                viper,
 		Log:                  log,
@@ -57,6 +58,7 @@ func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repositor
 		UserMessage:          um,
 		EmployeeMessage:      em,
 		JobPlafonRepository:  jpr,
+		MPPlanningDTO:        mpPlanningDTO,
 	}
 }
 
@@ -383,7 +385,7 @@ func (uc *MPPlanningUseCase) GetPlanningApprovalHistoryByHeaderId(headerID uuid.
 		return nil, nil
 	}
 
-	return dto.ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories, uc.Viper), nil
+	return uc.MPPlanningDTO.ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories, uc.Viper), nil
 }
 
 func (uc *MPPlanningUseCase) GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryID uuid.UUID) ([]*response.ManpowerAttachmentResponse, error) {
@@ -1722,5 +1724,6 @@ func MPPlanningUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPPlannin
 	um := messaging.UserMessageFactory(log)
 	em := messaging.EmployeeMessageFactory(log)
 	jpr := repository.JobPlafonRepositoryFactory(log)
-	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em, jpr)
+	mpPlanningDTO := dto.MPPlanningDTOFactory(log)
+	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em, jpr, mpPlanningDTO)
 }

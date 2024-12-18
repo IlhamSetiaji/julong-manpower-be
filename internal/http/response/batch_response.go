@@ -7,14 +7,14 @@ import (
 )
 
 type BatchResponse struct {
-	ID             uuid.UUID           `json:"id"`
-	DocumentNumber string              `json:"document_number"`
-	ApproverID     *uuid.UUID          `json:"approver_id"`
-	ApproverName   string              `json:"approver_name"`
-	Status         string              `json:"status"`
-	CreatedAt      time.Time           `json:"created_at"`
-	UpdatedAt      time.Time           `json:"updated_at"`
-	BatchLines     []BatchLineResponse `json:"batch_lines"`
+	ID             uuid.UUID            `json:"id"`
+	DocumentNumber string               `json:"document_number"`
+	ApproverID     *uuid.UUID           `json:"approver_id"`
+	ApproverName   string               `json:"approver_name"`
+	Status         string               `json:"status"`
+	CreatedAt      time.Time            `json:"created_at"`
+	UpdatedAt      time.Time            `json:"updated_at"`
+	BatchLines     []*BatchLineResponse `json:"batch_lines"`
 }
 
 type BatchLineResponse struct {

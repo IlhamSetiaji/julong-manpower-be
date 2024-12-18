@@ -3,8 +3,8 @@ package messaging
 import (
 	"errors"
 	"log"
+	"time"
 
-	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/dto"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
@@ -64,9 +64,30 @@ func (m *EmployeeMessage) SendFindEmployeeByIDMessage(req request.SendFindEmploy
 	}
 
 	employeeData := resp.MessageData["employee"].(map[string]interface{})
-	employee := dto.ConvertInterfaceToEmployeeResponse(employeeData)
+	employee := convertInterfaceToEmployeeResponse(employeeData)
 
 	return employee, nil
+}
+
+func convertInterfaceToEmployeeResponse(data map[string]interface{}) *response.EmployeeResponse {
+	// Extract values from the map
+	id := data["id"].(string)
+	organizationID := data["organization_id"].(string)
+	name := data["name"].(string)
+	endDate, _ := time.Parse("2006-01-02", data["end_date"].(string))
+	retirementDate, _ := time.Parse("2006-01-02", data["retirement_date"].(string))
+	email := data["email"].(string)
+	mobilePhone := data["mobile_phone"].(string)
+
+	return &response.EmployeeResponse{
+		ID:             uuid.MustParse(id),
+		OrganizationID: uuid.MustParse(organizationID),
+		Name:           name,
+		EndDate:        endDate,
+		RetirementDate: retirementDate,
+		Email:          email,
+		MobilePhone:    mobilePhone,
+	}
 }
 
 func EmployeeMessageFactory(log *logrus.Logger) IEmployeeMessage {

@@ -4,7 +4,7 @@ import "github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 
 type CreateBatchHeaderAndLinesRequest struct {
 	DocumentNumber string                           `json:"document_number" validate:"required"`
-	Status         entity.BatchHeaderApprovalStatus `json:"status" validate:"required,BatchHeaderApprovalStatusValidation"`
+	Status         entity.BatchHeaderApprovalStatus `json:"status" validate:"omitempty,BatchHeaderApprovalStatusValidation"`
 	BatchLines     []struct {
 		MPPlanningHeaderID     string `json:"mp_planning_header_id" validate:"required"`
 		OrganizationID         string `json:"organization_id" validate:"required"`

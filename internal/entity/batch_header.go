@@ -10,8 +10,9 @@ import (
 type BatchHeaderApprovalStatus string
 
 const (
-	BatchHeaderApprovalStatusApproved BatchHeaderApprovalStatus = "APPROVED"
-	BatchHeaderApprovalStatusRejected BatchHeaderApprovalStatus = "REJECTED"
+	BatchHeaderApprovalStatusApproved     BatchHeaderApprovalStatus = "APPROVED"
+	BatchHeaderApprovalStatusRejected     BatchHeaderApprovalStatus = "REJECTED"
+	BatchHeaderApprovalStatusNeedApproval BatchHeaderApprovalStatus = "NEED_APPROVAL"
 )
 
 type BatchHeader struct {

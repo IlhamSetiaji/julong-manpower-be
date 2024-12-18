@@ -132,7 +132,7 @@ func BatchHeaderApprovalStatusValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.BatchHeaderApprovalStatus(status) {
-	case entity.BatchHeaderApprovalStatusApproved, entity.BatchHeaderApprovalStatusRejected:
+	case entity.BatchHeaderApprovalStatusApproved, entity.BatchHeaderApprovalStatusRejected, entity.BatchHeaderApprovalStatusNeedApproval:
 		return true
 	default:
 		return false
