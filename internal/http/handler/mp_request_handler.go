@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
@@ -15,6 +16,7 @@ import (
 
 type IMPRequestHandler interface {
 	Create(ctx *gin.Context)
+	FindAllPaginated(ctx *gin.Context)
 }
 
 type MPRequestHandler struct {
@@ -42,6 +44,59 @@ func MPRequestHandlerFactory(log *logrus.Logger, viper *viper.Viper) IMPRequestH
 	useCase := usecase.MPRequestUseCaseFactory(viper, log)
 	validate := config.NewValidator(viper)
 	return NewMPRequestHandler(log, viper, useCase, validate)
+}
+
+func (h *MPRequestHandler) FindAllPaginated(ctx *gin.Context) {
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(ctx.Query("page_size"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	search := ctx.Query("search")
+	if search == "" {
+		search = ""
+	}
+
+	filter := make(map[string]interface{})
+
+	status := ctx.Query("status")
+	if status != "" {
+		filter["status"] = status
+	}
+
+	departmentHead := ctx.Query("department_head")
+	if departmentHead != "" {
+		filter["department_head"] = departmentHead
+	}
+
+	vpGmDirector := ctx.Query("vp_gm_director")
+	if vpGmDirector != "" {
+		filter["vp_gm_director"] = vpGmDirector
+	}
+
+	ceo := ctx.Query("ceo")
+	if ceo != "" {
+		filter["ceo"] = ceo
+	}
+
+	hrdHoUnit := ctx.Query("hrd_ho_unit")
+	if hrdHoUnit != "" {
+		filter["hrd_ho_unit"] = hrdHoUnit
+	}
+
+	res, err := h.UseCase.FindAllPaginated(page, pageSize, search, filter)
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.FindAllPaginated] error when find all paginated: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to find all paginated", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Headers found", res)
 }
 
 func (h *MPRequestHandler) Create(ctx *gin.Context) {

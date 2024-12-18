@@ -80,7 +80,7 @@ func MPRequestStatusValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.MPRequestStatus(status) {
-	case entity.MPRequestStatusDraft, entity.MPRequestStatusSubmitted, entity.MPRequestStatusRejected, entity.MPRequestStatusApproved:
+	case entity.MPRequestStatusDraft, entity.MPRequestStatusSubmitted, entity.MPRequestStatusRejected, entity.MPRequestStatusApproved, entity.MPRequestStatusNeedApproval:
 		return true
 	default:
 		return false

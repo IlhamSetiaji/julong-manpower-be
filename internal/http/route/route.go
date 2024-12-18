@@ -91,6 +91,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.GET("/majors/:id", c.MajorHandler.FindById)
 
 			// mp requests
+			apiRoute.GET("/mp-requests", c.MPRequestHandler.FindAllPaginated)
 			apiRoute.POST("/mp-requests", c.MPRequestHandler.Create)
 
 			// batch

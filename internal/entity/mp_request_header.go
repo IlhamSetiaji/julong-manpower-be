@@ -10,10 +10,11 @@ import (
 type MPRequestStatus string
 
 const (
-	MPRequestStatusDraft     MPRequestStatus = "DRAFT"
-	MPRequestStatusSubmitted MPRequestStatus = "SUBMITTED"
-	MPRequestStatusRejected  MPRequestStatus = "REJECTED"
-	MPRequestStatusApproved  MPRequestStatus = "APPROVED"
+	MPRequestStatusDraft        MPRequestStatus = "DRAFT"
+	MPRequestStatusSubmitted    MPRequestStatus = "SUBMITTED"
+	MPRequestStatusRejected     MPRequestStatus = "REJECTED"
+	MPRequestStatusApproved     MPRequestStatus = "APPROVED"
+	MPRequestStatusNeedApproval MPRequestStatus = "NEED APPROVAL"
 )
 
 type MaritalStatusEnum string
@@ -101,6 +102,8 @@ type MPRequestHeader struct {
 	JobName                  string `json:"job_name" gorm:"-"`
 	RequestorName            string `json:"requestor_name" gorm:"-"`
 	DepartmentHeadName       string `json:"department_head_name" gorm:"-"`
+	VpGmDirectorName         string `json:"vp_gm_director_name" gorm:"-"`
+	CeoName                  string `json:"ceo_name" gorm:"-"`
 	HrdHoUnitName            string `json:"hrd_ho_unit_name" gorm:"-"`
 	EmpOrganizationName      string `json:"emp_organization_name" gorm:"-"`
 	JobLevelName             string `json:"job_level_name" gorm:"-"`
