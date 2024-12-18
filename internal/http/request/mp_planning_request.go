@@ -12,6 +12,7 @@ type FindAllHeadersPaginatedMPPlanningRequest struct {
 	ApproverType  string `json:"approver_type"`
 	OrgLocationID string `json:"org_location_id"`
 	OrgID         string `json:"org_id"`
+	Status        string `json:"status"`
 }
 
 type FindHeaderByIdMPPlanningRequest struct {

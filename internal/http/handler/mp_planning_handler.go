@@ -198,10 +198,16 @@ func (h *MPPlanningHandler) FindAllHeadersForBatchPaginated(ctx *gin.Context) {
 		search = ""
 	}
 
+	status := ctx.Query("status")
+	if status == "" {
+		status = ""
+	}
+
 	req := request.FindAllHeadersPaginatedMPPlanningRequest{
 		Page:     page,
 		PageSize: pageSize,
 		Search:   search,
+		Status:   status,
 	}
 
 	resp, err := h.UseCase.FindAllHeadersForBatchPaginated(&req)

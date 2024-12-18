@@ -16,7 +16,7 @@ type IOrganizationMessage interface {
 	SendFindOrganizationByIDMessage(request request.SendFindOrganizationByIDMessageRequest) (*orgResponse.SendFindOrganizationByIDMessageResponse, error)
 	SendFindOrganizationLocationByIDMessage(request request.SendFindOrganizationLocationByIDMessageRequest) (*orgResponse.SendFindOrganizationLocationByIDMessageResponse, error)
 	SendFindOrganizationStructureByIDMessage(request request.SendFindOrganizationStructureByIDMessageRequest) (*orgResponse.SendFindOrganizationStructureByIDMessageResponse, error)
-	SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string) (*orgResponse.OrganizationLocationPaginatedResponse, error)
+	SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string) (*orgResponse.OrganizationLocationPaginatedResponse, error)
 }
 
 type OrganizationMessage struct {
@@ -158,11 +158,13 @@ func (m *OrganizationMessage) SendFindOrganizationStructureByIDMessage(req reque
 	}, nil
 }
 
-func (m *OrganizationMessage) SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string) (*orgResponse.OrganizationLocationPaginatedResponse, error) {
+func (m *OrganizationMessage) SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string) (*orgResponse.OrganizationLocationPaginatedResponse, error) {
+	m.Log.Infof("Included IDs: %v", includedIDs)
 	payload := map[string]interface{}{
-		"page":      page,
-		"page_size": pageSize,
-		"search":    search,
+		"page":         page,
+		"page_size":    pageSize,
+		"search":       search,
+		"included_ids": includedIDs,
 	}
 
 	docMsg := &request.RabbitMQRequest{

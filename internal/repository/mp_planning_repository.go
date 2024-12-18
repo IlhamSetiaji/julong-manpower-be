@@ -15,6 +15,8 @@ type IMPPlanningRepository interface {
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
+	FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
+	GetHeadersByStatus(status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
 	GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
@@ -131,8 +133,9 @@ func (r *MPPlanningRepository) FindHeaderById(id uuid.UUID) (*entity.MPPlanningH
 
 func (r *MPPlanningRepository) FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error) {
 	var mppHeader entity.MPPlanningHeader
+	statuses := []entity.MPPlaningStatus{entity.MPPlaningStatusApproved, entity.MPPlaningStatusReject}
 
-	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).First(&mppHeader).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where("status IN ?", statuses).First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationID] " + err.Error())
 			return nil, nil
@@ -143,6 +146,38 @@ func (r *MPPlanningRepository) FindHeaderByOrganizationLocationID(organizationLo
 	}
 
 	return &mppHeader, nil
+}
+
+func (r *MPPlanningRepository) FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error) {
+	var mppHeader entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where("status = ?", status).First(&mppHeader).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+		}
+	}
+
+	return &mppHeader, nil
+}
+
+func (r *MPPlanningRepository) GetHeadersByStatus(status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, error) {
+	var mppHeaders []entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("status = ?", status).Find(&mppHeaders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.GetHeadersByStatus] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.GetHeadersByStatus] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.GetHeadersByStatus] " + err.Error())
+		}
+	}
+
+	return &mppHeaders, nil
 }
 
 func (r *MPPlanningRepository) GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error) {

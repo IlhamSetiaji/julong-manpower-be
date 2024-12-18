@@ -292,8 +292,29 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error) {
+	var includedIDs []string
+
+	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] req.Status: %v", req.Status)
+
+	if req.Status != "" {
+		mpPlanningHeaders, err := uc.MPPlanningRepository.GetHeadersByStatus(entity.MPPlaningStatus(req.Status))
+
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
+			return nil, err
+		}
+
+		for _, header := range *mpPlanningHeaders {
+			includedIDs = append(includedIDs, header.OrganizationLocationID.String())
+		}
+
+		uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] includedIDs: %v", includedIDs)
+	} else {
+		includedIDs = []string{}
+	}
+
 	// fetch organization locations paginated from rabbitmq
-	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search)
+	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
 		return nil, err
@@ -304,19 +325,37 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 	}
 
 	// loop the org locs and find mp planning header using org loc id from repository
-	for _, orgLoc := range orgLocs.OrganizationLocations {
-		header, err := uc.MPPlanningRepository.FindHeaderByOrganizationLocationID(orgLoc.ID)
-		if err != nil {
-			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
-			return nil, err
-		}
+	for i, orgLoc := range orgLocs.OrganizationLocations {
+		var header *entity.MPPlanningHeader
 
-		if header == nil {
-			continue
-		}
+		if req.Status != "" {
+			header, err = uc.MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus(orgLoc.ID, entity.MPPlaningStatus(req.Status))
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
+				return nil, err
+			}
 
+			if header == nil {
+				continue
+			}
+
+			uc.Log.Info("Kontol")
+
+		} else {
+			header, err = uc.MPPlanningRepository.FindHeaderByOrganizationLocationID(orgLoc.ID)
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
+				return nil, err
+			}
+
+			if header == nil {
+				continue
+			}
+
+			uc.Log.Info("Ngentod")
+		}
 		orgLoc.MPPlanningHeader = uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(header)
-		orgLocs.OrganizationLocations = append(orgLocs.OrganizationLocations, orgLoc)
+		orgLocs.OrganizationLocations[i] = orgLoc
 	}
 
 	return orgLocs, nil
