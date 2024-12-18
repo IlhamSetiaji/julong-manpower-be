@@ -161,6 +161,10 @@ func (uc *BatchUsecase) FindByStatus(status entity.BatchHeaderApprovalStatus) (*
 		return nil, err
 	}
 
+	if resp == nil {
+		return nil, errors.New("Batch not found")
+	}
+
 	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(resp), nil
 }
 
@@ -170,6 +174,10 @@ func (uc *BatchUsecase) FindById(id string) (*response.BatchResponse, error) {
 		return nil, err
 	}
 
+	if resp == nil {
+		return nil, errors.New("Batch not found")
+	}
+
 	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(resp), nil
 }
 
@@ -177,6 +185,10 @@ func (uc *BatchUsecase) FindDocumentByID(id string) (*response.RealDocumentBatch
 	resp, err := uc.Repo.FindById(id)
 	if err != nil {
 		return nil, err
+	}
+
+	if resp == nil {
+		return nil, errors.New("Batch not found")
 	}
 
 	return uc.batchDTO.ConvertRealDocumentBatchResponse(resp), nil

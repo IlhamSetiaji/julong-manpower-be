@@ -103,7 +103,7 @@ func (r *BatchRepository) DeleteLinesNotInBatchLines(batchHeaderID string, batch
 
 func (r *BatchRepository) FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error) {
 	var batchHeader entity.BatchHeader
-	if err := r.DB.Where("status = ?", status).First(&batchHeader).Error; err != nil {
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", status).First(&batchHeader).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			r.Log.Warnf("Batch header with status %s not found", status)
 			return nil, nil
