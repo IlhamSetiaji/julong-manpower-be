@@ -32,23 +32,25 @@ type BatchLineResponse struct {
 }
 
 type RealDocumentBatchResponse struct {
-	Overall             DocumentBatchResponse `json:"overall"`
-	OrganizationOverall []OrganizationOverall `json:"organization_overall"`
+	Overall             DocumentBatchResponse         `json:"overall"`
+	OrganizationOverall []OrganizationOverallResponse `json:"organization_overall"`
 }
 
-type OrganizationOverall struct {
-	Overall  DocumentBatchResponse `json:"overall"`
-	Children []OrganizationOverall `json:"children"`
+type OrganizationOverallResponse struct {
+	Overall         DocumentBatchResponse   `json:"overall"`
+	LocationOverall []DocumentBatchResponse `json:"location_overall"`
 }
 
 type DocumentBatchResponse struct {
-	OperatingUnit string `json:"operating_unit"`
-	BudgetYear    string `json:"budget_year"`
-	Grade         struct {
-		Executive    DocumentCalculationBatchResponse `json:"executive"`
-		NonExecutive DocumentCalculationBatchResponse `json:"non_executive"`
-		Total        DocumentCalculationBatchResponse `json:"total"`
-	}
+	OperatingUnit string             `json:"operating_unit"`
+	BudgetYear    string             `json:"budget_year"`
+	Grade         GradeBatchResponse `json:"grade"`
+}
+
+type GradeBatchResponse struct {
+	Executive    []DocumentCalculationBatchResponse `json:"executive"`
+	NonExecutive []DocumentCalculationBatchResponse `json:"non_executive"`
+	Total        []DocumentCalculationBatchResponse `json:"total"`
 }
 
 type DocumentCalculationBatchResponse struct {

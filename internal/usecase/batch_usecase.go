@@ -173,12 +173,13 @@ func (uc *BatchUsecase) FindById(id string) (*response.BatchResponse, error) {
 }
 
 func (uc *BatchUsecase) FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error) {
-	resp, err := uc.Repo.FindById(id)
+	_, err := uc.Repo.FindById(id)
 	if err != nil {
 		return nil, err
 	}
 
-	return uc.batchDTO.ConvertDocumentBatchEntityToResponse(resp), nil
+	// return uc.batchDTO.ConvertDocumentBatchEntityToResponse(resp), nil
+	return nil, nil
 }
 
 func BatchUsecaseFactory(viper *viper.Viper, log *logrus.Logger) IBatchUsecase {

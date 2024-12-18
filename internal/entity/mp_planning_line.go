@@ -27,6 +27,7 @@ type MPPlanningLine struct {
 	MPPlanningHeader         MPPlanningHeader `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	OrganizationLocationName string           `json:"organization_location_name" gorm:"-"`
 	JobLevelName             string           `json:"job_level_name" gorm:"-"`
+	JobLevel                 int              `json:"job_level" gorm:"-"`
 	JobName                  string           `json:"job_name" gorm:"-"`
 }
 
