@@ -114,6 +114,18 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 			}
 		}
 
+		mpHeaderByStatus, err := uc.mpPlanningRepo.FindHeaderById(uuid.MustParse(bl.MPPlanningHeaderID))
+
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] " + err.Error())
+			return nil, err
+		}
+
+		if mpHeaderByStatus.Status != entity.MPPlaningStatusApproved {
+			uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] MP Planning Header not in Approved status")
+			continue
+		}
+
 		batchLines[i] = entity.BatchLine{
 			MPPlanningHeaderID:     uuid.MustParse(bl.MPPlanningHeaderID),
 			OrganizationID:         func(u uuid.UUID) *uuid.UUID { return &u }(uuid.MustParse(bl.OrganizationID)),
