@@ -3,12 +3,15 @@ package repository
 import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type IBatchRepository interface {
 	CreateBatchHeaderAndLines(batchHeader *entity.BatchHeader, batchLines []entity.BatchLine) (*entity.BatchHeader, error)
+	InsertLinesByBatchHeaderID(batchHeaderID string, batchLines []entity.BatchLine) error
+	DeleteLinesNotInBatchLines(batchHeaderID string, batchLines []entity.BatchLine) error
 	FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 	FindById(id string) (*entity.BatchHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error)
@@ -55,6 +58,44 @@ func (r *BatchRepository) CreateBatchHeaderAndLines(batchHeader *entity.BatchHea
 	}
 
 	return batchHeader, nil
+}
+
+func (r *BatchRepository) InsertLinesByBatchHeaderID(batchHeaderID string, batchLines []entity.BatchLine) error {
+	tx := r.DB.Begin()
+	for i := range batchLines {
+		batchLines[i].BatchHeaderID = uuid.MustParse(batchHeaderID)
+		if err := tx.Create(&batchLines[i]).Error; err != nil {
+			tx.Rollback()
+			return err
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
+}
+
+func (r *BatchRepository) DeleteLinesNotInBatchLines(batchHeaderID string, batchLines []entity.BatchLine) error {
+	tx := r.DB.Begin()
+	var batchLineIDs []uuid.UUID
+	for _, bl := range batchLines {
+		batchLineIDs = append(batchLineIDs, bl.ID)
+	}
+
+	if err := tx.Where("batch_header_id = ? AND id NOT IN ?", batchHeaderID, batchLineIDs).Delete(&entity.BatchLine{}).Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return nil
 }
 
 func (r *BatchRepository) FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error) {

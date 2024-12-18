@@ -26,7 +26,7 @@ func MPPlaningStatusValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.MPPlaningStatus(status) {
-	case entity.MPPlaningStatusDraft, entity.MPPlaningStatusReject, entity.MPPlaningStatusSubmit, entity.MPPlaningStatusComplete, entity.MPPlaningStatusApproved, entity.MPPlanningStatusInProgress:
+	case entity.MPPlaningStatusDraft, entity.MPPlaningStatusReject, entity.MPPlaningStatusSubmit, entity.MPPlaningStatusComplete, entity.MPPlaningStatusApproved, entity.MPPlanningStatusInProgress, entity.MPPlaningStatusNeedApproval:
 		return true
 	default:
 		return false
