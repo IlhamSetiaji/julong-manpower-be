@@ -14,6 +14,7 @@ type IMPPlanningRepository interface {
 	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
+	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
 	GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
@@ -122,6 +123,22 @@ func (r *MPPlanningRepository) FindHeaderById(id uuid.UUID) (*entity.MPPlanningH
 		} else {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderById] " + err.Error())
 			return nil, errors.New("[MPPlanningRepository.FindHeaderById] " + err.Error())
+		}
+	}
+
+	return &mppHeader, nil
+}
+
+func (r *MPPlanningRepository) FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error) {
+	var mppHeader entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).First(&mppHeader).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationID] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationID] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationID] " + err.Error())
 		}
 	}
 

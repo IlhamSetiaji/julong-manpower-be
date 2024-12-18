@@ -61,8 +61,10 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 		})
 		if err != nil {
 			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+			mpPlanningHeader.OrganizationName = ""
+		} else {
+			mpPlanningHeader.OrganizationName = organization.Name
 		}
-		mpPlanningHeader.OrganizationName = organization.Name
 	}
 
 	if mpPlanningHeader.EmpOrganizationName == "" {
@@ -71,8 +73,10 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 		})
 		if err != nil {
 			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+			mpPlanningHeader.EmpOrganizationName = ""
+		} else {
+			mpPlanningHeader.EmpOrganizationName = organization.Name
 		}
-		mpPlanningHeader.EmpOrganizationName = organization.Name
 	}
 
 	if mpPlanningHeader.JobName == "" {
@@ -81,18 +85,22 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 		})
 		if err != nil {
 			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+			mpPlanningHeader.JobName = ""
+		} else {
+			mpPlanningHeader.JobName = job.Name
 		}
-		mpPlanningHeader.JobName = job.Name
 	}
 
-	if mpPlanningHeader.RequestorName == "" {
+	if mpPlanningHeader.RequestorName == "" || mpPlanningHeader.RequestorID == nil {
 		employee, err := d.empMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 			ID: mpPlanningHeader.RequestorID.String(),
 		})
 		if err != nil {
 			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+			mpPlanningHeader.RequestorName = ""
+		} else {
+			mpPlanningHeader.RequestorName = employee.Name
 		}
-		mpPlanningHeader.RequestorName = employee.Name
 	}
 
 	if mpPlanningHeader.OrganizationLocationName == "" {
@@ -101,8 +109,10 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 		})
 		if err != nil {
 			d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
+			mpPlanningHeader.OrganizationLocationName = ""
+		} else {
+			mpPlanningHeader.OrganizationLocationName = organizationLocation.Name
 		}
-		mpPlanningHeader.OrganizationLocationName = organizationLocation.Name
 	}
 
 	return &response.MPPlanningHeaderResponse{

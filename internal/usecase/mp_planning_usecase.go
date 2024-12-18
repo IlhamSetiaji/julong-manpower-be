@@ -19,6 +19,7 @@ import (
 type IMPPlanningUseCase interface {
 	FindAllHeadersPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
+	FindAllHeadersForBatchPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
@@ -288,6 +289,37 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}(),
 		Total: total,
 	}, nil
+}
+
+func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error) {
+	// fetch organization locations paginated from rabbitmq
+	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
+		return nil, err
+	}
+
+	if orgLocs == nil {
+		return nil, nil
+	}
+
+	// loop the org locs and find mp planning header using org loc id from repository
+	for _, orgLoc := range orgLocs.OrganizationLocations {
+		header, err := uc.MPPlanningRepository.FindHeaderByOrganizationLocationID(orgLoc.ID)
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
+			return nil, err
+		}
+
+		if header == nil {
+			continue
+		}
+
+		orgLoc.MPPlanningHeader = uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(header)
+		orgLocs.OrganizationLocations = append(orgLocs.OrganizationLocations, orgLoc)
+	}
+
+	return orgLocs, nil
 }
 
 func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateStatusMPPlanningHeaderRequest) error {

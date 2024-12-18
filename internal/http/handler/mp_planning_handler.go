@@ -24,6 +24,7 @@ import (
 type IMPPlanningHandler interface {
 	FindAllHeadersPaginated(ctx *gin.Context)
 	FindAllHeadersByRequestorIDPaginated(ctx *gin.Context)
+	FindAllHeadersForBatchPaginated(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
 	FindById(ctx *gin.Context)
 	Create(ctx *gin.Context)
@@ -179,6 +180,38 @@ func (h *MPPlanningHandler) FindAllHeadersByRequestorIDPaginated(ctx *gin.Contex
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers by requestor id paginated success", resp)
+}
+
+func (h *MPPlanningHandler) FindAllHeadersForBatchPaginated(ctx *gin.Context) {
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(ctx.Query("pageSize"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	search := ctx.Query("search")
+	if search == "" {
+		search = ""
+	}
+
+	req := request.FindAllHeadersPaginatedMPPlanningRequest{
+		Page:     page,
+		PageSize: pageSize,
+		Search:   search,
+	}
+
+	resp, err := h.UseCase.FindAllHeadersForBatchPaginated(&req)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.FindAllHeadersForBatchPaginated] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find all headers for batch paginated success", resp)
 }
 
 func (h *MPPlanningHandler) GenerateDocumentNumber(ctx *gin.Context) {

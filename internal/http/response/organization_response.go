@@ -1,6 +1,8 @@
 package response
 
-import "github.com/google/uuid"
+import (
+	"github.com/google/uuid"
+)
 
 type SendFindOrganizationByIDMessageResponse struct {
 	OrganizationID string `json:"organization_id"`
@@ -21,4 +23,19 @@ type OrganizationResponse struct {
 	ID                 uuid.UUID `json:"id"`
 	OrganizationTypeID uuid.UUID `json:"organization_type_id"`
 	Name               string    `json:"name"`
+}
+
+type OrganizationLocationResponse struct {
+	ID               uuid.UUID                 `json:"id"`
+	OrganizationID   uuid.UUID                 `json:"organization_id"`
+	OrganizationName string                    `json:"organization_name"`
+	Name             string                    `json:"name"`
+	CreatedAt        string                    `json:"created_at"`
+	UpdatedAt        string                    `json:"updated_at"`
+	MPPlanningHeader *MPPlanningHeaderResponse `json:"mp_planning_header"`
+}
+
+type OrganizationLocationPaginatedResponse struct {
+	OrganizationLocations []OrganizationLocationResponse `json:"organization_locations"`
+	Total                 int64                          `json:"total"`
 }
