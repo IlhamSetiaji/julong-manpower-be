@@ -71,18 +71,27 @@ type MPRequestHeader struct {
 	SalaryMax                  string              `json:"salary_max" gorm:"type:varchar(255);not null"`
 	RequestorID                *uuid.UUID          `json:"requestor_id" gorm:"type:char(36);not null"`
 	DepartmentHead             *uuid.UUID          `json:"department_head" gorm:"type:char(36);not null"`
-	VpGmDirector               string              `json:"vp_gm_director" gorm:"type:text;default:null"`
-	CEO                        string              `json:"ceo" gorm:"type:text;default:null"`
+	VpGmDirector               *uuid.UUID          `json:"vp_gm_director" gorm:"type:text;default:null"`
+	CEO                        *uuid.UUID          `json:"ceo" gorm:"type:text;default:null"`
 	HrdHoUnit                  *uuid.UUID          `json:"hrd_ho_unit" gorm:"type:char(36);null"` // verificator tim rekrutmen
 	MPPlanningHeaderID         *uuid.UUID          `json:"mp_planning_header_id" gorm:"type:char(36);null"`
 	Status                     MPRequestStatus     `json:"status" gorm:"default:'DRAFT'"`
 	MPRequestType              MPRequestTypeEnum   `json:"mp_request_type" gorm:"default:'ON_BUDGET'"`
 	RecruitmentType            RecruitmentTypeEnum `json:"recruitment_type" gorm:"type:text;default:not null"`
+	MPPPeriodID                uuid.UUID           `json:"mpp_period_id" gorm:"type:char(36);null"`
+	NotesDepartmentHead        string              `json:"notes_department_head" gorm:"type:text;default:null"`
+	NotesVpGmDirector          string              `json:"notes_vp_gm_director" gorm:"type:text;default:null"`
+	NotesCEO                   string              `json:"notes_ceo" gorm:"type:text;default:null"`
+	NotesHrdHo                 string              `json:"notes_hrd_ho" gorm:"type:text;default:null"`
+	TotalNeeds                 int                 `json:"total_needs" gorm:"type:int;default:0"`
+	EmpOrganizationID          *uuid.UUID          `json:"emp_organization_id" gorm:"type:char(36);null"`
+	JobLevelID                 *uuid.UUID          `json:"job_level_id" gorm:"type:char(36);null"`
 
 	RequestCategory            RequestCategory            `json:"request_category" gorm:"foreignKey:RequestCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	RequestMajors              []RequestMajor             `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPlanningHeader           MPPlanningHeader           `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPRequestApprovalHistories []MPRequestApprovalHistory `json:"mp_request_approval_histories" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
+	MPPPeriod                  MPPPeriod                  `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	OrganizationName         string `json:"organization_name" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`
@@ -93,6 +102,9 @@ type MPRequestHeader struct {
 	RequestorName            string `json:"requestor_name" gorm:"-"`
 	DepartmentHeadName       string `json:"department_head_name" gorm:"-"`
 	HrdHoUnitName            string `json:"hrd_ho_unit_name" gorm:"-"`
+	EmpOrganizationName      string `json:"emp_organization_name" gorm:"-"`
+	JobLevelName             string `json:"job_level_name" gorm:"-"`
+	JobLevel                 int    `json:"job_level" gorm:"-"`
 }
 
 func (m *MPRequestHeader) BeforeCreate(tx *gorm.DB) (err error) {

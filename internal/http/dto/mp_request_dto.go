@@ -45,6 +45,9 @@ func ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPReques
 		MPPlanningHeaderID:         req.MPPlanningHeaderID,
 		Status:                     req.Status,
 		MPRequestType:              req.MPRequestType,
+		MPPPeriodID:                *req.MPPPeriodID,
+		EmpOrganizationID:          req.EmpOrganizationID,
+		JobLevelID:                 req.JobLevelID,
 	}
 }
 
@@ -95,6 +98,7 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 		Status:                     ent.Status,
 		MPRequestType:              ent.MPRequestType,
 		RecruitmentType:            ent.RecruitmentType,
+		MPPPeriodID:                &ent.MPPPeriodID,
 
 		RequestCategory: map[string]interface{}{
 			"ID":   ent.RequestCategory.ID,
@@ -118,6 +122,17 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 			"DocumentNumber": ent.MPPlanningHeader.DocumentNumber,
 			"DocumentDate":   ent.MPPlanningHeader.DocumentDate,
 		},
+		MPPPeriod: response.MPPeriodResponse{
+			ID:              ent.MPPPeriod.ID,
+			Title:           ent.MPPPeriod.Title,
+			StartDate:       ent.MPPPeriod.StartDate.Format("2006-01-02"),
+			EndDate:         ent.MPPPeriod.EndDate.Format("2006-01-02"),
+			BudgetStartDate: ent.MPPPeriod.BudgetStartDate.Format("2006-01-02"),
+			BudgetEndDate:   ent.MPPPeriod.BudgetEndDate.Format("2006-01-02"),
+			Status:          ent.MPPPeriod.Status,
+			CreatedAt:       ent.MPPPeriod.CreatedAt,
+			UpdatedAt:       ent.MPPPeriod.UpdatedAt,
+		},
 
 		OrganizationName:         ent.OrganizationName,
 		OrganizationLocationName: ent.OrganizationLocationName,
@@ -128,5 +143,8 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 		RequestorName:            ent.RequestorName,
 		DepartmentHeadName:       ent.DepartmentHeadName,
 		HrdHoUnitName:            ent.HrdHoUnitName,
+		EmpOrganizationName:      ent.EmpOrganizationName,
+		JobLevelName:             ent.JobLevelName,
+		JobLevel:                 ent.JobLevel,
 	}
 }

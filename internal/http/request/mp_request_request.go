@@ -33,13 +33,16 @@ type CreateMPRequestHeaderRequest struct {
 	SalaryMin                  string                     `json:"salary_min" validate:"required"`
 	SalaryMax                  string                     `json:"salary_max" validate:"required"`
 	RequestorID                *uuid.UUID                 `json:"requestor_id" validate:"required,uuid"`
-	DepartmentHead             *uuid.UUID                 `json:"department_head" validate:"required,uuid"`
-	VpGmDirector               string                     `json:"vp_gm_director" validate:"omitempty"`
-	CEO                        string                     `json:"ceo" validate:"omitempty"`
+	DepartmentHead             *uuid.UUID                 `json:"department_head" validate:"omitempty,uuid"`
+	VpGmDirector               *uuid.UUID                 `json:"vp_gm_director" validate:"omitempty"`
+	CEO                        *uuid.UUID                 `json:"ceo" validate:"omitempty"`
 	HrdHoUnit                  *uuid.UUID                 `json:"hrd_ho_unit" validate:"omitempty,uuid"`
 	MPPlanningHeaderID         *uuid.UUID                 `json:"mp_planning_header_id" validate:"omitempty,uuid"`
 	Status                     entity.MPRequestStatus     `json:"status" validate:"required,MPRequestStatusValidation"`
 	MPRequestType              entity.MPRequestTypeEnum   `json:"mp_request_type" validate:"required,MPRequestTypeEnumValidation"`
 	RecruitmentType            entity.RecruitmentTypeEnum `json:"recruitment_type" validate:"required,RecruitmentTypeEnumValidation"`
 	MajorIDs                   []uuid.UUID                `json:"major_ids" validate:"omitempty,dive,uuid"`
+	MPPPeriodID                *uuid.UUID                 `json:"mpp_period_id" validate:"omitempty,uuid"`
+	EmpOrganizationID          *uuid.UUID                 `json:"emp_organization_id" validate:"omitempty,uuid"`
+	JobLevelID                 *uuid.UUID                 `json:"job_level_id" validate:"omitempty,uuid"`
 }

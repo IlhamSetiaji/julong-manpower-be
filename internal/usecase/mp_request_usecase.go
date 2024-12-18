@@ -25,6 +25,8 @@ type MPRequestUseCase struct {
 	OrganizationMessage    messaging.IOrganizationMessage
 	JobPlafonMessage       messaging.IJobPlafonMessage
 	UserMessage            messaging.IUserMessage
+	MPPPeriodRepo          repository.IMPPPeriodRepository
+	EmpMessage             messaging.IEmployeeMessage
 }
 
 func NewMPRequestUseCase(
@@ -35,6 +37,8 @@ func NewMPRequestUseCase(
 	organizationMessage messaging.IOrganizationMessage,
 	jobPlafonMessage messaging.IJobPlafonMessage,
 	userMessage messaging.IUserMessage,
+	mppPeriodRepo repository.IMPPPeriodRepository,
+	em messaging.IEmployeeMessage,
 ) IMPRequestUseCase {
 	return &MPRequestUseCase{
 		Viper:                  viper,
@@ -44,6 +48,8 @@ func NewMPRequestUseCase(
 		OrganizationMessage:    organizationMessage,
 		JobPlafonMessage:       jobPlafonMessage,
 		UserMessage:            userMessage,
+		MPPPeriodRepo:          mppPeriodRepo,
+		EmpMessage:             em,
 	}
 }
 
@@ -133,11 +139,25 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	}
 
 	// check if requestor ID is exist
-	requestorExist, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// requestorExist, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+	// 	ID: req.RequestorID.String(),
+	// })
+	// if err != nil {
+	// 	uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
+	// 	return nil, err
+	// }
+
+	// if requestorExist == nil {
+	// 	uc.Log.Errorf("[MPRequestUseCase.Create] requestor with id %s is not exist", req.RequestorID.String())
+	// 	return nil, errors.New("requestor is not exist")
+	// }
+
+	// check if requestor ID is exist
+	requestorExist, err := uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 		ID: req.RequestorID.String(),
 	})
 	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
+		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find employee by id message: %v", err)
 		return nil, err
 	}
 
@@ -147,22 +167,57 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	}
 
 	// check if department head is exist
-	deptHeadExist, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
-		ID: req.DepartmentHead.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
-		return nil, err
-	}
+	var deptHeadExist *response.SendFindUserByIDResponse
+	if req.DepartmentHead != nil {
+		deptHeadExist, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+			ID: req.DepartmentHead.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
+			return nil, err
+		}
 
-	if deptHeadExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] department head with id %s is not exist", req.DepartmentHead.String())
-		return nil, errors.New("department head is not exist")
+		if deptHeadExist == nil {
+			uc.Log.Errorf("[MPRequestUseCase.Create] department head with id %s is not exist", req.DepartmentHead.String())
+			return nil, errors.New("department head is not exist")
+		}
+	} else {
+		deptHeadExist = &response.SendFindUserByIDResponse{}
 	}
 
 	mpRequestHeader, err := uc.MPRequestRepository.Create(dto.ConvertToEntity(req))
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.Create] error when create mp request header: %v", err)
+		return nil, err
+	}
+
+	// check if mpp period exist
+	mppPeriod, err := uc.MPPPeriodRepo.FindById(*req.MPPPeriodID)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] error when find mpp period by id: %v", err)
+		return nil, err
+	}
+
+	if mppPeriod == nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] mpp period with id %s is not exist", req.MPPPeriodID.String())
+		return nil, errors.New("mpp period is not exist")
+	}
+
+	// check if emp organization is exist
+	empOrgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+		ID: req.EmpOrganizationID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find emp organization by id message: %v", err)
+		return nil, err
+	}
+
+	// check if job level is exist
+	jobLevelExist, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+		ID: req.JobLevelID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find job level by id message: %v", err)
 		return nil, err
 	}
 
@@ -188,6 +243,10 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.JobName = jobExist.Name
 	mpRequestHeader.RequestorName = requestorExist.Name
 	mpRequestHeader.DepartmentHeadName = deptHeadExist.Name
+	mpRequestHeader.EmpOrganizationName = empOrgExist.Name
+	mpRequestHeader.JobLevelName = jobLevelExist.Name
+	mpRequestHeader.JobLevel = int(jobLevelExist.Level)
+	mpRequestHeader.MPPPeriod = *mppPeriod
 
 	return dto.ConvertToResponse(mpRequestHeader), nil
 }
@@ -198,5 +257,7 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 	organizationMessage := messaging.OrganizationMessageFactory(log)
 	jobPlafonMessage := messaging.JobPlafonMessageFactory(log)
 	userMessage := messaging.UserMessageFactory(log)
-	return NewMPRequestUseCase(viper, log, mpRequestRepository, requestMajorRepository, organizationMessage, jobPlafonMessage, userMessage)
+	mppPeriodRepo := repository.MPPPeriodRepositoryFactory(log)
+	em := messaging.EmployeeMessageFactory(log)
+	return NewMPRequestUseCase(viper, log, mpRequestRepository, requestMajorRepository, organizationMessage, jobPlafonMessage, userMessage, mppPeriodRepo, em)
 }

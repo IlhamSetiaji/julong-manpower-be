@@ -37,17 +37,21 @@ type MPRequestHeaderResponse struct {
 	SalaryMax                  string                     `json:"salary_max"`
 	RequestorID                *uuid.UUID                 `json:"requestor_id"`
 	DepartmentHead             *uuid.UUID                 `json:"department_head"`
-	VpGmDirector               string                     `json:"vp_gm_director"`
-	CEO                        string                     `json:"ceo"`
+	VpGmDirector               *uuid.UUID                 `json:"vp_gm_director"`
+	CEO                        *uuid.UUID                 `json:"ceo"`
 	HrdHoUnit                  *uuid.UUID                 `json:"hrd_ho_unit"`
 	MPPlanningHeaderID         *uuid.UUID                 `json:"mp_planning_header_id"`
 	Status                     entity.MPRequestStatus     `json:"status"`
 	MPRequestType              entity.MPRequestTypeEnum   `json:"mp_request_type"`
 	RecruitmentType            entity.RecruitmentTypeEnum `json:"recruitment_type"`
+	MPPPeriodID                *uuid.UUID                 `json:"mpp_period_id"`
+	EmpOrganizationID          *uuid.UUID                 `json:"emp_organization_id"`
+	JobLevelID                 *uuid.UUID                 `json:"job_level_id"`
 
 	RequestCategory  map[string]interface{}   `json:"request_category" gorm:"foreignKey:RequestCategoryID"`
 	RequestMajors    []map[string]interface{} `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID"`
 	MPPlanningHeader map[string]interface{}   `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID"`
+	MPPPeriod        MPPeriodResponse         `json:"mpp_period" gorm:"foreignKey:MPPPeriodID"`
 
 	OrganizationName         string `json:"organization_name" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`
@@ -58,4 +62,7 @@ type MPRequestHeaderResponse struct {
 	RequestorName            string `json:"requestor_name" gorm:"-"`
 	DepartmentHeadName       string `json:"department_head_name" gorm:"-"`
 	HrdHoUnitName            string `json:"hrd_ho_unit_name" gorm:"-"`
+	EmpOrganizationName      string `json:"emp_organization_name" gorm:"-"`
+	JobLevelName             string `json:"job_level_name" gorm:"-"`
+	JobLevel                 int    `json:"job_level" gorm:"-"`
 }
