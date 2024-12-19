@@ -194,15 +194,6 @@ func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeade
 	if approvedBy != "" {
 		approvedByPtr = uuid.MustParse(approvedBy)
 	}
-	if err := tx.Model(&entity.BatchHeader{}).Where("id = ?", batchHeader.ID).Updates(&entity.BatchHeader{
-		Status:       status,
-		ApproverID:   &approvedByPtr,
-		ApproverName: approverName,
-	}).Error; err != nil {
-		tx.Rollback()
-		r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
-		return err
-	}
 
 	// loop through the batch lines and update the status
 	for _, bl := range batchHeader.BatchLines {
@@ -286,6 +277,16 @@ func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeade
 					return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
 				}
 			}
+
+			if err := tx.Model(&entity.BatchHeader{}).Where("id = ?", batchHeader.ID).Updates(&entity.BatchHeader{
+				Status:       status,
+				ApproverID:   &approvedByPtr,
+				ApproverName: approverName,
+			}).Error; err != nil {
+				tx.Rollback()
+				r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+				return err
+			}
 		} else {
 			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
 				Status: entity.MPPlaningStatus(status),
@@ -302,6 +303,16 @@ func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeade
 				tx.Rollback()
 				r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
 				return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+			}
+
+			if err := tx.Model(&entity.BatchHeader{}).Where("id = ?", batchHeader.ID).Updates(&entity.BatchHeader{
+				Status: status,
+				// ApproverID:   &approvedByPtr,
+				// ApproverName: approverName,
+			}).Error; err != nil {
+				tx.Rollback()
+				r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+				return err
 			}
 
 		}
