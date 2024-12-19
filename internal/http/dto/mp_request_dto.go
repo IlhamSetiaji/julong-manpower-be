@@ -107,8 +107,9 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 		JobLevelID:                 ent.JobLevelID,
 
 		RequestCategory: map[string]interface{}{
-			"ID":   ent.RequestCategory.ID,
-			"Name": ent.RequestCategory.Name,
+			"ID":            ent.RequestCategory.ID,
+			"Name":          ent.RequestCategory.Name,
+			"IsReplacement": ent.RequestCategory.IsReplacement,
 		},
 		RequestMajors: func() []map[string]interface{} {
 			var majors []map[string]interface{}
