@@ -82,7 +82,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.POST("/mp-plannings/lines/batch/store", c.MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines)
 
 			// request categories
-			apiRoute.GET("/request-categories/", c.RequestCategoryHandler.FindAll)
+			apiRoute.GET("/request-categories", c.RequestCategoryHandler.FindAll)
 			apiRoute.GET("/request-categories/is-replacement", c.RequestCategoryHandler.GetByIsReplacement)
 			apiRoute.GET("/request-categories/:id", c.RequestCategoryHandler.FindById)
 

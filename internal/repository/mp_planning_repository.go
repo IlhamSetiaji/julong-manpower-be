@@ -11,8 +11,9 @@ import (
 )
 
 type IMPPlanningRepository interface {
-	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string) (*[]entity.MPPlanningHeader, int64, error)
+	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
+	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
@@ -51,7 +52,23 @@ func NewMPPlanningRepository(log *logrus.Logger, db *gorm.DB) IMPPlanningReposit
 	}
 }
 
-func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string) (*[]entity.MPPlanningHeader, int64, error) {
+func (r *MPPlanningRepository) FindAllHeaders() (*[]entity.MPPlanningHeader, error) {
+	var mppHeaders []entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPlanningLines.MPRequestLine").Preload("MPPPeriod").Find(&mppHeaders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindAllHeaders] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindAllHeaders] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindAllHeaders] " + err.Error())
+		}
+	}
+
+	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, int64, error) {
 	var mppHeaders []entity.MPPlanningHeader
 	var total int64
 
@@ -76,6 +93,10 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 
 	if orgId != "" {
 		query = query.Where("organization_id = ?", orgId)
+	}
+
+	if status != "" {
+		query = query.Where("status = ?", status)
 	}
 
 	countQuery := query.Session(&gorm.Session{})

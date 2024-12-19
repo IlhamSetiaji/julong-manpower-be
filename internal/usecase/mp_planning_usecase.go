@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -64,7 +65,7 @@ func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repositor
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error) {
-	mpPlanningHeaders, total, err := uc.MPPlanningRepository.FindAllHeadersPaginated(req.Page, req.PageSize, req.Search, req.ApproverType, req.OrgLocationID, req.OrgID)
+	mpPlanningHeaders, total, err := uc.MPPlanningRepository.FindAllHeadersPaginated(req.Page, req.PageSize, req.Search, req.ApproverType, req.OrgLocationID, req.OrgID, entity.MPPlaningStatus(req.Status))
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated] " + err.Error())
 		return nil, err
@@ -103,15 +104,6 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 			header.JobName = messageJobResposne.Name
 		}
 
-		// Fetch requestor names using RabbitMQ
-		// messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
-		// 	ID: header.RequestorID.String(),
-		// })
-		// if err != nil {
-		// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-		// 	return nil, err
-		// }
-		// header.RequestorName = messageUserResponse.Name
 		messageEmployeeResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 			ID: header.RequestorID.String(),
 		})
@@ -134,15 +126,6 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		header.OrganizationLocationName = messageOrgLocResponse.Name
 
 		if header.ApproverManagerID != nil {
-			// fetch approver manager names using RabbitMQ
-			// messageApprManagerResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
-			// 	ID: header.ApproverManagerID.String(),
-			// })
-			// if err != nil {
-			// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-			// 	return nil, err
-			// }
-			// header.ApproverManagerName = messageApprManagerResponse.Name
 			messageApprManagerResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 				ID: header.ApproverManagerID.String(),
 			})
@@ -156,15 +139,6 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}
 
 		if header.ApproverRecruitmentID != nil {
-			// fetch approver recruitment names using RabbitMQ
-			// messageApprRecruitmentResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
-			// 	ID: header.ApproverRecruitmentID.String(),
-			// })
-			// if err != nil {
-			// 	uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
-			// 	return nil, err
-			// }
-			// header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
 			messageApprRecruitmentResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 				ID: header.ApproverRecruitmentID.String(),
 			})
@@ -292,7 +266,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error) {
-	var includedIDs []string
+	var includedIDs []string = []string{}
 
 	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] req.Status: %v", req.Status)
 
@@ -308,13 +282,33 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 			includedIDs = append(includedIDs, header.OrganizationLocationID.String())
 		}
 
-		uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] includedIDs: %v", includedIDs)
 	} else {
 		includedIDs = []string{}
 	}
 
 	// fetch organization locations paginated from rabbitmq
-	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs)
+	var isNull bool
+	var error error
+	uc.Log.Info("is null value ", req.IsNull)
+	if req.IsNull == "" {
+		isNull, error = strconv.ParseBool(req.IsNull)
+		if error != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + error.Error())
+			return nil, error
+		}
+
+		mpPlanningHeaders, err := uc.MPPlanningRepository.FindAllHeaders()
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
+			return nil, err
+		}
+
+		for _, header := range *mpPlanningHeaders {
+			includedIDs = append(includedIDs, header.OrganizationLocationID.String())
+		}
+	}
+	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] includedIDs: %v", includedIDs)
+	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs, isNull)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
 		return nil, err

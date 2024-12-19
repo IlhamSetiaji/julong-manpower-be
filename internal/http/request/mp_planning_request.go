@@ -13,6 +13,7 @@ type FindAllHeadersPaginatedMPPlanningRequest struct {
 	OrgLocationID string `json:"org_location_id"`
 	OrgID         string `json:"org_id"`
 	Status        string `json:"status"`
+	IsNull        string `json:"is_null"`
 }
 
 type FindHeaderByIdMPPlanningRequest struct {

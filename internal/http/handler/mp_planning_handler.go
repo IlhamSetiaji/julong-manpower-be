@@ -98,13 +98,21 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 		orgID = ""
 	}
 
+	status := ctx.Query("status")
+	if status == "" {
+		status = ""
+	}
+
 	h.Log.Infof("approver type: %s", approverType)
 
 	req := request.FindAllHeadersPaginatedMPPlanningRequest{
-		Page:         page,
-		PageSize:     pageSize,
-		Search:       search,
-		ApproverType: approverType,
+		Page:          page,
+		PageSize:      pageSize,
+		Search:        search,
+		ApproverType:  approverType,
+		OrgLocationID: orgLocationID,
+		OrgID:         orgID,
+		Status:        status,
 	}
 
 	resp, err := h.UseCase.FindAllHeadersPaginated(&req)
@@ -203,11 +211,23 @@ func (h *MPPlanningHandler) FindAllHeadersForBatchPaginated(ctx *gin.Context) {
 		status = ""
 	}
 
+	isNull := ctx.Query("is_null")
+	if isNull == "" {
+		isNull = ""
+	} else {
+		_, err := strconv.ParseBool(isNull)
+		if err != nil {
+			utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "is_null must be a boolean value")
+			return
+		}
+	}
+
 	req := request.FindAllHeadersPaginatedMPPlanningRequest{
 		Page:     page,
 		PageSize: pageSize,
 		Search:   search,
 		Status:   status,
+		IsNull:   isNull,
 	}
 
 	resp, err := h.UseCase.FindAllHeadersForBatchPaginated(&req)
