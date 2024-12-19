@@ -6,11 +6,13 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
+	"github.com/google/uuid"
 )
 
 func ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader {
 	expectedDate := parseDate(req.ExpectedDate)
 	return &entity.MPRequestHeader{
+		ID:                         uuid.MustParse(req.ID),
 		OrganizationID:             &req.OrganizationID,
 		OrganizationLocationID:     &req.OrganizationLocationID,
 		ForOrganizationID:          &req.ForOrganizationID,

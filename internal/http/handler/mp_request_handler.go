@@ -20,6 +20,7 @@ import (
 
 type IMPRequestHandler interface {
 	Create(ctx *gin.Context)
+	Update(ctx *gin.Context)
 	FindAllPaginated(ctx *gin.Context)
 	UpdateStatusMPRequestHeader(ctx *gin.Context)
 }
@@ -126,6 +127,36 @@ func (h *MPRequestHandler) Create(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusCreated, "MP Request Header created", res)
+}
+
+func (h *MPRequestHandler) Update(ctx *gin.Context) {
+	var req request.CreateMPRequestHeaderRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.Log.Errorf("[MPRequestHandler.Update] error when bind json: %v", err)
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	if req.ID == "" {
+		h.Log.Errorf("[MPRequestHandler.Update] error when get ID from request")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request body", "ID is required")
+		return
+	}
+
+	if err := h.Validate.Struct(req); err != nil {
+		h.Log.Errorf("[MPRequestHandler.Update] error when validate request: %v", err)
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	res, err := h.UseCase.Update(&req)
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.Update] error when update mp request header: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to update mp request header", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Header updated", res)
 }
 
 func (h *MPRequestHandler) UpdateStatusMPRequestHeader(ctx *gin.Context) {
