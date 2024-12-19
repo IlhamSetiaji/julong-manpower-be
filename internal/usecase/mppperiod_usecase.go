@@ -82,7 +82,12 @@ func (uc *MPPPeriodUseCase) Create(req request.CreateMPPPeriodRequest) (*respons
 		return nil, err
 	}
 
-	periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+	// periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+	// if err != nil {
+	// 	uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+	// 	return nil, err
+	// }
+	periodExist, err := uc.MPPPeriodRepository.FindByStatus(entity.MPPeriodStatusOpen)
 	if err != nil {
 		uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
 		return nil, err
@@ -142,9 +147,14 @@ func (uc *MPPPeriodUseCase) Update(req request.UpdateMPPPeriodRequest) (*respons
 	}
 
 	if req.Status != entity.MPPPeriodStatusDraft {
-		periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+		// periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+		// if err != nil {
+		// 	uc.Log.Errorf("[MPPPeriodUseCase.Update] " + err.Error())
+		// 	return nil, err
+		// }
+		periodExist, err := uc.MPPPeriodRepository.FindByStatus(entity.MPPeriodStatusOpen)
 		if err != nil {
-			uc.Log.Errorf("[MPPPeriodUseCase.Update] " + err.Error())
+			uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
 			return nil, err
 		}
 

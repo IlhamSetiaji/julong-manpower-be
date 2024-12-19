@@ -18,6 +18,7 @@ type IMPPPeriodRepository interface {
 	Update(mppPeriod *entity.MPPPeriod) (*entity.MPPPeriod, error)
 	Delete(id uuid.UUID) error
 	FindByCurrentDateAndStatus(status entity.MPPPeriodStatus) (*entity.MPPPeriod, error)
+	FindByStatus(status entity.MPPPeriodStatus) (*entity.MPPPeriod, error)
 }
 
 type MPPPeriodRepository struct {
@@ -30,6 +31,24 @@ func NewMPPPeriodRepository(log *logrus.Logger, db *gorm.DB) IMPPPeriodRepositor
 		Log: log,
 		DB:  db,
 	}
+}
+
+func (r *MPPPeriodRepository) FindByStatus(status entity.MPPPeriodStatus) (*entity.MPPPeriod, error) {
+	var mppPeriod entity.MPPPeriod
+
+	err := r.DB.Where("status = ?", status).First(&mppPeriod).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warn("[MPPPeriodRepository.FindByStatus] User not found")
+			return nil, nil
+		} else {
+			r.Log.Error("[MPPPeriodRepository.FindByStatus] " + err.Error())
+			return nil, errors.New("[UserRepository.FindByEmail] " + err.Error())
+		}
+	}
+
+	return &mppPeriod, nil
 }
 
 func (r *MPPPeriodRepository) FindAllPaginated(page int, pageSize int, search string) (*[]entity.MPPPeriod, int64, error) {
