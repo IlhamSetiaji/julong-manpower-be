@@ -112,6 +112,13 @@ func (r *MPPPeriodRepository) Update(mppPeriod *entity.MPPPeriod) (*entity.MPPPe
 		return nil, errors.New("[MPPPeriodRepository.Update] " + tx.Error.Error())
 	}
 
+	if mppPeriod.Status != "draft" {
+		dateNow := time.Now().Format("2006-01-02")
+		if dateNow < mppPeriod.StartDate.Format("2006-01-02") {
+			mppPeriod.Status = entity.MPPeriodStatusNotOpen
+		}
+	}
+
 	if err := tx.Model(mppPeriod).Where("id = ?", mppPeriod.ID).Updates(mppPeriod).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPPPeriodRepository.Update] " + err.Error())
