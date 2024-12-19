@@ -56,6 +56,7 @@ func (d *MPPlanningDTO) ConvertMPPlanningApprovalHistoriesToResponse(approvalHis
 
 func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader *entity.MPPlanningHeader) *response.MPPlanningHeaderResponse {
 	if mpPlanningHeader.OrganizationName == "" {
+		d.log.Infof("Organization ID: %s", mpPlanningHeader.OrganizationID)
 		organization, err := d.orgMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
 			ID: mpPlanningHeader.OrganizationID.String(),
 		})

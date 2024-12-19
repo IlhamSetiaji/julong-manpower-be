@@ -93,6 +93,12 @@ func parseDate(dateStr string) time.Time {
 }
 
 func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse {
+	var mpPlanningHeader response.MPPlanningHeaderResponse
+	if ent.MPPlanningHeaderID != nil {
+		mpPlanningHeader = *d.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(&ent.MPPlanningHeader)
+	} else {
+		mpPlanningHeader = response.MPPlanningHeaderResponse{}
+	}
 	var approvedByDeptHead, approvedByVpGmDirector, approvedByCEO, approvedByHrdHoUnit uuid.NullUUID
 	if ent.DepartmentHead != nil {
 		approvedByDeptHead = uuid.NullUUID{UUID: *ent.DepartmentHead, Valid: true}
@@ -167,7 +173,7 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 			}
 			return majors
 		}(),
-		MPPlanningHeader: d.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(&ent.MPPlanningHeader),
+		MPPlanningHeader: &mpPlanningHeader,
 		// MPPlanningHeader: map[string]interface{}{
 		// 	"ID":             ent.MPPlanningHeader.ID,
 		// 	"DocumentNumber": ent.MPPlanningHeader.DocumentNumber,
