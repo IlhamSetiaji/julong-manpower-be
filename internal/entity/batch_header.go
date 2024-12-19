@@ -13,6 +13,7 @@ const (
 	BatchHeaderApprovalStatusApproved     BatchHeaderApprovalStatus = "APPROVED"
 	BatchHeaderApprovalStatusRejected     BatchHeaderApprovalStatus = "REJECTED"
 	BatchHeaderApprovalStatusNeedApproval BatchHeaderApprovalStatus = "NEED APPROVAL"
+	BatchHeaderApprovalStatusCompleted    BatchHeaderApprovalStatus = "COMPLETED"
 )
 
 type BatchHeader struct {

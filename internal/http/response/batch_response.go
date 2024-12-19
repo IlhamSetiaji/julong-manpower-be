@@ -61,3 +61,12 @@ type DocumentCalculationBatchResponse struct {
 	Total        int    `json:"total"`
 	IsTotal      bool   `json:"is_total"`
 }
+
+type CompletedBatchResponse struct {
+	ID             uuid.UUID        `json:"id"`
+	DocumentNumber string           `json:"document_number"`
+	DocumentDate   time.Time        `json:"document_date"`
+	CreatedAt      time.Time        `json:"created_at"`
+	UpdatedAt      time.Time        `json:"updated_at"`
+	MPPPeriod      MPPeriodResponse `json:"mpp_period"`
+}

@@ -22,6 +22,7 @@ type IBatchHandler interface {
 	FindDocumentByID(c *gin.Context)
 	FindByCurrentDocumentDateAndStatus(c *gin.Context)
 	UpdateStatusBatchHeader(c *gin.Context)
+	GetCompletedBatchHeader(c *gin.Context)
 }
 
 type BatchHandler struct {
@@ -40,6 +41,18 @@ func NewBatchHandler(log *logrus.Logger, viper *viper.Viper, useCase usecase.IBa
 		Validate:   validate,
 		UserHelper: userHelper,
 	}
+}
+
+func (h *BatchHandler) GetCompletedBatchHeader(c *gin.Context) {
+	batch, err := h.UseCase.GetCompletedBatchHeader()
+
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to get completed batch header", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Completed batch header found", batch)
 }
 
 func (h *BatchHandler) CreateBatchHeaderAndLines(c *gin.Context) {
@@ -127,6 +140,23 @@ func (h *BatchHandler) UpdateStatusBatchHeader(c *gin.Context) {
 	if err := h.Validate.Struct(req); err != nil {
 		h.Log.Error(err)
 		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request body", err.Error())
+		return
+	}
+
+	batchExist, err := h.UseCase.FindById(req.ID)
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find batch by id", err.Error())
+		return
+	}
+
+	if batchExist == nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Batch not found", "Batch not found")
+		return
+	}
+
+	if batchExist.Status == string(entity.BatchHeaderApprovalStatus(req.Status)) {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Status already same", "Status already same")
 		return
 	}
 
