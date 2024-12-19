@@ -413,26 +413,50 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 
 	if req.Level == entity.MPPRequestApprovalHistoryLevelHRDHO && req.Status == entity.MPRequestStatusCompleted {
 		// find mp planning line by header id and job id
-		mpPlanningLine, err := uc.MPPlanningRepository.FindLineByHeaderIDAndJobID(mpRequestHeader.ID, *mpRequestHeader.JobID)
+		// mpPlanningLine, err := uc.MPPlanningRepository.FindLineByHeaderIDAndJobID(*mpRequestHeader.MPPlanningHeaderID, *mpRequestHeader.JobID)
+		// if err != nil {
+		// 	uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when find mp planning line by header id and job id: %v", err)
+		// 	return err
+		// }
+
+		// if mpPlanningLine == nil {
+		// 	uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] mp planning line with header id %s and job id %s is not exist", mpRequestHeader.ID.String(), mpRequestHeader.JobID.String())
+		// 	// return errors.New("mp planning line is not exist")
+		// 	// return nil
+		// }
+
+		// if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumMT {
+		// 	mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.TotalNeeds
+		// } else if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumPH {
+		// 	mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.TotalNeeds
+		// }
+		// _, err = uc.MPPlanningRepository.UpdateLineByHeaderIDAndJobID(mpRequestHeader.ID, *mpRequestHeader.JobID, mpPlanningLine)
+		// if err != nil {
+		// 	uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line by header id and job id: %v", err)
+		// 	return err
+		// }
+		mpPlanningLines, err := uc.MPPlanningRepository.GetLinesByHeaderAndJobID(*mpRequestHeader.MPPlanningHeaderID, *mpRequestHeader.MPPlanningHeader.JobID)
 		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when find mp planning line by header id and job id: %v", err)
+			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when get mp planning lines by header and job id: %v", err)
 			return err
 		}
 
-		if mpPlanningLine == nil {
-			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] mp planning line with header id %s and job id %s is not exist", mpRequestHeader.ID.String(), mpRequestHeader.JobID.String())
-			return errors.New("mp planning line is not exist")
+		if mpPlanningLines == nil {
+			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] mp planning lines with header id %s and job id %s is not exist", mpRequestHeader.MPPlanningHeaderID.String(), mpRequestHeader.JobID.String())
+			return errors.New("mp planning lines is not exist")
 		}
 
-		if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumMT {
-			mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.TotalNeeds
-		} else if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumPH {
-			mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.TotalNeeds
-		}
-		_, err = uc.MPPlanningRepository.UpdateLineByHeaderIDAndJobID(mpRequestHeader.ID, *mpRequestHeader.JobID, mpPlanningLine)
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line by header id and job id: %v", err)
-			return err
+		for _, mpPlanningLine := range *mpPlanningLines {
+			if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumMT {
+				mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.TotalNeeds
+			} else if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumPH {
+				mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.TotalNeeds
+			}
+			_, err = uc.MPPlanningRepository.UpdateLineByHeaderIDAndJobID(*mpRequestHeader.MPPlanningHeaderID, *mpRequestHeader.JobID, &mpPlanningLine)
+			if err != nil {
+				uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line by header id and job id: %v", err)
+				return err
+			}
 		}
 	}
 
