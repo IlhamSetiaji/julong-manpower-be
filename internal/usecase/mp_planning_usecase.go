@@ -271,21 +271,21 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 
 	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] req.Status: %v", req.Status)
 
-	if req.Status != "" {
-		mpPlanningHeaders, err := uc.MPPlanningRepository.GetHeadersByStatus(entity.MPPlaningStatus(req.Status))
+	// if req.Status != "" {
+	// 	mpPlanningHeaders, err := uc.MPPlanningRepository.GetHeadersByStatus(entity.MPPlaningStatus(req.Status))
 
-		if err != nil {
-			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
-			return nil, err
-		}
+	// 	if err != nil {
+	// 		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
+	// 		return nil, err
+	// 	}
 
-		for _, header := range *mpPlanningHeaders {
-			includedIDs = append(includedIDs, header.OrganizationLocationID.String())
-		}
+	// 	for _, header := range *mpPlanningHeaders {
+	// 		includedIDs = append(includedIDs, header.OrganizationLocationID.String())
+	// 	}
 
-	} else {
-		includedIDs = []string{}
-	}
+	// } else {
+	// 	includedIDs = []string{}
+	// }
 
 	// fetch organization locations paginated from rabbitmq
 	var isNull bool
