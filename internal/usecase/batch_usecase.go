@@ -81,10 +81,15 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 
 	batchLines := make([]entity.BatchLine, len(req.BatchLines))
 	for i, bl := range req.BatchLines {
-		if bl.OrganizationLocationID != "" {
+		mpLine, err := uc.mpPlanningRepo.FindLineById(uuid.MustParse(bl.MPPlanningHeaderID))
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
+			return nil, err
+		}
+		if mpLine.OrganizationLocationID != nil {
 			// Check if organization location exist
 			orgLocExist, err := uc.OrgMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-				ID: bl.OrganizationLocationID,
+				ID: mpLine.OrganizationLocationID.String(),
 			})
 
 			if err != nil {
@@ -98,10 +103,10 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 			}
 		}
 
-		if bl.OrganizationID != "" {
+		if mpLine.MPPlanningHeader.OrganizationID != nil {
 			// Check if organization exist
 			orgExist, err := uc.OrgMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-				ID: bl.OrganizationID,
+				ID: mpLine.MPPlanningHeader.OrganizationID.String(),
 			})
 
 			if err != nil {
@@ -129,8 +134,8 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 
 		batchLines[i] = entity.BatchLine{
 			MPPlanningHeaderID:     uuid.MustParse(bl.MPPlanningHeaderID),
-			OrganizationID:         func(u uuid.UUID) *uuid.UUID { return &u }(uuid.MustParse(bl.OrganizationID)),
-			OrganizationLocationID: func(u uuid.UUID) *uuid.UUID { return &u }(uuid.MustParse(bl.OrganizationLocationID)),
+			OrganizationID:         func(u uuid.UUID) *uuid.UUID { return &u }(uuid.MustParse(mpLine.MPPlanningHeader.OrganizationID.String())),
+			OrganizationLocationID: func(u uuid.UUID) *uuid.UUID { return &u }(uuid.MustParse(mpLine.OrganizationLocationID.String())),
 		}
 	}
 

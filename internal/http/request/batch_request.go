@@ -8,9 +8,9 @@ type CreateBatchHeaderAndLinesRequest struct {
 	ApproverID     string                           `json:"approver_id" validate:"required"`
 	ApproverName   string                           `json:"approver_name" validate:"required"`
 	BatchLines     []struct {
-		MPPlanningHeaderID     string `json:"mp_planning_header_id" validate:"required"`
-		OrganizationID         string `json:"organization_id" validate:"required"`
-		OrganizationLocationID string `json:"organization_location_id" validate:"required"`
+		MPPlanningHeaderID string `json:"mp_planning_header_id" validate:"required"`
+		// OrganizationID         string `json:"organization_id" validate:"required"`
+		// OrganizationLocationID string `json:"organization_location_id" validate:"required"`
 	} `json:"batch_lines" validate:"required,dive"`
 }
 

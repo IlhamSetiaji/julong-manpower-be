@@ -24,6 +24,7 @@ type IMPPlanningUseCase interface {
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
+	RejectStatusPartialMPPlanningHeader(request *request.UpdateStatusPartialMPPlanningHeaderRequest) error
 	GetPlanningApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPPlanningApprovalHistoryResponse, error)
 	GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryID uuid.UUID) ([]*response.ManpowerAttachmentResponse, error)
 	Create(request *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error)
@@ -436,6 +437,52 @@ func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateSta
 	}
 
 	uc.Log.Infof("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] attachmentLength: %v", attachmentLength)
+
+	return nil
+}
+
+func (uc *MPPlanningUseCase) RejectStatusPartialMPPlanningHeader(req *request.UpdateStatusPartialMPPlanningHeaderRequest) error {
+	// check employee using rabbitmq
+	messageEmpResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+		ID: req.ApproverID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] " + err.Error())
+		return err
+	}
+
+	if messageEmpResponse == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] Employee not found")
+		return errors.New("Employee not found")
+	}
+
+	for _, payload := range req.Payload {
+		mpPlanningHeader, err := uc.MPPlanningRepository.FindHeaderById(uuid.MustParse(payload.ID))
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] " + err.Error())
+			return err
+		}
+
+		if mpPlanningHeader == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] MP Planning Header not found")
+			return errors.New("MP Planning Header not found")
+		}
+
+		approvalHistory := &entity.MPPlanningApprovalHistory{
+			MPPlanningHeaderID: uuid.MustParse(payload.ID),
+			ApproverID:         req.ApproverID,
+			ApproverName:       messageEmpResponse.Name,
+			Notes:              payload.Notes,
+			Level:              string(entity.MPPlanningApprovalHistoryLevelCEO),
+			Status:             entity.MPPlanningApprovalHistoryStatusRejected,
+		}
+
+		err = uc.MPPlanningRepository.UpdateStatusHeader(uuid.MustParse(payload.ID), string(entity.MPPlaningStatusReject), approvalHistory.ApproverName, approvalHistory)
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] " + err.Error())
+			return err
+		}
+	}
 
 	return nil
 }

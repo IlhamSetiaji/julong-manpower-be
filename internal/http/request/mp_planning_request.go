@@ -37,6 +37,16 @@ type UpdateStatusMPPlanningHeaderRequest struct {
 	// ApproverName string                      `json:"approved_by_name" validate:"omitempty"`
 }
 
+type UpdateStatusPartialMPPlanningHeaderRequest struct {
+	ApproverID uuid.UUID                    `json:"approver_id" validate:"required"`
+	Payload    []UpdateStatusPartialPayload `json:"payload" validate:"required,dive"`
+}
+
+type UpdateStatusPartialPayload struct {
+	ID    string `json:"id" validate:"required,uuid"`
+	Notes string `json:"notes" validate:"omitempty"`
+}
+
 type CreateHeaderMPPlanningRequest struct {
 	MPPPeriodID            uuid.UUID                   `json:"mpp_period_id" validate:"required"`
 	OrganizationID         uuid.UUID                   `json:"organization_id" validate:"required"`
