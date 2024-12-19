@@ -14,6 +14,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -22,6 +23,7 @@ type IMPRequestHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	FindAllPaginated(ctx *gin.Context)
+	FindByID(ctx *gin.Context)
 	UpdateStatusMPRequestHeader(ctx *gin.Context)
 }
 
@@ -103,6 +105,24 @@ func (h *MPRequestHandler) FindAllPaginated(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Headers found", res)
+}
+
+func (h *MPRequestHandler) FindByID(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		h.Log.Errorf("[MPRequestHandler.FindByID] error when get ID from request")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request", "ID is required")
+		return
+	}
+
+	res, err := h.UseCase.FindByID(uuid.MustParse(id))
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.FindByID] error when find by ID: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to find by ID", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Header found", res)
 }
 
 func (h *MPRequestHandler) Create(ctx *gin.Context) {

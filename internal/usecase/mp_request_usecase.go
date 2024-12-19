@@ -18,6 +18,7 @@ import (
 type IMPRequestUseCase interface {
 	Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
+	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
 }
@@ -186,6 +187,43 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
 	mpRequestHeader.MPPPeriod = *mppPeriod
+
+	return dto.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error) {
+	mpRequestHeader, err := uc.MPRequestRepository.FindById(id)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByID] error when find mp request header by id: %v", err)
+		return nil, err
+	}
+
+	if mpRequestHeader == nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByID] mp request header with id %s is not exist", id.String())
+		return nil, errors.New("mp request header is not exist")
+	}
+
+	// check portal data
+	portalResponse, err := uc.MPRequestHelper.CheckPortalData(dto.ConvertEntityToRequest(mpRequestHeader))
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByID] error when check portal data: %v", err)
+		return nil, err
+	}
+
+	mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+	mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
+	mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
+	mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
+	mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
+	mpRequestHeader.JobName = portalResponse.JobName
+	mpRequestHeader.RequestorName = portalResponse.RequestorName
+	mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
+	mpRequestHeader.VpGmDirectorName = portalResponse.VpGmDirectorName
+	mpRequestHeader.CeoName = portalResponse.CeoName
+	mpRequestHeader.HrdHoUnitName = portalResponse.HrdHoUnitName
+	mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
+	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
+	mpRequestHeader.JobLevel = portalResponse.JobLevel
 
 	return dto.ConvertToResponse(mpRequestHeader), nil
 }
