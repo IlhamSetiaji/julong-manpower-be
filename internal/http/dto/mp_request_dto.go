@@ -7,9 +7,33 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	"github.com/google/uuid"
+	"github.com/sirupsen/logrus"
 )
 
-func ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader {
+type IMPRequestDTO interface {
+	ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader
+	ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse
+	ConvertEntityToRequest(ent *entity.MPRequestHeader) *request.CreateMPRequestHeaderRequest
+}
+
+type MPRequestDTO struct {
+	Log           *logrus.Logger
+	MPPlanningDTO IMPPlanningDTO
+}
+
+func NewMPRequestDTO(log *logrus.Logger, mpPlanningDTO IMPPlanningDTO) IMPRequestDTO {
+	return &MPRequestDTO{
+		Log:           log,
+		MPPlanningDTO: mpPlanningDTO,
+	}
+}
+
+func MPRequestDTOFactory(log *logrus.Logger) IMPRequestDTO {
+	mpPlanningDTO := MPPlanningDTOFactory(log)
+	return NewMPRequestDTO(log, mpPlanningDTO)
+}
+
+func (d *MPRequestDTO) ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader {
 	expectedDate := parseDate(req.ExpectedDate)
 	var parsedID uuid.NullUUID
 	if req.ID != "" {
@@ -68,7 +92,7 @@ func parseDate(dateStr string) time.Time {
 	return date
 }
 
-func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse {
+func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse {
 	var approvedByDeptHead, approvedByVpGmDirector, approvedByCEO, approvedByHrdHoUnit uuid.NullUUID
 	if ent.DepartmentHead != nil {
 		approvedByDeptHead = uuid.NullUUID{UUID: *ent.DepartmentHead, Valid: true}
@@ -143,11 +167,12 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 			}
 			return majors
 		}(),
-		MPPlanningHeader: map[string]interface{}{
-			"ID":             ent.MPPlanningHeader.ID,
-			"DocumentNumber": ent.MPPlanningHeader.DocumentNumber,
-			"DocumentDate":   ent.MPPlanningHeader.DocumentDate,
-		},
+		MPPlanningHeader: d.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(&ent.MPPlanningHeader),
+		// MPPlanningHeader: map[string]interface{}{
+		// 	"ID":             ent.MPPlanningHeader.ID,
+		// 	"DocumentNumber": ent.MPPlanningHeader.DocumentNumber,
+		// 	"DocumentDate":   ent.MPPlanningHeader.DocumentDate,
+		// },
 		MPPPeriod: response.MPPeriodResponse{
 			ID:              ent.MPPPeriod.ID,
 			Title:           ent.MPPPeriod.Title,
@@ -161,6 +186,7 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 		},
 
 		OrganizationName:         ent.OrganizationName,
+		OrganizationCategory:     ent.OrganizationCategory,
 		OrganizationLocationName: ent.OrganizationLocationName,
 		ForOrganizationName:      ent.ForOrganizationName,
 		ForOrganizationLocation:  ent.ForOrganizationLocation,
@@ -179,7 +205,7 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 	}
 }
 
-func ConvertEntityToRequest(ent *entity.MPRequestHeader) *request.CreateMPRequestHeaderRequest {
+func (d *MPRequestDTO) ConvertEntityToRequest(ent *entity.MPRequestHeader) *request.CreateMPRequestHeaderRequest {
 	return &request.CreateMPRequestHeaderRequest{
 		OrganizationID:             *ent.OrganizationID,
 		OrganizationLocationID:     *ent.OrganizationLocationID,

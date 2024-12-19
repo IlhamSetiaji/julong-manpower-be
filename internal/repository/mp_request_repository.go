@@ -125,7 +125,7 @@ func (r *MPRequestRepository) DeleteHeader(id uuid.UUID) error {
 func (r *MPRequestRepository) FindById(id uuid.UUID) (*entity.MPRequestHeader, error) {
 	var mpRequestHeader entity.MPRequestHeader
 
-	if err := r.DB.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").First(&mpRequestHeader, id).Error; err != nil {
+	if err := r.DB.Preload("MPPPeriod").Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader.MPPlanningLines").First(&mpRequestHeader, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPRequestRepository.FindById] mp request header with id %s not found", id)
 			return nil, nil

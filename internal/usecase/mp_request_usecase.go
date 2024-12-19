@@ -38,6 +38,7 @@ type MPRequestUseCase struct {
 	MPPPeriodRepo          repository.IMPPPeriodRepository
 	EmpMessage             messaging.IEmployeeMessage
 	MPRequestHelper        helper.IMPRequestHelper
+	MPRequestDTO           dto.IMPRequestDTO
 }
 
 func NewMPRequestUseCase(
@@ -51,6 +52,7 @@ func NewMPRequestUseCase(
 	mppPeriodRepo repository.IMPPPeriodRepository,
 	em messaging.IEmployeeMessage,
 	mprHelper helper.IMPRequestHelper,
+	mprDTO dto.IMPRequestDTO,
 ) IMPRequestUseCase {
 	return &MPRequestUseCase{
 		Viper:                  viper,
@@ -63,6 +65,7 @@ func NewMPRequestUseCase(
 		MPPPeriodRepo:          mppPeriodRepo,
 		EmpMessage:             em,
 		MPRequestHelper:        mprHelper,
+		MPRequestDTO:           mprDTO,
 	}
 }
 
@@ -86,7 +89,7 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 		return nil, err
 	}
 
-	mpRequestHeader, err := uc.MPRequestRepository.Create(dto.ConvertToEntity(req))
+	mpRequestHeader, err := uc.MPRequestRepository.Create(uc.MPRequestDTO.ConvertToEntity(req))
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.Create] error when create mp request header: %v", err)
 		return nil, err
@@ -107,6 +110,7 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	}
 
 	mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+	mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
 	mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
 	mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
 	mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
@@ -119,7 +123,7 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
 	mpRequestHeader.MPPPeriod = *mppPeriod
 
-	return dto.ConvertToResponse(mpRequestHeader), nil
+	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }
 
 func (uc *MPRequestUseCase) Delete(id uuid.UUID) error {
@@ -190,7 +194,7 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 		return nil, err
 	}
 
-	mpRequestHeader, err := uc.MPRequestRepository.Update(dto.ConvertToEntity(req))
+	mpRequestHeader, err := uc.MPRequestRepository.Update(uc.MPRequestDTO.ConvertToEntity(req))
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.Update] error when create mp request header: %v", err)
 		return nil, err
@@ -216,6 +220,7 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 	}
 
 	mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+	mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
 	mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
 	mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
 	mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
@@ -228,7 +233,7 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
 	mpRequestHeader.MPPPeriod = *mppPeriod
 
-	return dto.ConvertToResponse(mpRequestHeader), nil
+	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }
 
 func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error) {
@@ -244,13 +249,14 @@ func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderRes
 	}
 
 	// check portal data
-	portalResponse, err := uc.MPRequestHelper.CheckPortalData(dto.ConvertEntityToRequest(mpRequestHeader))
+	portalResponse, err := uc.MPRequestHelper.CheckPortalData(uc.MPRequestDTO.ConvertEntityToRequest(mpRequestHeader))
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.FindByID] error when check portal data: %v", err)
 		return nil, err
 	}
 
 	mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+	mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
 	mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
 	mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
 	mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
@@ -265,7 +271,7 @@ func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderRes
 	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
 
-	return dto.ConvertToResponse(mpRequestHeader), nil
+	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }
 
 func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error) {
@@ -278,13 +284,14 @@ func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search stri
 	var mpRequestHeaderResponses []response.MPRequestHeaderResponse
 	for _, mpRequestHeader := range mpRequestHeaders {
 		// check portal data
-		portalResponse, err := uc.MPRequestHelper.CheckPortalData(dto.ConvertEntityToRequest(&mpRequestHeader))
+		portalResponse, err := uc.MPRequestHelper.CheckPortalData(uc.MPRequestDTO.ConvertEntityToRequest(&mpRequestHeader))
 		if err != nil {
 			uc.Log.Errorf("[MPRequestUseCase.FindAllPaginated] error when check portal data: %v", err)
 			return nil, err
 		}
 
 		mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+		mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
 		mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
 		mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
 		mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
@@ -299,7 +306,7 @@ func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search stri
 		mpRequestHeader.JobLevelName = portalResponse.JobLevelName
 		mpRequestHeader.JobLevel = portalResponse.JobLevel
 
-		mpRequestHeaderResponses = append(mpRequestHeaderResponses, *dto.ConvertToResponse(&mpRequestHeader))
+		mpRequestHeaderResponses = append(mpRequestHeaderResponses, *uc.MPRequestDTO.ConvertToResponse(&mpRequestHeader))
 	}
 
 	return &response.MPRequestPaginatedResponse{
@@ -392,6 +399,7 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 	mppPeriodRepo := repository.MPPPeriodRepositoryFactory(log)
 	em := messaging.EmployeeMessageFactory(log)
 	mprHelper := helper.MPRequestHelperFactory(log)
+	mprDTO := dto.MPRequestDTOFactory(log)
 	return NewMPRequestUseCase(
 		viper,
 		log,
@@ -403,5 +411,6 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 		mppPeriodRepo,
 		em,
 		mprHelper,
+		mprDTO,
 	)
 }

@@ -230,6 +230,7 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 
 	return &response.CheckPortalDataMPRequestResponse{
 		OrganizationName:             orgExist.Name,
+		OrganizationCategory:         orgExist.OrganizationCategory,
 		OrganizationLocationName:     orgLocExist.Name,
 		ForOrganizationName:          forOrgExist.Name,
 		ForOrganizationLocationName:  forOrgLocExist.Name,

@@ -97,6 +97,7 @@ type MPRequestHeader struct {
 	MPPPeriod                  MPPPeriod                  `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
 	OrganizationName         string `json:"organization_name" gorm:"-"`
+	OrganizationCategory     string `json:"organization_category" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`
 	ForOrganizationName      string `json:"for_organization_name" gorm:"-"`
 	ForOrganizationLocation  string `json:"for_organization_location" gorm:"-"`

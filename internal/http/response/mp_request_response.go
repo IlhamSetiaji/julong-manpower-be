@@ -54,12 +54,14 @@ type MPRequestHeaderResponse struct {
 	JobLevelID                 *uuid.UUID                 `json:"job_level_id"`
 	IsReplacement              bool                       `json:"is_replacement"`
 
-	RequestCategory  map[string]interface{}   `json:"request_category" gorm:"foreignKey:RequestCategoryID"`
-	RequestMajors    []map[string]interface{} `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID"`
-	MPPlanningHeader map[string]interface{}   `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID"`
-	MPPPeriod        MPPeriodResponse         `json:"mpp_period" gorm:"foreignKey:MPPPeriodID"`
+	RequestCategory map[string]interface{}   `json:"request_category" gorm:"foreignKey:RequestCategoryID"`
+	RequestMajors   []map[string]interface{} `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID"`
+	// MPPlanningHeader map[string]interface{}   `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID"`
+	MPPlanningHeader *MPPlanningHeaderResponse `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID"`
+	MPPPeriod        MPPeriodResponse          `json:"mpp_period" gorm:"foreignKey:MPPPeriodID"`
 
 	OrganizationName         string `json:"organization_name" gorm:"-"`
+	OrganizationCategory     string `json:"organization_category" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`
 	ForOrganizationName      string `json:"for_organization_name" gorm:"-"`
 	ForOrganizationLocation  string `json:"for_organization_location" gorm:"-"`
@@ -81,6 +83,7 @@ type MPRequestHeaderResponse struct {
 
 type CheckPortalDataMPRequestResponse struct {
 	OrganizationName             string `json:"organization_name"`
+	OrganizationCategory         string `json:"organization_category"`
 	OrganizationLocationName     string `json:"organization_location_name"`
 	ForOrganizationName          string `json:"for_organization_name"`
 	ForOrganizationLocationName  string `json:"for_organization_location_name"`

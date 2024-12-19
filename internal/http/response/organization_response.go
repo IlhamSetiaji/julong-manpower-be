@@ -5,8 +5,9 @@ import (
 )
 
 type SendFindOrganizationByIDMessageResponse struct {
-	OrganizationID string `json:"organization_id"`
-	Name           string `json:"name"`
+	OrganizationID       string `json:"organization_id"`
+	Name                 string `json:"name"`
+	OrganizationCategory string `json:"organization_category"`
 }
 
 type SendFindOrganizationLocationByIDMessageResponse struct {
