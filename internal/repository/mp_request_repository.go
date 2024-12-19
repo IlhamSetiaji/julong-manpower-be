@@ -13,6 +13,8 @@ import (
 type IMPRequestRepository interface {
 	Create(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) ([]entity.MPRequestHeader, int64, error)
+	FindAll() ([]entity.MPRequestHeader, error)
+	GetHeadersByDocumentDate(documentDate string) ([]entity.MPRequestHeader, error)
 	FindById(id uuid.UUID) (*entity.MPRequestHeader, error)
 	Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPRequestApprovalHistory) error
@@ -26,6 +28,28 @@ type MPRequestRepository struct {
 
 func NewMPRequestRepository(log *logrus.Logger, db *gorm.DB) IMPRequestRepository {
 	return &MPRequestRepository{Log: log, DB: db}
+}
+
+func (r *MPRequestRepository) FindAll() ([]entity.MPRequestHeader, error) {
+	var mpRequestHeaders []entity.MPRequestHeader
+
+	if err := r.DB.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Find(&mpRequestHeaders).Error; err != nil {
+		r.Log.Errorf("[MPRequestRepository.FindAll] error when query mp request headers: %v", err)
+		return nil, errors.New("[MPRequestRepository.FindAll] error when query mp request headers " + err.Error())
+	}
+
+	return mpRequestHeaders, nil
+}
+
+func (r *MPRequestRepository) GetHeadersByDocumentDate(documentDate string) ([]entity.MPRequestHeader, error) {
+	var mpRequestHeaders []entity.MPRequestHeader
+
+	if err := r.DB.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Where("document_date = ?", documentDate).Find(&mpRequestHeaders).Error; err != nil {
+		r.Log.Errorf("[MPRequestRepository.GetHeadersByDocumentDate] error when query mp request headers: %v", err)
+		return nil, errors.New("[MPRequestRepository.GetHeadersByDocumentDate] error when query mp request headers " + err.Error())
+	}
+
+	return mpRequestHeaders, nil
 }
 
 func (r *MPRequestRepository) Create(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error) {

@@ -2,6 +2,8 @@ package usecase
 
 import (
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/dto"
@@ -21,6 +23,7 @@ type IMPRequestUseCase interface {
 	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
+	GenerateDocumentNumber(dateNow time.Time) (string, error)
 }
 
 type MPRequestUseCase struct {
@@ -116,6 +119,20 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.MPPPeriod = *mppPeriod
 
 	return dto.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
+	foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.GenerateDocumentNumber] error when get headers by document date: %v", err)
+		return "", err
+	}
+
+	if len(foundMpRequestHeader) == 0 || foundMpRequestHeader == nil {
+		return "MPR/" + dateNow.Format("20060102") + "/001", nil
+	}
+
+	return "MPR/" + dateNow.Format("20060102") + "/" + fmt.Sprintf("%03d", len(*&foundMpRequestHeader)+1), nil
 }
 
 func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error) {

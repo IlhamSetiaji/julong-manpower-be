@@ -92,6 +92,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 
 			// mp requests
 			apiRoute.GET("/mp-requests", c.MPRequestHandler.FindAllPaginated)
+			apiRoute.GET("/mp-requests/document-number", c.MPRequestHandler.GenerateDocumentNumber)
 			apiRoute.GET("/mp-requests/:id", c.MPRequestHandler.FindByID)
 			apiRoute.POST("/mp-requests", c.MPRequestHandler.Create)
 			apiRoute.PUT("/mp-requests/status", c.MPRequestHandler.UpdateStatusMPRequestHeader)

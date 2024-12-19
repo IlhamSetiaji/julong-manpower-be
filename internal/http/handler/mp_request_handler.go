@@ -24,6 +24,7 @@ type IMPRequestHandler interface {
 	Update(ctx *gin.Context)
 	FindAllPaginated(ctx *gin.Context)
 	FindByID(ctx *gin.Context)
+	GenerateDocumentNumber(ctx *gin.Context)
 	UpdateStatusMPRequestHeader(ctx *gin.Context)
 }
 
@@ -52,6 +53,18 @@ func MPRequestHandlerFactory(log *logrus.Logger, viper *viper.Viper) IMPRequestH
 	useCase := usecase.MPRequestUseCaseFactory(viper, log)
 	validate := config.NewValidator(viper)
 	return NewMPRequestHandler(log, viper, useCase, validate)
+}
+
+func (h *MPRequestHandler) GenerateDocumentNumber(ctx *gin.Context) {
+	dateNow := time.Now()
+	res, err := h.UseCase.GenerateDocumentNumber(dateNow)
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.GenerateDocumentNumber] error when generate document number: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to generate document number", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "Document number generated", res)
 }
 
 func (h *MPRequestHandler) FindAllPaginated(ctx *gin.Context) {
