@@ -18,8 +18,8 @@ type CreateMPRequestHeaderRequest struct {
 	Experiences                string                     `json:"experiences" validate:"required"`
 	DocumentNumber             string                     `json:"document_number" validate:"required"`
 	DocumentDate               string                     `json:"document_date" validate:"required"`
-	MaleNeeds                  int                        `json:"male_needs" validate:"required"`
-	FemaleNeeds                int                        `json:"female_needs" validate:"required"`
+	MaleNeeds                  int                        `json:"male_needs" validate:"omitempty"`
+	FemaleNeeds                int                        `json:"female_needs" validate:"omitempty"`
 	MinimumAge                 int                        `json:"minimum_age" validate:"required"`
 	MaximumAge                 int                        `json:"maximum_age" validate:"required"`
 	MinimumExperience          int                        `json:"minimum_experience" validate:"omitempty"`
