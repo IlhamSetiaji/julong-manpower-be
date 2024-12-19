@@ -97,6 +97,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.POST("/mp-requests", c.MPRequestHandler.Create)
 			apiRoute.PUT("/mp-requests/status", c.MPRequestHandler.UpdateStatusMPRequestHeader)
 			apiRoute.PUT("/mp-requests", c.MPRequestHandler.Update)
+			apiRoute.DELETE("/mp-requests/:id", c.MPRequestHandler.Delete)
 
 			// batch
 			apiRoute.POST("/batch/create", c.BatchHandler.CreateBatchHeaderAndLines)

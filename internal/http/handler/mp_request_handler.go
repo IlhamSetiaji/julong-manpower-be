@@ -22,6 +22,7 @@ import (
 type IMPRequestHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
+	Delete(ctx *gin.Context)
 	FindAllPaginated(ctx *gin.Context)
 	FindByID(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
@@ -65,6 +66,24 @@ func (h *MPRequestHandler) GenerateDocumentNumber(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "Document number generated", res)
+}
+
+func (h *MPRequestHandler) Delete(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		h.Log.Errorf("[MPRequestHandler.Delete] error when get ID from request")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request", "ID is required")
+		return
+	}
+
+	err := h.UseCase.Delete(uuid.MustParse(id))
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.Delete] error when delete: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to delete", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Header deleted", nil)
 }
 
 func (h *MPRequestHandler) FindAllPaginated(ctx *gin.Context) {
