@@ -45,6 +45,7 @@ type CreateMPRequestHeaderRequest struct {
 	MPPPeriodID                *uuid.UUID                 `json:"mpp_period_id" validate:"omitempty,uuid"`
 	EmpOrganizationID          *uuid.UUID                 `json:"emp_organization_id" validate:"omitempty,uuid"`
 	JobLevelID                 *uuid.UUID                 `json:"job_level_id" validate:"omitempty,uuid"`
+	IsReplacement              bool                       `json:"is_replacement" validate:"required"`
 }
 
 type UpdateMPRequestHeaderRequest struct {

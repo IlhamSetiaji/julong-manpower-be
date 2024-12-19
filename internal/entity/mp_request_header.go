@@ -88,6 +88,7 @@ type MPRequestHeader struct {
 	TotalNeeds                 int                 `json:"total_needs" gorm:"type:int;default:0"`
 	EmpOrganizationID          *uuid.UUID          `json:"emp_organization_id" gorm:"type:char(36);null"`
 	JobLevelID                 *uuid.UUID          `json:"job_level_id" gorm:"type:char(36);null"`
+	IsReplacement              bool                `json:"is_replacement" gorm:"default:false"`
 
 	RequestCategory            RequestCategory            `json:"request_category" gorm:"foreignKey:RequestCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	RequestMajors              []RequestMajor             `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`

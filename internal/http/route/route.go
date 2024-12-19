@@ -87,7 +87,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.GET("/request-categories/:id", c.RequestCategoryHandler.FindById)
 
 			// majors
-			apiRoute.GET("/majors/", c.MajorHandler.FindAll)
+			apiRoute.GET("/majors", c.MajorHandler.FindAll)
 			apiRoute.GET("/majors/:id", c.MajorHandler.FindById)
 
 			// mp requests

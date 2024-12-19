@@ -52,6 +52,7 @@ type MPRequestHeaderResponse struct {
 	MPPPeriodID                *uuid.UUID                 `json:"mpp_period_id"`
 	EmpOrganizationID          *uuid.UUID                 `json:"emp_organization_id"`
 	JobLevelID                 *uuid.UUID                 `json:"job_level_id"`
+	IsReplacement              bool                       `json:"is_replacement"`
 
 	RequestCategory  map[string]interface{}   `json:"request_category" gorm:"foreignKey:RequestCategoryID"`
 	RequestMajors    []map[string]interface{} `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID"`

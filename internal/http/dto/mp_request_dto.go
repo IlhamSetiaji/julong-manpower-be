@@ -48,6 +48,7 @@ func ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPReques
 		MPPPeriodID:                *req.MPPPeriodID,
 		EmpOrganizationID:          req.EmpOrganizationID,
 		JobLevelID:                 req.JobLevelID,
+		IsReplacement:              req.IsReplacement,
 	}
 }
 
@@ -99,6 +100,9 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 		MPRequestType:              ent.MPRequestType,
 		RecruitmentType:            ent.RecruitmentType,
 		MPPPeriodID:                &ent.MPPPeriodID,
+		IsReplacement:              ent.IsReplacement,
+		EmpOrganizationID:          ent.EmpOrganizationID,
+		JobLevelID:                 ent.JobLevelID,
 
 		RequestCategory: map[string]interface{}{
 			"ID":   ent.RequestCategory.ID,
