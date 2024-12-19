@@ -15,6 +15,7 @@ type IMPPlanningRepository interface {
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
+	CountTotalApprovalHistoryByStatus(mpPlanningHeaderId uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
 	GetHeadersByStatus(status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, error)
@@ -40,6 +41,8 @@ type IMPPlanningRepository interface {
 	DeleteLineIfNotInIDs(ids []uuid.UUID) error
 	DeleteAllLinesByHeaderID(headerID uuid.UUID) error
 	DeleteLinesByIDs(ids []uuid.UUID) error
+	FindAllLinesByHeaderID(headerID uuid.UUID) (*[]entity.MPPlanningLine, error)
+	FindLineByHeaderID(headerID uuid.UUID) (*entity.MPPlanningLine, error)
 }
 
 type MPPlanningRepository struct {
@@ -68,6 +71,17 @@ func (r *MPPlanningRepository) FindAllHeaders() (*[]entity.MPPlanningHeader, err
 	}
 
 	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) CountTotalApprovalHistoryByStatus(mpPlanningHeaderId uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error) {
+	var total int64
+
+	if err := r.DB.Model(&entity.MPPlanningApprovalHistory{}).Where("mp_planning_header_id = ? AND status = ?", mpPlanningHeaderId, status).Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.CountTotalApprovalHistoryByStatus] " + err.Error())
+		return 0, errors.New("[MPPlanningRepository.CountTotalApprovalHistoryByStatus] " + err.Error())
+	}
+
+	return total, nil
 }
 
 func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, int64, error) {
@@ -718,6 +732,38 @@ func (r *MPPlanningRepository) DeleteAllLinesByHeaderID(headerID uuid.UUID) erro
 	r.Log.Infof("[MPPlanningRepository.DeleteAllLinesByHeaderID] Successfully deleted all lines by header ID")
 
 	return nil
+}
+
+func (r *MPPlanningRepository) FindAllLinesByHeaderID(headerID uuid.UUID) (*[]entity.MPPlanningLine, error) {
+	var mppLines []entity.MPPlanningLine
+
+	if err := r.DB.Preload("MPPlanningHeader").Where("mp_planning_header_id = ?", headerID).Find(&mppLines).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindAllLinesByHeaderID] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindAllLinesByHeaderID] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindAllLinesByHeaderID] " + err.Error())
+		}
+	}
+
+	return &mppLines, nil
+}
+
+func (r *MPPlanningRepository) FindLineByHeaderID(headerID uuid.UUID) (*entity.MPPlanningLine, error) {
+	var mppLine entity.MPPlanningLine
+
+	if err := r.DB.Preload("MPPlanningHeader").Where("mp_planning_header_id = ?", headerID).First(&mppLine).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindLineByHeaderID] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindLineByHeaderID] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindLineByHeaderID] " + err.Error())
+		}
+	}
+
+	return &mppLine, nil
 }
 
 func (r *MPPlanningRepository) DeleteLinesByIDs(ids []uuid.UUID) error {

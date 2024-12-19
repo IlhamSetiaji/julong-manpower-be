@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
@@ -26,6 +27,7 @@ type IMPPlanningHandler interface {
 	FindAllHeadersByRequestorIDPaginated(ctx *gin.Context)
 	FindAllHeadersForBatchPaginated(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
+	CountTotalApprovalHistoryByStatus(ctx *gin.Context)
 	FindById(ctx *gin.Context)
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
@@ -124,6 +126,29 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers paginated success", resp)
+}
+
+func (h *MPPlanningHandler) CountTotalApprovalHistoryByStatus(ctx *gin.Context) {
+	status := ctx.Query("status")
+	if status == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "status is required")
+		return
+	}
+
+	mpPlanningHeaderId := ctx.Query("mpp_header_id")
+	if mpPlanningHeaderId == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "mpp_header_id is required")
+		return
+	}
+
+	resp, err := h.UseCase.CountTotalApprovalHistoryByStatus(uuid.MustParse(mpPlanningHeaderId), entity.MPPlanningApprovalHistoryStatus(status))
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.CountTotalApprovalHistoryByStatus] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "count total approval history by status success", resp)
 }
 
 func (h *MPPlanningHandler) FindAllHeadersByRequestorIDPaginated(ctx *gin.Context) {

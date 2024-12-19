@@ -131,6 +131,17 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 }
 
 func (uc *MPRequestUseCase) CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error) {
+	exist, err := uc.MPRequestRepository.FindById(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.CountTotalApprovalHistoryByStatus] error when find mp request header by id: %v", err)
+		return 0, err
+	}
+
+	if exist == nil {
+		uc.Log.Errorf("[MPRequestUseCase.CountTotalApprovalHistoryByStatus] mp request header with id %s is not exist", headerID.String())
+		return 0, errors.New("mp request header is not exist")
+	}
+
 	total, err := uc.MPRequestRepository.CountTotalApprovalHistoryByStatus(headerID, status)
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.CountTotalApprovalHistoryByStatus] error when count total approval history by status: %v", err)

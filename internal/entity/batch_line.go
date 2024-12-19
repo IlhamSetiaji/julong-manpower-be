@@ -9,11 +9,11 @@ import (
 
 type BatchLine struct {
 	gorm.Model             `json:"-"`
-	ID                     uuid.UUID  `json:"id" gorm:"type:char(36);primaryKey;"`
-	BatchHeaderID          uuid.UUID  `json:"batch_header_id" gorm:"type:char(36);not null;"`
-	MPPlanningHeaderID     uuid.UUID  `json:"mp_planning_header_id" gorm:"type:char(36);not null;"`
-	OrganizationID         *uuid.UUID `json:"organization_id" gorm:"type:char(36);not null;"`
-	OrganizationLocationID *uuid.UUID `json:"organization_location_id" gorm:"type:char(36);not null;"`
+	ID                     uuid.UUID `json:"id" gorm:"type:char(36);primaryKey;"`
+	BatchHeaderID          uuid.UUID `json:"batch_header_id" gorm:"type:char(36);not null;"`
+	MPPlanningHeaderID     uuid.UUID `json:"mp_planning_header_id" gorm:"type:char(36);not null;"`
+	OrganizationID         uuid.UUID `json:"organization_id" gorm:"type:char(36);not null;"`
+	OrganizationLocationID uuid.UUID `json:"organization_location_id" gorm:"type:char(36);not null;"`
 
 	OrganizationName         string `json:"organization_name" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`

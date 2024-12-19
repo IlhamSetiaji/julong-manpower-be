@@ -23,6 +23,7 @@ type IMPPlanningUseCase interface {
 	FindAllHeadersForBatchPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
+	CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
 	RejectStatusPartialMPPlanningHeader(request *request.UpdateStatusPartialMPPlanningHeaderRequest) error
 	GetPlanningApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPPlanningApprovalHistoryResponse, error)
@@ -440,6 +441,27 @@ func (uc *MPPlanningUseCase) UpdateStatusMPPlanningHeader(req *request.UpdateSta
 	uc.Log.Infof("[MPPlanningUseCase.UpdateStatusMPPlanningHeader] attachmentLength: %v", attachmentLength)
 
 	return nil
+}
+
+func (uc *MPPlanningUseCase) CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error) {
+	exist, err := uc.MPPlanningRepository.FindHeaderById(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CountTotalApprovalHistoryByStatus] " + err.Error())
+		return 0, err
+	}
+
+	if exist == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CountTotalApprovalHistoryByStatus] MP Planning Header not found")
+		return 0, errors.New("MP Planning Header not found")
+	}
+
+	total, err := uc.MPPlanningRepository.CountTotalApprovalHistoryByStatus(headerID, status)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CountTotalApprovalHistoryByStatus] " + err.Error())
+		return 0, err
+	}
+
+	return total, nil
 }
 
 func (uc *MPPlanningUseCase) RejectStatusPartialMPPlanningHeader(req *request.UpdateStatusPartialMPPlanningHeaderRequest) error {

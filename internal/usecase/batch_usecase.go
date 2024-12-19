@@ -124,13 +124,21 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 		}
 	}
 
-	batchLines := make([]entity.BatchLine, len(req.BatchLines))
-	for i, bl := range req.BatchLines {
-		mpLine, err := uc.mpPlanningRepo.FindLineById(uuid.MustParse(bl.MPPlanningHeaderID))
+	// batchLines := make([]entity.BatchLine, len(req.BatchLines))
+	var batchLines []entity.BatchLine
+	for _, bl := range req.BatchLines {
+		mpLine, err := uc.mpPlanningRepo.FindLineByHeaderID(uuid.MustParse(bl.MPPlanningHeaderID))
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
 			return nil, err
 		}
+
+		if mpLine == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] MP Planning Line not found")
+			return nil, errors.New("MP Planning Line not found")
+		}
+
+		uc.Log.Infof("mpLine mememememem: %+v", mpLine.OrganizationLocationID)
 		if mpLine.OrganizationLocationID != nil {
 			// Check if organization location exist
 			orgLocExist, err := uc.OrgMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
@@ -146,6 +154,7 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 				uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] Organization Location not found")
 				return nil, errors.New("Organization Location not found")
 			}
+
 		}
 
 		if mpLine.MPPlanningHeader.OrganizationID != nil {
@@ -163,6 +172,7 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 				uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] Organization not found")
 				return nil, errors.New("Organization not found")
 			}
+
 		}
 
 		mpHeaderByStatus, err := uc.mpPlanningRepo.FindHeaderById(uuid.MustParse(bl.MPPlanningHeaderID))
@@ -177,12 +187,15 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 			continue
 		}
 
-		batchLines[i] = entity.BatchLine{
+		batchLines = append(batchLines, entity.BatchLine{
+			BatchHeaderID:          batchHeader.ID,
 			MPPlanningHeaderID:     uuid.MustParse(bl.MPPlanningHeaderID),
-			OrganizationID:         func(u uuid.UUID) *uuid.UUID { return &u }(uuid.MustParse(mpLine.MPPlanningHeader.OrganizationID.String())),
-			OrganizationLocationID: func(u uuid.UUID) *uuid.UUID { return &u }(uuid.MustParse(mpLine.OrganizationLocationID.String())),
-		}
+			OrganizationID:         *mpLine.MPPlanningHeader.OrganizationID,
+			OrganizationLocationID: *mpLine.OrganizationLocationID,
+		})
 	}
+
+	// uc.Log.Infof("batchLines hahahahaha: %+v", batchLines[0].OrganizationID)
 
 	batchHeaderExists, err := uc.Repo.FindByStatus(entity.BatchHeaderApprovalStatusNeedApproval)
 	if err != nil {
