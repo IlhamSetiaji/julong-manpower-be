@@ -21,7 +21,7 @@ type CreateMPPPeriodRequest struct {
 	EndDate         string                 `json:"end_date" validate:"required,datetime=2006-01-02"`
 	BudgetStartDate string                 `json:"budget_start_date" validate:"required,datetime=2006-01-02,date_today_or_later"`
 	BudgetEndDate   string                 `json:"budget_end_date" validate:"required,datetime=2006-01-02"`
-	Status          entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
+	Status          entity.MPPPeriodStatus `json:"status" validate:"omitempty,MPPPeriodStatusValidation"`
 }
 
 type UpdateMPPPeriodRequest struct {
@@ -31,7 +31,7 @@ type UpdateMPPPeriodRequest struct {
 	EndDate         string                 `json:"end_date" validate:"required,datetime=2006-01-02"`
 	BudgetStartDate string                 `json:"budget_start_date" validate:"required,datetime=2006-01-02"`
 	BudgetEndDate   string                 `json:"budget_end_date" validate:"required,datetime=2006-01-02"`
-	Status          entity.MPPPeriodStatus `json:"status" validate:"required,MPPPeriodStatusValidation"`
+	Status          entity.MPPPeriodStatus `json:"status" validate:"omitempty,MPPPeriodStatusValidation"`
 }
 
 type FindByCurrentDateAndStatusMPPPeriodRequest struct {
