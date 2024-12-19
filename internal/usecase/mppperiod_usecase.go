@@ -154,7 +154,7 @@ func (uc *MPPPeriodUseCase) Update(req request.UpdateMPPPeriodRequest) (*respons
 		// }
 		periodExist, err := uc.MPPPeriodRepository.FindByStatus(entity.MPPeriodStatusOpen)
 		if err != nil {
-			uc.Log.Errorf("[MPPPeriodUseCase.Create] " + err.Error())
+			uc.Log.Errorf("[MPPPeriodUseCase.Update] " + err.Error())
 			return nil, err
 		}
 
