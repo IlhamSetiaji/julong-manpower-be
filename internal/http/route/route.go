@@ -53,6 +53,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 
 			// job plafon
 			apiRoute.GET("/job-plafons", c.JobPlafonHandler.FindAllPaginated)
+			apiRoute.GET("/job-plafons/sync", c.JobPlafonHandler.SyncJobPlafon)
 			apiRoute.GET("/job-plafons/:id", c.JobPlafonHandler.FindById)
 			apiRoute.GET("/job-plafons/job/:job_id", c.JobPlafonHandler.FindByJobId)
 			apiRoute.POST("/job-plafons", c.JobPlafonHandler.Create)

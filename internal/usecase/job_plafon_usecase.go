@@ -19,6 +19,7 @@ type IJobPlafonUseCase interface {
 	Create(request *request.CreateJobPlafonRequest) (*response.CreateJobPlafonResponse, error)
 	Update(request *request.UpdateJobPlafonRequest) (*response.UpdateJobPlafonResponse, error)
 	Delete(request *request.DeleteJobPlafonRequest) error
+	SyncJobPlafon() error
 }
 
 type JobPlafonUseCase struct {
@@ -35,6 +36,39 @@ func NewJobPlafonUseCase(log *logrus.Logger, repo repository.IJobPlafonRepositor
 		JobPlafonMessage:    message,
 		JobMessage:          jm,
 	}
+}
+
+func (uc *JobPlafonUseCase) SyncJobPlafon() error {
+	// get jobs data using rabbitmq
+	jobPlafonMessageResponse, err := uc.JobMessage.SendGetAllJobDataMessage()
+	if err != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.SyncJobPlafon] " + err.Error())
+		return err
+	}
+
+	// loop jobs data to find job plafon (create when doesnt exist)
+	for _, job := range *jobPlafonMessageResponse {
+		jobPlafon, err := uc.JobPlafonRepository.FindByJobId(job.ID)
+		if err != nil {
+			uc.Log.Errorf("[JobPlafonUseCase.SyncJobPlafon] " + err.Error())
+			return err
+		}
+
+		if jobPlafon == nil {
+			jobPlafonEntity := entity.JobPlafon{
+				JobID:  &job.ID,
+				Plafon: 0,
+			}
+
+			_, err := uc.JobPlafonRepository.Create(&jobPlafonEntity)
+			if err != nil {
+				uc.Log.Errorf("[JobPlafonUseCase.SyncJobPlafon] " + err.Error())
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, error) {

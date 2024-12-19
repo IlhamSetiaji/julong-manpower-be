@@ -21,6 +21,7 @@ type IJobPlafonHandler interface {
 	Create(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
+	SyncJobPlafon(ctx *gin.Context)
 }
 
 type JobPlafonHandler struct {
@@ -43,6 +44,17 @@ func JobPlafonHandlerFactory(log *logrus.Logger, viper *viper.Viper) IJobPlafonH
 	usecase := usecase.JobPlafonUseCaseFactory(log)
 	validate := config.NewValidator(viper)
 	return NewJobPlafonHandler(log, viper, usecase, validate)
+}
+
+func (h *JobPlafonHandler) SyncJobPlafon(ctx *gin.Context) {
+	err := h.UseCase.SyncJobPlafon()
+	if err != nil {
+		h.Log.Errorf("[JobPlafonHandler.SyncJobPlafon] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "job plafon synced successfully", nil)
 }
 
 func (h *JobPlafonHandler) FindAllPaginated(ctx *gin.Context) {

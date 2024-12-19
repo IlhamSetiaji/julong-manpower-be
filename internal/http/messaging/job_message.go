@@ -14,6 +14,7 @@ import (
 
 type IJobMessage interface {
 	SendFindJobDataByIdMessage(request request.SendFindJobByIDMessageRequest) (*response.JobResponse, error)
+	SendGetAllJobDataMessage() (*[]response.JobResponse, error)
 }
 
 type JobMessage struct {
@@ -65,6 +66,51 @@ func (m *JobMessage) SendFindJobDataByIdMessage(req request.SendFindJobByIDMessa
 
 	jobData := resp.MessageData["job"].(map[string]interface{})
 	return convertInterfaceToJobResponse(jobData), nil
+}
+
+func (m *JobMessage) SendGetAllJobDataMessage() (*[]response.JobResponse, error) {
+	docMsg := &request.RabbitMQRequest{
+		ID:          uuid.New().String(),
+		MessageType: "get_all_job_data",
+		MessageData: nil,
+		ReplyTo:     "julong_manpower",
+	}
+
+	log.Printf("INFO: document message: %v", docMsg)
+
+	// create channel and add to rchans with uid
+	rchan := make(chan response.RabbitMQResponse)
+	utils.Rchans[docMsg.ID] = rchan
+
+	// publish rabbit message
+	msg := utils.RabbitMsg{
+		QueueName: "julong_sso",
+		Message:   *docMsg,
+	}
+
+	utils.Pchan <- msg
+
+	// wait for reply
+	resp, err := waitReply(docMsg.ID, rchan)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("INFO: response: %v", resp.MessageData["jobs"])
+
+	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
+		return nil, errors.New("[SendGetAllJobDataMessage] " + errMsg)
+	}
+
+	jobsData := resp.MessageData["jobs"].([]interface{})
+	var jobsResponse []response.JobResponse
+	for _, job := range jobsData {
+		if jobMap, ok := job.(map[string]interface{}); ok {
+			jobsResponse = append(jobsResponse, *convertInterfaceToJobResponse(jobMap))
+		}
+	}
+
+	return &jobsResponse, nil
 }
 
 func convertInterfaceToJobResponse(job map[string]interface{}) *response.JobResponse {
