@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
@@ -27,6 +28,7 @@ type IMPRequestHandler interface {
 	FindByID(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
 	UpdateStatusMPRequestHeader(ctx *gin.Context)
+	CountTotalApprovalHistoryByStatus(ctx *gin.Context)
 }
 
 type MPRequestHandler struct {
@@ -66,6 +68,31 @@ func (h *MPRequestHandler) GenerateDocumentNumber(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "Document number generated", res)
+}
+
+func (h *MPRequestHandler) CountTotalApprovalHistoryByStatus(ctx *gin.Context) {
+	status := ctx.Query("status")
+	if status == "" {
+		h.Log.Errorf("[MPRequestHandler.CountTotalApprovalHistoryByStatus] error when get status from request")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request", "Status is required")
+		return
+	}
+
+	mpHeaderID := ctx.Query("mp_header_id")
+	if mpHeaderID == "" {
+		h.Log.Errorf("[MPRequestHandler.CountTotalApprovalHistoryByStatus] error when get mp header ID from request")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request", "MP Header ID is required")
+		return
+	}
+
+	res, err := h.UseCase.CountTotalApprovalHistoryByStatus(uuid.MustParse(mpHeaderID), entity.MPRequestApprovalHistoryStatus(status))
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.CountTotalApprovalHistoryByStatus] error when count total approval history by status: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to count total approval history", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "Total approval history counted", res)
 }
 
 func (h *MPRequestHandler) Delete(ctx *gin.Context) {

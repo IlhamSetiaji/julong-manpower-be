@@ -20,6 +20,7 @@ type IMPRequestRepository interface {
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPRequestApprovalHistory) error
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPRequestApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPRequestApprovalHistory, error)
 	DeleteHeader(id uuid.UUID) error
+	CountTotalApprovalHistoryByStatus(mpHeaderID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error)
 }
 
 type MPRequestRepository struct {
@@ -51,6 +52,17 @@ func (r *MPRequestRepository) GetHeadersByDocumentDate(documentDate string) ([]e
 	}
 
 	return mpRequestHeaders, nil
+}
+
+func (r *MPRequestRepository) CountTotalApprovalHistoryByStatus(mpHeaderID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error) {
+	var total int64
+
+	if err := r.DB.Model(&entity.MPRequestApprovalHistory{}).Where("mp_request_header_id = ? AND status = ?", mpHeaderID, status).Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPRequestRepository.CountTotalApprovalHistoryByStatus] error when count total approval history: %v", err)
+		return 0, errors.New("[MPRequestRepository.CountTotalApprovalHistoryByStatus] error when count total approval history " + err.Error())
+	}
+
+	return total, nil
 }
 
 func (r *MPRequestRepository) Create(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error) {

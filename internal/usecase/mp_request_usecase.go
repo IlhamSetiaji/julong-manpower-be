@@ -25,6 +25,7 @@ type IMPRequestUseCase interface {
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
+	CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error)
 }
 
 type MPRequestUseCase struct {
@@ -127,6 +128,16 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.MPPPeriod = *mppPeriod
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error) {
+	total, err := uc.MPRequestRepository.CountTotalApprovalHistoryByStatus(headerID, status)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.CountTotalApprovalHistoryByStatus] error when count total approval history by status: %v", err)
+		return 0, err
+	}
+
+	return total, nil
 }
 
 func (uc *MPRequestUseCase) Delete(id uuid.UUID) error {

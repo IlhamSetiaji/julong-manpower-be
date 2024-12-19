@@ -352,17 +352,6 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 		}
 		orgLoc.MPPlanningHeader = uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(header)
 
-		// Fetch organization names using RabbitMQ
-		messageResponse, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-			ID: header.OrganizationID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated Message] " + err.Error())
-			return nil, err
-		}
-
-		orgLoc.OrganizationName = messageResponse.Name
-
 		orgLocs.OrganizationLocations[i] = orgLoc
 	}
 
