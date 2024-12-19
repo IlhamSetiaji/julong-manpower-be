@@ -290,7 +290,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 	var isNull bool
 	var error error
 	uc.Log.Info("is null value ", req.IsNull)
-	if req.IsNull != "" {
+	if req.IsNull != "" && req.Status == "" {
 		isNull, error = strconv.ParseBool(req.IsNull)
 		if error != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + error.Error())
