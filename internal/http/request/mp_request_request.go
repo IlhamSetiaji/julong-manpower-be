@@ -22,9 +22,9 @@ type CreateMPRequestHeaderRequest struct {
 	FemaleNeeds                int                        `json:"female_needs" validate:"required"`
 	MinimumAge                 int                        `json:"minimum_age" validate:"required"`
 	MaximumAge                 int                        `json:"maximum_age" validate:"required"`
-	MinimumExperience          int                        `json:"minimum_experience" validate:"required"`
+	MinimumExperience          int                        `json:"minimum_experience" validate:"omitempty"`
 	MaritalStatus              entity.MaritalStatusEnum   `json:"marital_status" validate:"required,MaritalStatusValidation"`
-	MinimumEducation           entity.EducationLevelEnum  `json:"minimum_education" validate:"omitempty,MinimumEducationValidation"`
+	MinimumEducation           entity.EducationLevelEnum  `json:"minimum_education" validate:"required,MinimumEducationValidation"`
 	RequiredQualification      string                     `json:"required_qualification" validate:"required"`
 	Certificate                string                     `json:"certificate" validate:"omitempty"`
 	ComputerSkill              string                     `json:"computer_skill" validate:"omitempty"`
