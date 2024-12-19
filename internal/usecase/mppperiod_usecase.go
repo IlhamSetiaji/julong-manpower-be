@@ -141,15 +141,17 @@ func (uc *MPPPeriodUseCase) Update(req request.UpdateMPPPeriodRequest) (*respons
 		return nil, err
 	}
 
-	periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
-	if err != nil {
-		uc.Log.Errorf("[MPPPeriodUseCase.Update] " + err.Error())
-		return nil, err
-	}
+	if req.Status != entity.MPPPeriodStatusDraft {
+		periodExist, err := uc.MPPPeriodRepository.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+		if err != nil {
+			uc.Log.Errorf("[MPPPeriodUseCase.Update] " + err.Error())
+			return nil, err
+		}
 
-	if periodExist != nil {
-		uc.Log.Errorf("[MPPPeriodUseCase.Update] " + "MPP Period already exist")
-		return nil, errors.New("MPP Period already exist")
+		if periodExist != nil {
+			uc.Log.Errorf("[MPPPeriodUseCase.Update] " + "MPP Period already exist")
+			return nil, errors.New("MPP Period already exist")
+		}
 	}
 
 	mppPeriodEntity := &entity.MPPPeriod{
