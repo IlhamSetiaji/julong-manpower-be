@@ -201,6 +201,8 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 		RequestorName:            ent.RequestorName,
 		DepartmentHeadName:       ent.DepartmentHeadName,
 		HrdHoUnitName:            ent.HrdHoUnitName,
+		VpGmDirectorName:         ent.VpGmDirectorName,
+		CeoName:                  ent.CeoName,
 		EmpOrganizationName:      ent.EmpOrganizationName,
 		JobLevelName:             ent.JobLevelName,
 		JobLevel:                 ent.JobLevel,

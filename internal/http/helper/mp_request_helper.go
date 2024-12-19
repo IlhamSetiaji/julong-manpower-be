@@ -187,6 +187,11 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 			h.Log.Errorf("[MPRequestHelper] error when send find user by id message: %v", err)
 			return nil, err
 		}
+
+		if ceoExist == nil {
+			h.Log.Errorf("[MPRequestHelper] ceo with id %s is not exist", req.CEO.String())
+			return nil, errors.New("ceo is not exist")
+		}
 	} else {
 		ceoExist = &response.EmployeeResponse{}
 	}
