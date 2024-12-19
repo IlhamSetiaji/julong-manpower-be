@@ -143,7 +143,7 @@ func (h *MPPlanningHandler) FindAllHeadersByRequestorIDPaginated(ctx *gin.Contex
 		page = 1
 	}
 
-	pageSize, err := strconv.Atoi(ctx.Query("pageSize"))
+	pageSize, err := strconv.Atoi(ctx.Query("page_size"))
 	if err != nil || pageSize < 1 {
 		pageSize = 10
 	}
@@ -196,7 +196,7 @@ func (h *MPPlanningHandler) FindAllHeadersForBatchPaginated(ctx *gin.Context) {
 		page = 1
 	}
 
-	pageSize, err := strconv.Atoi(ctx.Query("pageSize"))
+	pageSize, err := strconv.Atoi(ctx.Query("page_size"))
 	if err != nil || pageSize < 1 {
 		pageSize = 10
 	}
@@ -667,7 +667,7 @@ func (h *MPPlanningHandler) FindAllLinesByHeaderIdPaginated(ctx *gin.Context) {
 		page = 1
 	}
 
-	pageSize, err := strconv.Atoi(ctx.Query("pageSize"))
+	pageSize, err := strconv.Atoi(ctx.Query("page_size"))
 	if err != nil || pageSize < 1 {
 		pageSize = 10
 	}
