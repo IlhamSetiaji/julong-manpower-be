@@ -39,6 +39,7 @@ type MPRequestUseCase struct {
 	EmpMessage             messaging.IEmployeeMessage
 	MPRequestHelper        helper.IMPRequestHelper
 	MPRequestDTO           dto.IMPRequestDTO
+	MPPlanningRepository   repository.IMPPlanningRepository
 }
 
 func NewMPRequestUseCase(
@@ -53,6 +54,7 @@ func NewMPRequestUseCase(
 	em messaging.IEmployeeMessage,
 	mprHelper helper.IMPRequestHelper,
 	mprDTO dto.IMPRequestDTO,
+	mpPlanningRepository repository.IMPPlanningRepository,
 ) IMPRequestUseCase {
 	return &MPRequestUseCase{
 		Viper:                  viper,
@@ -66,6 +68,7 @@ func NewMPRequestUseCase(
 		EmpMessage:             em,
 		MPRequestHelper:        mprHelper,
 		MPRequestDTO:           mprDTO,
+		MPPlanningRepository:   mpPlanningRepository,
 	}
 }
 
@@ -386,6 +389,31 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 		}
 	}
 
+	if req.Level == entity.MPPRequestApprovalHistoryLevelHRDHO && req.Status == entity.MPRequestStatusCompleted {
+		// find mp planning line by header id and job id
+		mpPlanningLine, err := uc.MPPlanningRepository.FindLineByHeaderIDAndJobID(mpRequestHeader.ID, *mpRequestHeader.JobID)
+		if err != nil {
+			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when find mp planning line by header id and job id: %v", err)
+			return err
+		}
+
+		if mpPlanningLine == nil {
+			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] mp planning line with header id %s and job id %s is not exist", mpRequestHeader.ID.String(), mpRequestHeader.JobID.String())
+			return errors.New("mp planning line is not exist")
+		}
+
+		if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumMT {
+			mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.TotalNeeds
+		} else if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumPH {
+			mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.TotalNeeds
+		}
+		_, err = uc.MPPlanningRepository.UpdateLineByHeaderIDAndJobID(mpRequestHeader.ID, *mpRequestHeader.JobID, mpPlanningLine)
+		if err != nil {
+			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line by header id and job id: %v", err)
+			return err
+		}
+	}
+
 	uc.Log.Infof("[MPRequestUseCase.UpdateStatusHeader] mp request header with id %s has been updated", string(req.ID))
 	return nil
 }
@@ -400,6 +428,7 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 	em := messaging.EmployeeMessageFactory(log)
 	mprHelper := helper.MPRequestHelperFactory(log)
 	mprDTO := dto.MPRequestDTOFactory(log)
+	mpPlanningRepo := repository.MPPlanningRepositoryFactory(log)
 	return NewMPRequestUseCase(
 		viper,
 		log,
@@ -412,5 +441,6 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 		em,
 		mprHelper,
 		mprDTO,
+		mpPlanningRepo,
 	)
 }

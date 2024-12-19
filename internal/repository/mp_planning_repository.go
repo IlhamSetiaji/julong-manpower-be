@@ -34,6 +34,8 @@ type IMPPlanningRepository interface {
 	FindLineById(id uuid.UUID) (*entity.MPPlanningLine, error)
 	CreateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	UpdateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
+	UpdateLineByHeaderIDAndJobID(headerID uuid.UUID, jobID uuid.UUID, mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
+	FindLineByHeaderIDAndJobID(headerID uuid.UUID, jobID uuid.UUID) (*entity.MPPlanningLine, error)
 	DeleteLine(id uuid.UUID) error
 	DeleteLineIfNotInIDs(ids []uuid.UUID) error
 	DeleteAllLinesByHeaderID(headerID uuid.UUID) error
@@ -601,6 +603,45 @@ func (r *MPPlanningRepository) UpdateLine(mppLine *entity.MPPlanningLine) (*enti
 	}
 
 	return mppLine, nil
+}
+
+func (r *MPPlanningRepository) UpdateLineByHeaderIDAndJobID(headerID uuid.UUID, jobID uuid.UUID, mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error) {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.UpdateLineByHeaderIDAndJobID] " + tx.Error.Error())
+		return nil, errors.New("[MPPlanningRepository.UpdateLineByHeaderIDAndJobID] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(&entity.MPPlanningLine{}).Where("mp_planning_header_id = ? AND job_id = ?", headerID, jobID).Updates(mppLine).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.UpdateLineByHeaderIDAndJobID] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.UpdateLineByHeaderIDAndJobID] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.UpdateLineByHeaderIDAndJobID] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.UpdateLineByHeaderIDAndJobID] " + err.Error())
+	}
+
+	return mppLine, nil
+}
+
+func (r *MPPlanningRepository) FindLineByHeaderIDAndJobID(headerID uuid.UUID, jobID uuid.UUID) (*entity.MPPlanningLine, error) {
+	var mppLine entity.MPPlanningLine
+
+	if err := r.DB.Preload("MPPlanningHeader").Where("mp_planning_header_id = ? AND job_id = ?", headerID, jobID).First(&mppLine).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindLineByHeaderIDAndJobID] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindLineByHeaderIDAndJobID] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindLineByHeaderIDAndJobID] " + err.Error())
+		}
+	}
+
+	return &mppLine, nil
 }
 
 func (r *MPPlanningRepository) DeleteLine(id uuid.UUID) error {
