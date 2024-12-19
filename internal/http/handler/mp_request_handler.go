@@ -78,7 +78,7 @@ func (h *MPRequestHandler) CountTotalApprovalHistoryByStatus(ctx *gin.Context) {
 		return
 	}
 
-	mpHeaderID := ctx.Query("mp_header_id")
+	mpHeaderID := ctx.Query("mpr_header_id")
 	if mpHeaderID == "" {
 		h.Log.Errorf("[MPRequestHandler.CountTotalApprovalHistoryByStatus] error when get mp header ID from request")
 		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request", "MP Header ID is required")
