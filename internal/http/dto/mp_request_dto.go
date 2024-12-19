@@ -55,6 +55,7 @@ func ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPReques
 		EmpOrganizationID:          req.EmpOrganizationID,
 		JobLevelID:                 req.JobLevelID,
 		IsReplacement:              req.IsReplacement,
+		RecruitmentType:            req.RecruitmentType,
 	}
 }
 

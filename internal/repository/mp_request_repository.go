@@ -19,6 +19,7 @@ type IMPRequestRepository interface {
 	Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPRequestApprovalHistory) error
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPRequestApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPRequestApprovalHistory, error)
+	DeleteHeader(id uuid.UUID) error
 }
 
 type MPRequestRepository struct {
@@ -96,6 +97,29 @@ func (r *MPRequestRepository) Update(mpRequestHeader *entity.MPRequestHeader) (*
 	}
 
 	return mpRequestHeader, nil
+}
+
+func (r *MPRequestRepository) DeleteHeader(id uuid.UUID) error {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPRequestRepository.DeleteHeader] " + tx.Error.Error())
+		return errors.New("[MPRequestRepository.DeleteHeader] " + tx.Error.Error())
+	}
+
+	if err := tx.Where("id = ?", id).Delete(&entity.MPRequestHeader{}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPRequestRepository.DeleteHeader] error when delete mp request header: %v", err)
+		return errors.New("[MPRequestRepository.DeleteHeader] error when delete mp request header " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPRequestRepository.DeleteHeader] error when commit transaction: %v", err)
+		return errors.New("[MPRequestRepository.DeleteHeader] error when commit transaction " + err.Error())
+	}
+
+	return nil
 }
 
 func (r *MPRequestRepository) FindById(id uuid.UUID) (*entity.MPRequestHeader, error) {

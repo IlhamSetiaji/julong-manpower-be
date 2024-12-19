@@ -20,6 +20,7 @@ import (
 type IMPRequestUseCase interface {
 	Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
+	Delete(id uuid.UUID) error
 	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
@@ -119,6 +120,28 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.MPPPeriod = *mppPeriod
 
 	return dto.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) Delete(id uuid.UUID) error {
+	mpRequestHeader, err := uc.MPRequestRepository.FindById(id)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Delete] error when find mp request header by id: %v", err)
+		return err
+	}
+
+	if mpRequestHeader == nil {
+		uc.Log.Errorf("[MPRequestUseCase.Delete] mp request header with id %s is not exist", id.String())
+		return errors.New("mp request header is not exist")
+	}
+
+	err = uc.MPRequestRepository.DeleteHeader(id)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Delete] error when delete mp request header: %v", err)
+		return err
+	}
+
+	uc.Log.Infof("[MPRequestUseCase.Delete] mp request header with id %s has been deleted", id.String())
+	return nil
 }
 
 func (uc *MPRequestUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
