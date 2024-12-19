@@ -11,8 +11,12 @@ import (
 
 func ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader {
 	expectedDate := parseDate(req.ExpectedDate)
+	var parsedID uuid.NullUUID
+	if req.ID != "" {
+		parsedID = uuid.NullUUID{UUID: uuid.MustParse(req.ID), Valid: true}
+	}
 	return &entity.MPRequestHeader{
-		ID:                         uuid.MustParse(req.ID),
+		ID:                         parsedID.UUID,
 		OrganizationID:             &req.OrganizationID,
 		OrganizationLocationID:     &req.OrganizationLocationID,
 		ForOrganizationID:          &req.ForOrganizationID,
