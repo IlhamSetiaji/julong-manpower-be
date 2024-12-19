@@ -145,9 +145,9 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 	}
 
 	// check if department head is exist
-	var deptHeadExist *response.SendFindUserByIDResponse
+	var deptHeadExist *response.EmployeeResponse
 	if req.DepartmentHead != nil {
-		deptHeadExist, err = h.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
+		deptHeadExist, err = h.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 			ID: req.DepartmentHead.String(),
 		})
 		if err != nil {
@@ -160,7 +160,7 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 			return nil, errors.New("department head is not exist")
 		}
 	} else {
-		deptHeadExist = &response.SendFindUserByIDResponse{}
+		deptHeadExist = &response.EmployeeResponse{}
 	}
 
 	// check if vp gm director is exist
