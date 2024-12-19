@@ -55,7 +55,7 @@ func NewMPPlanningRepository(log *logrus.Logger, db *gorm.DB) IMPPlanningReposit
 func (r *MPPlanningRepository) FindAllHeaders() (*[]entity.MPPlanningHeader, error) {
 	var mppHeaders []entity.MPPlanningHeader
 
-	if err := r.DB.Preload("MPPlanningLines").Preload("MPPlanningLines.MPRequestLine").Preload("MPPPeriod").Find(&mppHeaders).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Find(&mppHeaders).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindAllHeaders] " + err.Error())
 			return nil, nil

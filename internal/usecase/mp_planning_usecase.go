@@ -290,7 +290,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 	var isNull bool
 	var error error
 	uc.Log.Info("is null value ", req.IsNull)
-	if req.IsNull == "" {
+	if req.IsNull != "" {
 		isNull, error = strconv.ParseBool(req.IsNull)
 		if error != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + error.Error())
@@ -305,6 +305,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 
 		for _, header := range *mpPlanningHeaders {
 			includedIDs = append(includedIDs, header.OrganizationLocationID.String())
+			uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] header id: %v", header.OrganizationLocationID.String())
 		}
 	}
 	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] includedIDs: %v", includedIDs)
