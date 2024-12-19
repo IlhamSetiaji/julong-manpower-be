@@ -235,6 +235,7 @@ func (r *MPRequestRepository) UpdateStatusHeader(id uuid.UUID, status string, ap
 
 	if approvalHistory != nil {
 		if approvalHistory.Status != entity.MPRequestApprovalHistoryStatusRejected {
+			r.Log.Info("Ini bukan reject")
 			if approvalHistory.Level == string(entity.MPRequestApprovalHistoryLevelCEO) {
 				if err := tx.Model(&entity.MPRequestHeader{}).Where("id = ?", id).Updates(&entity.MPRequestHeader{
 					Status: entity.MPRequestStatus(status),
@@ -281,7 +282,8 @@ func (r *MPRequestRepository) UpdateStatusHeader(id uuid.UUID, status string, ap
 				}
 			}
 		} else {
-			if err := tx.Model(&entity.MPRequestHeader{}).Where("id = ?", id).Updates(&entity.MPRequestHeader{
+			r.Log.Info("Ini reject")
+			if err := tx.Model(&entity.MPRequestHeader{}).Where("id = ?", id).Select("Status", "DepartmentHead", "VpGmDirector", "CEO", "HrdHoUnit").Updates(&entity.MPRequestHeader{
 				Status:         entity.MPRequestStatus(status),
 				DepartmentHead: nil,
 				VpGmDirector:   nil,
