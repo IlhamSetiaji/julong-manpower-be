@@ -16,7 +16,7 @@ type CreateMPRequestHeaderRequest struct {
 	RequestCategoryID          uuid.UUID                  `json:"request_category_id" validate:"required,uuid"`
 	ExpectedDate               string                     `json:"expected_date" validate:"required"`
 	Experiences                string                     `json:"experiences" validate:"required"`
-	DocumentNumber             string                     `json:"document_number" validate:"required"`
+	DocumentNumber             string                     `json:"document_number" validate:"required,datetime=2006-01-02,date_today_or_later"`
 	DocumentDate               string                     `json:"document_date" validate:"required"`
 	MaleNeeds                  int                        `json:"male_needs" validate:"omitempty"`
 	FemaleNeeds                int                        `json:"female_needs" validate:"omitempty"`
