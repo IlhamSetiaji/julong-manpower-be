@@ -188,7 +188,17 @@ func (r *BatchRepository) FindByCurrentDocumentDateAndStatus(status entity.Batch
 
 func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error {
 	tx := r.DB.Begin()
-	if err := tx.Model(&entity.BatchHeader{}).Where("id = ?", batchHeader.ID).Update("status", status).Error; err != nil {
+
+	var approvedByPtr uuid.UUID
+
+	if approvedBy != "" {
+		approvedByPtr = uuid.MustParse(approvedBy)
+	}
+	if err := tx.Model(&entity.BatchHeader{}).Where("id = ?", batchHeader.ID).Updates(&entity.BatchHeader{
+		Status:       status,
+		ApproverID:   &approvedByPtr,
+		ApproverName: approverName,
+	}).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
 		return err
