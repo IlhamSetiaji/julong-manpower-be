@@ -272,7 +272,11 @@ func (r *MPPlanningRepository) UpdateStatusHeader(id uuid.UUID, status string, a
 			}
 		} else {
 			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
-				Status: entity.MPPlaningStatus(status),
+				Status:                entity.MPPlaningStatus(status),
+				ApprovedBy:            "",
+				RecommendedBy:         "",
+				ApproverRecruitmentID: nil,
+				ApproverManagerID:     nil,
 			}).Error; err != nil {
 				tx.Rollback()
 				r.Log.Errorf("[MPPlanningRepository.UpdateStatusHeader] " + err.Error())

@@ -270,7 +270,11 @@ func (r *MPRequestRepository) UpdateStatusHeader(id uuid.UUID, status string, ap
 			}
 		} else {
 			if err := tx.Model(&entity.MPRequestHeader{}).Where("id = ?", id).Updates(&entity.MPRequestHeader{
-				Status: entity.MPRequestStatus(status),
+				Status:         entity.MPRequestStatus(status),
+				DepartmentHead: nil,
+				VpGmDirector:   nil,
+				CEO:            nil,
+				HrdHoUnit:      nil,
 			}).Error; err != nil {
 				tx.Rollback()
 				r.Log.Errorf("[MPRequestRepository.UpdateStatusHeader] error when update mp request header: %v", err)
