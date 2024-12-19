@@ -286,7 +286,7 @@ func (r *MPPlanningRepository) UpdateStatusHeader(id uuid.UUID, status string, a
 				}
 			}
 		} else {
-			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Updates(&entity.MPPlanningHeader{
+			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", id).Select("Status", "ApprovedBy", "RecommendedBy", "ApproverRecruitmentID", "ApproverManagerID").Updates(&entity.MPPlanningHeader{
 				Status:                entity.MPPlaningStatus(status),
 				ApprovedBy:            "",
 				RecommendedBy:         "",
