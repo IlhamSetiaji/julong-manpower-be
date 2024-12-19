@@ -69,6 +69,20 @@ func parseDate(dateStr string) time.Time {
 }
 
 func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse {
+	var approvedByDeptHead, approvedByVpGmDirector, approvedByCEO, approvedByHrdHoUnit uuid.NullUUID
+	if ent.DepartmentHead != nil {
+		approvedByDeptHead = uuid.NullUUID{UUID: *ent.DepartmentHead, Valid: true}
+	}
+	if ent.VpGmDirector != nil {
+		approvedByVpGmDirector = uuid.NullUUID{UUID: *ent.VpGmDirector, Valid: true}
+	}
+	if ent.CEO != nil {
+		approvedByCEO = uuid.NullUUID{UUID: *ent.CEO, Valid: true}
+	}
+	if ent.HrdHoUnit != nil {
+		approvedByHrdHoUnit = uuid.NullUUID{UUID: *ent.HrdHoUnit, Valid: true}
+	}
+
 	return &response.MPRequestHeaderResponse{
 		ID:                         ent.ID,
 		OrganizationID:             *ent.OrganizationID,
@@ -158,6 +172,10 @@ func ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderRes
 		EmpOrganizationName:      ent.EmpOrganizationName,
 		JobLevelName:             ent.JobLevelName,
 		JobLevel:                 ent.JobLevel,
+		ApprovedByDepartmentHead: approvedByDeptHead.Valid,
+		ApprovedByVpGmDirector:   approvedByVpGmDirector.Valid,
+		ApprovedByCEO:            approvedByCEO.Valid,
+		ApprovedByHrdHoUnit:      approvedByHrdHoUnit.Valid,
 	}
 }
 

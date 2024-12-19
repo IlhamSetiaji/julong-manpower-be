@@ -73,6 +73,10 @@ type MPRequestHeaderResponse struct {
 	EmpOrganizationName      string `json:"emp_organization_name" gorm:"-"`
 	JobLevelName             string `json:"job_level_name" gorm:"-"`
 	JobLevel                 int    `json:"job_level" gorm:"-"`
+	ApprovedByDepartmentHead bool   `json:"approved_by_department_head" gorm:"-"`
+	ApprovedByVpGmDirector   bool   `json:"approved_by_vp_gm_director" gorm:"-"`
+	ApprovedByCEO            bool   `json:"approved_by_ceo" gorm:"-"`
+	ApprovedByHrdHoUnit      bool   `json:"approved_by_hrd_ho_unit" gorm:"-"`
 }
 
 type CheckPortalDataMPRequestResponse struct {
