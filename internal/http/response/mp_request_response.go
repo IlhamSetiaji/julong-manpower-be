@@ -68,7 +68,26 @@ type MPRequestHeaderResponse struct {
 	RequestorName            string `json:"requestor_name" gorm:"-"`
 	DepartmentHeadName       string `json:"department_head_name" gorm:"-"`
 	HrdHoUnitName            string `json:"hrd_ho_unit_name" gorm:"-"`
+	VpGmDirectorName         string `json:"vp_gm_director_name" gorm:"-"`
+	CeoName                  string `json:"ceo_name" gorm:"-"`
 	EmpOrganizationName      string `json:"emp_organization_name" gorm:"-"`
 	JobLevelName             string `json:"job_level_name" gorm:"-"`
 	JobLevel                 int    `json:"job_level" gorm:"-"`
+}
+
+type CheckPortalDataMPRequestResponse struct {
+	OrganizationName             string `json:"organization_name"`
+	OrganizationLocationName     string `json:"organization_location_name"`
+	ForOrganizationName          string `json:"for_organization_name"`
+	ForOrganizationLocationName  string `json:"for_organization_location_name"`
+	ForOrganizationStructureName string `json:"for_organization_structure_name"`
+	JobName                      string `json:"job_name"`
+	RequestorName                string `json:"requestor_name"`
+	DepartmentHeadName           string `json:"department_head_name"`
+	VpGmDirectorName             string `json:"vp_gm_director_name"`
+	CeoName                      string `json:"ceo_name"`
+	HrdHoUnitName                string `json:"hrd_ho_unit_name"`
+	EmpOrganizationName          string `json:"emp_organization_name"`
+	JobLevelName                 string `json:"job_level_name"`
+	JobLevel                     int    `json:"job_level"`
 }

@@ -6,6 +6,7 @@ import (
 )
 
 type CreateMPRequestHeaderRequest struct {
+	ID                         string                     `json:"id" validate:"omitempty,uuid"` // ID
 	OrganizationID             uuid.UUID                  `json:"organization_id" validate:"required,uuid"`
 	OrganizationLocationID     uuid.UUID                  `json:"organization_location_id" validate:"required,uuid"`
 	ForOrganizationID          uuid.UUID                  `json:"for_organization_id" validate:"required,uuid"`

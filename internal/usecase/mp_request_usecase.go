@@ -5,6 +5,7 @@ import (
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/dto"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
@@ -16,6 +17,7 @@ import (
 
 type IMPRequestUseCase interface {
 	Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
+	Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
 }
@@ -30,6 +32,7 @@ type MPRequestUseCase struct {
 	UserMessage            messaging.IUserMessage
 	MPPPeriodRepo          repository.IMPPPeriodRepository
 	EmpMessage             messaging.IEmployeeMessage
+	MPRequestHelper        helper.IMPRequestHelper
 }
 
 func NewMPRequestUseCase(
@@ -42,6 +45,7 @@ func NewMPRequestUseCase(
 	userMessage messaging.IUserMessage,
 	mppPeriodRepo repository.IMPPPeriodRepository,
 	em messaging.IEmployeeMessage,
+	mprHelper helper.IMPRequestHelper,
 ) IMPRequestUseCase {
 	return &MPRequestUseCase{
 		Viper:                  viper,
@@ -53,127 +57,11 @@ func NewMPRequestUseCase(
 		UserMessage:            userMessage,
 		MPPPeriodRepo:          mppPeriodRepo,
 		EmpMessage:             em,
+		MPRequestHelper:        mprHelper,
 	}
 }
 
 func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error) {
-	// check if organization is exist
-	orgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-		ID: req.OrganizationID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find organization by id message: %v", err)
-		return nil, err
-	}
-
-	if orgExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] organization with id %s is not exist", req.OrganizationID.String())
-		return nil, errors.New("organization is not exist")
-	}
-
-	// check if organization location is exist
-	orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-		ID: req.OrganizationLocationID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find organization location by id message: %v", err)
-		return nil, err
-	}
-
-	if orgLocExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] organization location with id %s is not exist", req.OrganizationLocationID.String())
-		return nil, errors.New("organization location is not exist")
-	}
-
-	// check if for organization is exist
-	forOrgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-		ID: req.ForOrganizationID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find for organization by id message: %v", err)
-		return nil, err
-	}
-
-	if forOrgExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] for organization with id %s is not exist", req.ForOrganizationID.String())
-		return nil, errors.New("for organization is not exist")
-	}
-
-	// check if for organization location is exist
-	forOrgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-		ID: req.ForOrganizationLocationID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find for organization location by id message: %v", err)
-		return nil, err
-	}
-
-	if forOrgLocExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] for organization location with id %s is not exist", req.ForOrganizationLocationID.String())
-		return nil, errors.New("for organization location is not exist")
-	}
-
-	// check if for organization structure is exist
-	forOrgStructExist, err := uc.OrganizationMessage.SendFindOrganizationStructureByIDMessage(request.SendFindOrganizationStructureByIDMessageRequest{
-		ID: req.ForOrganizationStructureID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find for organization structure by id message: %v", err)
-		return nil, err
-	}
-
-	if forOrgStructExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] for organization structure with id %s is not exist", req.ForOrganizationStructureID.String())
-		return nil, errors.New("for organization structure is not exist")
-	}
-
-	// check if job ID is exist
-	jobExist, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
-		ID: req.JobID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find job by id message: %v", err)
-		return nil, err
-	}
-
-	if jobExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] job with id %s is not exist", req.JobID.String())
-		return nil, errors.New("job is not exist")
-	}
-
-	// check if requestor ID is exist
-	requestorExist, err := uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
-		ID: req.RequestorID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find employee by id message: %v", err)
-		return nil, err
-	}
-
-	if requestorExist == nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] requestor with id %s is not exist", req.RequestorID.String())
-		return nil, errors.New("requestor is not exist")
-	}
-
-	// check if department head is exist
-	var deptHeadExist *response.SendFindUserByIDResponse
-	if req.DepartmentHead != nil {
-		deptHeadExist, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
-			ID: req.DepartmentHead.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
-			return nil, err
-		}
-
-		if deptHeadExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] department head with id %s is not exist", req.DepartmentHead.String())
-			return nil, errors.New("department head is not exist")
-		}
-	} else {
-		deptHeadExist = &response.SendFindUserByIDResponse{}
-	}
-
 	// check if mpp period exist
 	mppPeriod, err := uc.MPPPeriodRepo.FindById(*req.MPPPeriodID)
 	if err != nil {
@@ -186,21 +74,10 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 		return nil, errors.New("mpp period is not exist")
 	}
 
-	// check if emp organization is exist
-	empOrgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-		ID: req.EmpOrganizationID.String(),
-	})
+	// check portal data
+	portalResponse, err := uc.MPRequestHelper.CheckPortalData(req)
 	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find emp organization by id message: %v", err)
-		return nil, err
-	}
-
-	// check if job level is exist
-	jobLevelExist, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
-		ID: req.JobLevelID.String(),
-	})
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.Create] error when send find job level by id message: %v", err)
+		uc.Log.Errorf("[MPRequestUseCase.Create] error when check portal data: %v", err)
 		return nil, err
 	}
 
@@ -224,17 +101,90 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 		mpRequestHeader.RequestMajors = append(mpRequestHeader.RequestMajors, *reqMajor)
 	}
 
-	mpRequestHeader.OrganizationName = orgExist.Name
-	mpRequestHeader.OrganizationLocationName = orgLocExist.Name
-	mpRequestHeader.ForOrganizationName = forOrgExist.Name
-	mpRequestHeader.ForOrganizationLocation = forOrgLocExist.Name
-	mpRequestHeader.ForOrganizationStructure = forOrgStructExist.Name
-	mpRequestHeader.JobName = jobExist.Name
-	mpRequestHeader.RequestorName = requestorExist.Name
-	mpRequestHeader.DepartmentHeadName = deptHeadExist.Name
-	mpRequestHeader.EmpOrganizationName = empOrgExist.Name
-	mpRequestHeader.JobLevelName = jobLevelExist.Name
-	mpRequestHeader.JobLevel = int(jobLevelExist.Level)
+	mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+	mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
+	mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
+	mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
+	mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
+	mpRequestHeader.JobName = portalResponse.JobName
+	mpRequestHeader.RequestorName = portalResponse.RequestorName
+	mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
+	mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
+	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
+	mpRequestHeader.JobLevel = portalResponse.JobLevel
+	mpRequestHeader.MPPPeriod = *mppPeriod
+
+	return dto.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error) {
+	// check if mp request header is exist
+	mpRequestHeaderExist, err := uc.MPRequestRepository.FindById(uuid.MustParse(req.ID))
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Update] error when find mp request header by id: %v", err)
+		return nil, err
+	}
+
+	if mpRequestHeaderExist == nil {
+		uc.Log.Errorf("[MPRequestUseCase.Update] mp request header with id %s is not exist", req.ID)
+		return nil, errors.New("mp request header is not exist")
+	}
+
+	// check if mpp period exist
+	mppPeriod, err := uc.MPPPeriodRepo.FindById(*req.MPPPeriodID)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Update] error when find mpp period by id: %v", err)
+		return nil, err
+	}
+
+	if mppPeriod == nil {
+		uc.Log.Errorf("[MPRequestUseCase.Update] mpp period with id %s is not exist", req.MPPPeriodID.String())
+		return nil, errors.New("mpp period is not exist")
+	}
+
+	// check portal data
+	portalResponse, err := uc.MPRequestHelper.CheckPortalData(req)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Update] error when check portal data: %v", err)
+		return nil, err
+	}
+
+	mpRequestHeader, err := uc.MPRequestRepository.Update(dto.ConvertToEntity(req))
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.Update] error when create mp request header: %v", err)
+		return nil, err
+	}
+
+	// create request major
+	for _, majorID := range req.MajorIDs {
+		err := uc.RequestMajorRepository.DeleteByMPRequestHeaderID(mpRequestHeader.ID)
+		if err != nil {
+			uc.Log.Errorf("[MPRequestUseCase.Update] error when delete request major by mp request header id: %v", err)
+			return nil, err
+		}
+		reqMajor, err := uc.RequestMajorRepository.Create(&entity.RequestMajor{
+			MPRequestHeaderID: mpRequestHeader.ID,
+			MajorID:           majorID,
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPRequestUseCase.Update] error when create request major: %v", err)
+			return nil, err
+		}
+
+		mpRequestHeader.RequestMajors = append(mpRequestHeader.RequestMajors, *reqMajor)
+	}
+
+	mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+	mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
+	mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
+	mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
+	mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
+	mpRequestHeader.JobName = portalResponse.JobName
+	mpRequestHeader.RequestorName = portalResponse.RequestorName
+	mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
+	mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
+	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
+	mpRequestHeader.JobLevel = portalResponse.JobLevel
 	mpRequestHeader.MPPPeriod = *mppPeriod
 
 	return dto.ConvertToResponse(mpRequestHeader), nil
@@ -249,197 +199,27 @@ func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search stri
 
 	var mpRequestHeaderResponses []response.MPRequestHeaderResponse
 	for _, mpRequestHeader := range mpRequestHeaders {
-		// check if organization is exist
-		orgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-			ID: mpRequestHeader.OrganizationID.String(),
-		})
+		// check portal data
+		portalResponse, err := uc.MPRequestHelper.CheckPortalData(dto.ConvertEntityToRequest(&mpRequestHeader))
 		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find organization by id message: %v", err)
+			uc.Log.Errorf("[MPRequestUseCase.FindAllPaginated] error when check portal data: %v", err)
 			return nil, err
 		}
 
-		if orgExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] organization with id %s is not exist", mpRequestHeader.OrganizationID.String())
-			return nil, errors.New("organization is not exist")
-		}
-
-		// check if organization location is exist
-		orgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-			ID: mpRequestHeader.OrganizationLocationID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find organization location by id message: %v", err)
-			return nil, err
-		}
-
-		if orgLocExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] organization location with id %s is not exist", mpRequestHeader.OrganizationLocationID.String())
-			return nil, errors.New("organization location is not exist")
-		}
-
-		// check if for organization is exist
-		forOrgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-			ID: mpRequestHeader.ForOrganizationID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find for organization by id message: %v", err)
-			return nil, err
-		}
-
-		if forOrgExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] for organization with id %s is not exist", mpRequestHeader.ForOrganizationID.String())
-			return nil, errors.New("for organization is not exist")
-		}
-
-		// check if for organization location is exist
-		forOrgLocExist, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
-			ID: mpRequestHeader.ForOrganizationLocationID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find for organization location by id message: %v", err)
-			return nil, err
-		}
-
-		if forOrgLocExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] for organization location with id %s is not exist", mpRequestHeader.ForOrganizationLocationID.String())
-			return nil, errors.New("for organization location is not exist")
-		}
-
-		// check if for organization structure is exist
-		forOrgStructExist, err := uc.OrganizationMessage.SendFindOrganizationStructureByIDMessage(request.SendFindOrganizationStructureByIDMessageRequest{
-			ID: mpRequestHeader.ForOrganizationStructureID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find for organization structure by id message: %v", err)
-			return nil, err
-		}
-
-		if forOrgStructExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] for organization structure with id %s is not exist", mpRequestHeader.ForOrganizationStructureID.String())
-			return nil, errors.New("for organization structure is not exist")
-		}
-
-		// check if job ID is exist
-		jobExist, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
-			ID: mpRequestHeader.JobID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find job by id message: %v", err)
-			return nil, err
-		}
-
-		if jobExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] job with id %s is not exist", mpRequestHeader.JobID.String())
-			return nil, errors.New("job is not exist")
-		}
-
-		// check if requestor ID is exist
-		requestorExist, err := uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
-			ID: mpRequestHeader.RequestorID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find employee by id message: %v", err)
-			return nil, err
-		}
-
-		if requestorExist == nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] requestor with id %s is not exist", mpRequestHeader.RequestorID.String())
-			return nil, errors.New("requestor is not exist")
-		}
-
-		// check if department head is exist
-		var deptHeadExist *response.EmployeeResponse
-		if mpRequestHeader.DepartmentHead != nil {
-			deptHeadExist, err = uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
-				ID: mpRequestHeader.DepartmentHead.String(),
-			})
-			if err != nil {
-				uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
-				return nil, err
-			}
-
-			if deptHeadExist == nil {
-				uc.Log.Errorf("[MPRequestUseCase.Create] department head with id %s is not exist", mpRequestHeader.DepartmentHead.String())
-				return nil, errors.New("department head is not exist")
-			}
-		} else {
-			deptHeadExist = &response.EmployeeResponse{}
-		}
-
-		// check if vp gm director is exist
-		var vpGmDirectorExist *response.EmployeeResponse
-		if mpRequestHeader.VpGmDirector != nil {
-			vpGmDirectorExist, err = uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
-				ID: mpRequestHeader.VpGmDirector.String(),
-			})
-			if err != nil {
-				uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
-				return nil, err
-			}
-		} else {
-			vpGmDirectorExist = &response.EmployeeResponse{}
-		}
-
-		// check if ceo is exist
-		var ceoExist *response.EmployeeResponse
-		if mpRequestHeader.CEO != nil {
-			ceoExist, err = uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
-				ID: mpRequestHeader.CEO.String(),
-			})
-			if err != nil {
-				uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
-				return nil, err
-			}
-		} else {
-			ceoExist = &response.EmployeeResponse{}
-		}
-
-		// check if hrd ho unit is exist
-		var hrdHoUnitExist *response.EmployeeResponse
-		if mpRequestHeader.HrdHoUnit != nil {
-			hrdHoUnitExist, err = uc.EmpMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
-				ID: mpRequestHeader.HrdHoUnit.String(),
-			})
-			if err != nil {
-				uc.Log.Errorf("[MPRequestUseCase.Create] error when send find user by id message: %v", err)
-				return nil, err
-			}
-		} else {
-			hrdHoUnitExist = &response.EmployeeResponse{}
-		}
-
-		// check if emp organization is exist
-		empOrgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
-			ID: mpRequestHeader.EmpOrganizationID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find emp organization by id message: %v", err)
-			return nil, err
-		}
-
-		// check if job level is exist
-		jobLevelExist, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
-			ID: mpRequestHeader.JobLevelID.String(),
-		})
-		if err != nil {
-			uc.Log.Errorf("[MPRequestUseCase.Create] error when send find job level by id message: %v", err)
-			return nil, err
-		}
-
-		mpRequestHeader.OrganizationName = orgExist.Name
-		mpRequestHeader.OrganizationLocationName = orgLocExist.Name
-		mpRequestHeader.ForOrganizationName = forOrgExist.Name
-		mpRequestHeader.ForOrganizationLocation = forOrgLocExist.Name
-		mpRequestHeader.ForOrganizationStructure = forOrgStructExist.Name
-		mpRequestHeader.JobName = jobExist.Name
-		mpRequestHeader.RequestorName = requestorExist.Name
-		mpRequestHeader.DepartmentHeadName = deptHeadExist.Name
-		mpRequestHeader.VpGmDirectorName = vpGmDirectorExist.Name
-		mpRequestHeader.CeoName = ceoExist.Name
-		mpRequestHeader.HrdHoUnitName = hrdHoUnitExist.Name
-		mpRequestHeader.EmpOrganizationName = empOrgExist.Name
-		mpRequestHeader.JobLevelName = jobLevelExist.Name
-		mpRequestHeader.JobLevel = int(jobLevelExist.Level)
+		mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+		mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
+		mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
+		mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
+		mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
+		mpRequestHeader.JobName = portalResponse.JobName
+		mpRequestHeader.RequestorName = portalResponse.RequestorName
+		mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
+		mpRequestHeader.VpGmDirectorName = portalResponse.VpGmDirectorName
+		mpRequestHeader.CeoName = portalResponse.CeoName
+		mpRequestHeader.HrdHoUnitName = portalResponse.HrdHoUnitName
+		mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
+		mpRequestHeader.JobLevelName = portalResponse.JobLevelName
+		mpRequestHeader.JobLevel = portalResponse.JobLevel
 
 		mpRequestHeaderResponses = append(mpRequestHeaderResponses, *dto.ConvertToResponse(&mpRequestHeader))
 	}
@@ -533,5 +313,17 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 	userMessage := messaging.UserMessageFactory(log)
 	mppPeriodRepo := repository.MPPPeriodRepositoryFactory(log)
 	em := messaging.EmployeeMessageFactory(log)
-	return NewMPRequestUseCase(viper, log, mpRequestRepository, requestMajorRepository, organizationMessage, jobPlafonMessage, userMessage, mppPeriodRepo, em)
+	mprHelper := helper.MPRequestHelperFactory(log)
+	return NewMPRequestUseCase(
+		viper,
+		log,
+		mpRequestRepository,
+		requestMajorRepository,
+		organizationMessage,
+		jobPlafonMessage,
+		userMessage,
+		mppPeriodRepo,
+		em,
+		mprHelper,
+	)
 }

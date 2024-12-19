@@ -5,12 +5,15 @@ import (
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
 type IRequestMajorRepository interface {
 	Create(requestMajor *entity.RequestMajor) (*entity.RequestMajor, error)
+	Delete(id uuid.UUID) error
+	DeleteByMPRequestHeaderID(mpRequestHeaderID uuid.UUID) error
 }
 
 type RequestMajorRepository struct {
@@ -43,6 +46,42 @@ func (r *RequestMajorRepository) Create(requestMajor *entity.RequestMajor) (*ent
 	}
 
 	return requestMajor, nil
+}
+
+func (r *RequestMajorRepository) Delete(id uuid.UUID) error {
+	tx := r.DB.Begin()
+
+	if err := tx.Where("id = ?", id).Delete(&entity.RequestMajor{}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[RequestMajorRepository.Delete] error when delete request major: %v", err)
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[RequestMajorRepository.Delete] error when commit transaction: %v", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *RequestMajorRepository) DeleteByMPRequestHeaderID(mpRequestHeaderID uuid.UUID) error {
+	tx := r.DB.Begin()
+
+	if err := tx.Where("mp_request_header_id = ?", mpRequestHeaderID).Delete(&entity.RequestMajor{}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[RequestMajorRepository.DeleteByMPRequestHeaderID] error when delete request major by mp request header id: %v", err)
+		return err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[RequestMajorRepository.DeleteByMPRequestHeaderID] error when commit transaction: %v", err)
+		return err
+	}
+
+	return nil
 }
 
 func RequestMajorRepositoryFactory(log *logrus.Logger) IRequestMajorRepository {

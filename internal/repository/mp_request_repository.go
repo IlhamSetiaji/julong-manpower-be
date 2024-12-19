@@ -14,6 +14,7 @@ type IMPRequestRepository interface {
 	Create(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) ([]entity.MPRequestHeader, int64, error)
 	FindById(id uuid.UUID) (*entity.MPRequestHeader, error)
+	Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPRequestApprovalHistory) error
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPRequestApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPRequestApprovalHistory, error)
 }
@@ -45,6 +46,29 @@ func (r *MPRequestRepository) Create(mpRequestHeader *entity.MPRequestHeader) (*
 	if err := r.DB.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").First(mpRequestHeader, mpRequestHeader.ID).Error; err != nil {
 		r.Log.Errorf("[MPRequestRepository.Create] error when preloading associations: %v", err)
 		return nil, errors.New("[MPRequestRepository.Create] error when preloading associations " + err.Error())
+	}
+
+	return mpRequestHeader, nil
+}
+
+func (r *MPRequestRepository) Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error) {
+	tx := r.DB.Begin()
+
+	if err := tx.Where("id = ?", mpRequestHeader.ID).Updates(&mpRequestHeader).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPRequestRepository.Update] error when update mp request header: %v", err)
+		return nil, errors.New("[MPRequestRepository.Update] error when update mp request header " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPRequestRepository.Update] error when commit transaction: %v", err)
+		return nil, errors.New("[MPRequestRepository.Update] error when commit transaction " + err.Error())
+	}
+
+	if err := r.DB.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").First(mpRequestHeader, mpRequestHeader.ID).Error; err != nil {
+		r.Log.Errorf("[MPRequestRepository.Update] error when preloading associations: %v", err)
+		return nil, errors.New("[MPRequestRepository.Update] error when preloading associations " + err.Error())
 	}
 
 	return mpRequestHeader, nil
