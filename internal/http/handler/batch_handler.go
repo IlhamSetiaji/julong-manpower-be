@@ -20,6 +20,7 @@ type IBatchHandler interface {
 	FindByStatus(c *gin.Context)
 	FindById(c *gin.Context)
 	FindDocumentByID(c *gin.Context)
+	FindByNeedApproval(c *gin.Context)
 	FindByCurrentDocumentDateAndStatus(c *gin.Context)
 	UpdateStatusBatchHeader(c *gin.Context)
 	GetCompletedBatchHeader(c *gin.Context)
@@ -114,6 +115,17 @@ func (h *BatchHandler) FindDocumentByID(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Document found", batch)
+}
+
+func (h *BatchHandler) FindByNeedApproval(c *gin.Context) {
+	batch, err := h.UseCase.FindByNeedApproval()
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find batch by need approval", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Batch found", batch)
 }
 
 func (h *BatchHandler) FindByCurrentDocumentDateAndStatus(c *gin.Context) {

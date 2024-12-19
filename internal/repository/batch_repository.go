@@ -17,6 +17,7 @@ type IBatchRepository interface {
 	DeleteLinesNotInBatchLines(batchHeaderID string, batchLines []entity.BatchLine) error
 	FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 	FindById(id string) (*entity.BatchHeader, error)
+	FindByNeedApproval() (*entity.BatchHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error)
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 	UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
@@ -134,6 +135,21 @@ func (r *BatchRepository) FindById(id string) (*entity.BatchHeader, error) {
 	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("id = ?", id).First(&batchHeader).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			r.Log.Warnf("Batch header with id %s not found", id)
+			return nil, nil
+		} else {
+			r.Log.Error(err)
+			return nil, err
+		}
+	}
+
+	return &batchHeader, nil
+}
+
+func (r *BatchRepository) FindByNeedApproval() (*entity.BatchHeader, error) {
+	var batchHeader entity.BatchHeader
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", entity.BatchHeaderApprovalStatusNeedApproval).First(&batchHeader).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.Log.Warnf("Batch header with status %s not found", entity.BatchHeaderApprovalStatusNeedApproval)
 			return nil, nil
 		} else {
 			r.Log.Error(err)

@@ -21,6 +21,7 @@ type IBatchUsecase interface {
 	FindByStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
 	FindById(id string) (*response.BatchResponse, error)
 	FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error)
+	FindByNeedApproval() (*response.RealDocumentBatchResponse, error)
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
 	UpdateStatusBatchHeader(req *request.UpdateStatusBatchHeaderRequest) (*response.BatchResponse, error)
 	GetCompletedBatchHeader() (*[]response.CompletedBatchResponse, error)
@@ -316,6 +317,19 @@ func (uc *BatchUsecase) UpdateStatusBatchHeader(req *request.UpdateStatusBatchHe
 
 func (uc *BatchUsecase) FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error) {
 	resp, err := uc.Repo.FindById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp == nil {
+		return nil, errors.New("Batch not found")
+	}
+
+	return uc.batchDTO.ConvertRealDocumentBatchResponse(resp), nil
+}
+
+func (uc *BatchUsecase) FindByNeedApproval() (*response.RealDocumentBatchResponse, error) {
+	resp, err := uc.Repo.FindByNeedApproval()
 	if err != nil {
 		return nil, err
 	}
