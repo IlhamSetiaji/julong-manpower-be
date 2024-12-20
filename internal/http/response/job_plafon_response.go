@@ -41,3 +41,8 @@ type UpdateJobPlafonResponse struct {
 type FindByJobIdJobPlafonResponse struct {
 	JobPlafon *entity.JobPlafon `json:"job_plafon"`
 }
+
+type JobPlafonResponse struct {
+	ID     uuid.UUID `json:"id"`
+	Plafon int       `json:"plafon"`
+}

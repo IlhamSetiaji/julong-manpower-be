@@ -8,6 +8,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	jobResponse "github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/repository"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
@@ -18,15 +19,18 @@ type IJobPlafonMessage interface {
 	SendFindJobByIDMessage(request request.SendFindJobByIDMessageRequest) (*jobResponse.SendFindJobByIDMessageResponse, error)
 	SendFindJobLevelByIDMessage(request request.SendFindJobLevelByIDMessageRequest) (*jobResponse.SendFindJobLevelByIDMessageResponse, error)
 	SendCheckJobByJobLevelMessage(request request.CheckJobByJobLevelRequest) (*jobResponse.CheckJobExistMessageResponse, error)
+	FindJobPlafonByJobIDMessage(jobID uuid.UUID) (*jobResponse.JobPlafonResponse, error)
 }
 
 type JobPlafonMessage struct {
-	Log *logrus.Logger
+	Log           *logrus.Logger
+	JobPlafonRepo repository.IJobPlafonRepository
 }
 
-func NewJobPlafonMessage(log *logrus.Logger) IJobPlafonMessage {
+func NewJobPlafonMessage(log *logrus.Logger, jpRepo repository.IJobPlafonRepository) IJobPlafonMessage {
 	return &JobPlafonMessage{
-		Log: log,
+		Log:           log,
+		JobPlafonRepo: jpRepo,
 	}
 }
 
@@ -208,6 +212,19 @@ func (m *JobPlafonMessage) SendCheckJobByJobLevelMessage(req request.CheckJobByJ
 	}, nil
 }
 
+func (m *JobPlafonMessage) FindJobPlafonByJobIDMessage(jobID uuid.UUID) (*jobResponse.JobPlafonResponse, error) {
+	jobPlafon, err := m.JobPlafonRepo.FindByJobId(jobID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &jobResponse.JobPlafonResponse{
+		ID:     jobPlafon.ID,
+		Plafon: jobPlafon.Plafon,
+	}, nil
+}
+
 func JobPlafonMessageFactory(log *logrus.Logger) IJobPlafonMessage {
-	return NewJobPlafonMessage(log)
+	jpRepo := repository.JobPlafonRepositoryFactory(log)
+	return NewJobPlafonMessage(log, jpRepo)
 }
