@@ -20,6 +20,7 @@ type IBatchUsecase interface {
 	CreateBatchHeaderAndLines(req *request.CreateBatchHeaderAndLinesRequest) (*response.BatchResponse, error)
 	FindByStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
 	FindById(id string) (*response.BatchResponse, error)
+	GetOrganizationsForBatchApproval(id string) (*[]response.OrganizationResponse, error)
 	FindDocumentByID(id string) (*response.RealDocumentBatchResponse, error)
 	FindByNeedApproval() (*response.RealDocumentBatchResponse, error)
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
@@ -91,6 +92,45 @@ func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchRes
 	}
 
 	return &completedBatchResponses, nil
+}
+
+func (uc *BatchUsecase) GetOrganizationsForBatchApproval(id string) (*[]response.OrganizationResponse, error) {
+	batchHeader, err := uc.Repo.FindById(id)
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.GetOrganizationsForBatchApproval] " + err.Error())
+		return nil, err
+	}
+
+	if batchHeader == nil {
+		return nil, errors.New("Batch not found")
+	}
+
+	orgIds := make([]string, len(batchHeader.BatchLines))
+	for i, bl := range batchHeader.BatchLines {
+		orgIds[i] = bl.OrganizationID.String()
+	}
+
+	ogrs, err := uc.OrgMessage.SendFindAllOrganizationMessage(orgIds)
+
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.GetOrganizationsForBatchApproval] " + err.Error())
+		return nil, err
+	}
+
+	if ogrs == nil {
+		return nil, errors.New("Organization not found")
+	}
+
+	organizationResponses := make([]response.OrganizationResponse, len(*ogrs))
+	for i, ogr := range *ogrs {
+		organizationResponses[i] = response.OrganizationResponse{
+			ID:                 ogr.ID,
+			OrganizationTypeID: ogr.OrganizationTypeID,
+			Name:               ogr.Name,
+		}
+	}
+
+	return &organizationResponses, nil
 }
 
 func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeaderAndLinesRequest) (*response.BatchResponse, error) {

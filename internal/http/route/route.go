@@ -109,6 +109,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.POST("/batch/create", c.BatchHandler.CreateBatchHeaderAndLines)
 			apiRoute.GET("/batch/completed", c.BatchHandler.GetCompletedBatchHeader)
 			apiRoute.GET("/batch/need-approval", c.BatchHandler.FindByNeedApproval)
+			apiRoute.GET("/batch/organizations/:id", c.BatchHandler.GetOrganizationsForBatchApproval)
 			apiRoute.GET("/batch/find-by-status/:status", c.BatchHandler.FindByStatus)
 			apiRoute.GET("/batch/find-document/:id", c.BatchHandler.FindDocumentByID)
 			apiRoute.GET("/batch/current-status/:status", c.BatchHandler.FindByCurrentDocumentDateAndStatus)

@@ -24,6 +24,7 @@ type IBatchHandler interface {
 	FindByCurrentDocumentDateAndStatus(c *gin.Context)
 	UpdateStatusBatchHeader(c *gin.Context)
 	GetCompletedBatchHeader(c *gin.Context)
+	GetOrganizationsForBatchApproval(c *gin.Context)
 }
 
 type BatchHandler struct {
@@ -78,6 +79,25 @@ func (h *BatchHandler) CreateBatchHeaderAndLines(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusCreated, "Batch header and lines created", batchHeader)
+}
+
+func (h *BatchHandler) GetOrganizationsForBatchApproval(c *gin.Context) {
+	id := c.Param("id")
+
+	if id == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", "Invalid request")
+		return
+	}
+
+	organizations, err := h.UseCase.GetOrganizationsForBatchApproval(id)
+
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to get organizations for batch approval", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Organizations for batch approval found", organizations)
 }
 
 func (h *BatchHandler) FindByStatus(c *gin.Context) {
