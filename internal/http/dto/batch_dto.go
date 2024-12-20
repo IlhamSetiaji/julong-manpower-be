@@ -116,6 +116,7 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 		Grade: response.GradeBatchResponse{
 			Executive: func() []response.DocumentCalculationBatchResponse {
 				var executive []response.DocumentCalculationBatchResponse
+				groupedByJobLevel := make(map[int]*response.DocumentCalculationBatchResponse)
 				for _, bl := range batch.BatchLines {
 					for _, mpl := range bl.MPPlanningHeader.MPPlanningLines {
 						// check job level name
@@ -127,15 +128,42 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 						}
 						mpl.JobLevelName = message2Response.Name
 						mpl.JobLevel = int(message2Response.Level)
+						// group mpl by job level
 						if mpl.JobLevel > 3 {
-							executive = append(executive, *d.ConvertToDocumentCalculationBatchResponse(mpl, false, &bl.MPPlanningHeader.MPPlanningLines))
+							if _, exists := groupedByJobLevel[mpl.JobLevel]; !exists {
+								groupedByJobLevel[mpl.JobLevel] = &response.DocumentCalculationBatchResponse{
+									JobLevelName: strconv.Itoa(mpl.JobLevel),
+								}
+							}
+
+							groupedByJobLevel[mpl.JobLevel].Existing += mpl.Existing
+							groupedByJobLevel[mpl.JobLevel].Promote += mpl.Promotion
+							groupedByJobLevel[mpl.JobLevel].Recruit += mpl.RecruitPH + mpl.RecruitMT
+
+							previousMpPlanningLine, err := d.findPreviousMPPlanningLineByJobLevel(mpl.JobLevel+1, bl.MPPlanningHeader.MPPlanningLines)
+							if err != nil {
+								d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
+							}
+
+							if previousMpPlanningLine != nil {
+								groupedByJobLevel[mpl.JobLevel].Total += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT - previousMpPlanningLine.Promotion
+							} else {
+								groupedByJobLevel[mpl.JobLevel].Total += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT
+							}
 						}
 					}
 				}
+
+				for _, v := range groupedByJobLevel {
+					executive = append(executive, *v)
+				}
+
 				return executive
 			}(),
 			NonExecutive: func() []response.DocumentCalculationBatchResponse {
 				var nonExecutive []response.DocumentCalculationBatchResponse
+				groupedByJobLevel := make(map[int]*response.DocumentCalculationBatchResponse)
+
 				for _, bl := range batch.BatchLines {
 					for _, mpl := range bl.MPPlanningHeader.MPPlanningLines {
 						message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
@@ -143,14 +171,40 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 						})
 						if err != nil {
 							d.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+							continue
 						}
 						mpl.JobLevelName = message2Response.Name
 						mpl.JobLevel = int(message2Response.Level)
+
 						if mpl.JobLevel <= 3 {
-							nonExecutive = append(nonExecutive, *d.ConvertToDocumentCalculationBatchResponse(mpl, false, &bl.MPPlanningHeader.MPPlanningLines))
+							if _, exists := groupedByJobLevel[mpl.JobLevel]; !exists {
+								groupedByJobLevel[mpl.JobLevel] = &response.DocumentCalculationBatchResponse{
+									JobLevelName: strconv.Itoa(mpl.JobLevel),
+								}
+							}
+
+							groupedByJobLevel[mpl.JobLevel].Existing += mpl.Existing
+							groupedByJobLevel[mpl.JobLevel].Promote += mpl.Promotion
+							groupedByJobLevel[mpl.JobLevel].Recruit += mpl.RecruitPH + mpl.RecruitMT
+
+							previousMpPlanningLine, err := d.findPreviousMPPlanningLineByJobLevel(mpl.JobLevel+1, bl.MPPlanningHeader.MPPlanningLines)
+							if err != nil {
+								d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
+							}
+
+							if previousMpPlanningLine != nil {
+								groupedByJobLevel[mpl.JobLevel].Total += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT - previousMpPlanningLine.Promotion
+							} else {
+								groupedByJobLevel[mpl.JobLevel].Total += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT
+							}
 						}
 					}
 				}
+
+				for _, v := range groupedByJobLevel {
+					nonExecutive = append(nonExecutive, *v)
+				}
+
 				return nonExecutive
 			}(),
 			Total: func() []response.DocumentCalculationBatchResponse {
