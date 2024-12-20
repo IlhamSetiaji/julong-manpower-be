@@ -27,6 +27,7 @@ type IMPPlanningUseCase interface {
 	CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
 	RejectStatusPartialMPPlanningHeader(request *request.UpdateStatusPartialMPPlanningHeaderRequest) error
+	RejectStatusPartialMPPlanningHeaderUsingPT(request *request.UpdateStatusPartialMPPlanningHeaderRequest) error
 	GetPlanningApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPPlanningApprovalHistoryResponse, error)
 	GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(approvalHistoryID uuid.UUID) ([]*response.ManpowerAttachmentResponse, error)
 	Create(request *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error)
@@ -633,6 +634,54 @@ func (uc *MPPlanningUseCase) RejectStatusPartialMPPlanningHeader(req *request.Up
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] " + err.Error())
 			return err
+		}
+	}
+
+	return nil
+}
+
+func (uc *MPPlanningUseCase) RejectStatusPartialMPPlanningHeaderUsingPT(req *request.UpdateStatusPartialMPPlanningHeaderRequest) error {
+	// check employee using rabbitmq
+	messageEmpResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+		ID: req.ApproverID.String(),
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] " + err.Error())
+		return err
+	}
+
+	if messageEmpResponse == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] Employee not found")
+		return errors.New("Employee not found")
+	}
+
+	for _, payload := range req.Payload {
+		mpPlanningHeaders, err := uc.MPPlanningRepository.GetHeadersByOrganizationID(uuid.MustParse(payload.ID))
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] " + err.Error())
+			return err
+		}
+
+		if mpPlanningHeaders == nil {
+			uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] MP Planning Header not found")
+			return errors.New("MP Planning Header not found")
+		}
+
+		for _, mpPlanningHeader := range *mpPlanningHeaders {
+			approvalHistory := &entity.MPPlanningApprovalHistory{
+				MPPlanningHeaderID: mpPlanningHeader.ID,
+				ApproverID:         req.ApproverID,
+				ApproverName:       messageEmpResponse.Name,
+				Notes:              payload.Notes,
+				Level:              string(entity.MPPlanningApprovalHistoryLevelCEO),
+				Status:             entity.MPPlanningApprovalHistoryStatusRejected,
+			}
+
+			err = uc.MPPlanningRepository.UpdateStatusHeader(mpPlanningHeader.ID, string(entity.MPPlaningStatusReject), approvalHistory.ApproverName, approvalHistory)
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.RejectStatusPartialMPPlanningHeader] " + err.Error())
+				return err
+			}
 		}
 	}
 

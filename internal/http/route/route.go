@@ -82,6 +82,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.POST("/mp-plannings/lines/store", c.MPPlanningHandler.CreateLine)
 			apiRoute.PUT("/mp-plannings/lines/update", c.MPPlanningHandler.UpdateLine)
 			apiRoute.PUT("/mp-plannings/lines/reject-partial", c.MPPlanningHandler.RejectStatusPartialMPPlanningHeader)
+			apiRoute.PUT("/mp-plannings/lines/reject-partial-pt", c.MPPlanningHandler.RejectStatusPartialMPPlanningHeaderUsingPT)
 			apiRoute.DELETE("/mp-plannings/lines/delete/:id", c.MPPlanningHandler.DeleteLine)
 			apiRoute.POST("/mp-plannings/lines/batch/store", c.MPPlanningHandler.CreateOrUpdateBatchLineMPPlanningLines)
 

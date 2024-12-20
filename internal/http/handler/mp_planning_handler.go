@@ -35,6 +35,7 @@ type IMPPlanningHandler interface {
 	Delete(ctx *gin.Context)
 	UpdateStatusMPPPlanningHeader(ctx *gin.Context)
 	RejectStatusPartialMPPlanningHeader(ctx *gin.Context)
+	RejectStatusPartialMPPlanningHeaderUsingPT(ctx *gin.Context)
 	GetPlanningApprovalHistoryByHeaderId(ctx *gin.Context)
 	GetPlanningApprovalHistoryAttachmentsByApprovalHistoryId(ctx *gin.Context)
 	FindHeaderByMPPPeriodId(ctx *gin.Context)
@@ -127,6 +128,30 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers paginated success", resp)
+}
+
+func (h *MPPlanningHandler) RejectStatusPartialMPPlanningHeaderUsingPT(ctx *gin.Context) {
+	var req request.UpdateStatusPartialMPPlanningHeaderRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		h.Log.Errorf("[MPPlanningHandler.RejectStatusPartialMPPlanningHeaderUsingPT] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	if err := h.Validate.Struct(req); err != nil {
+		h.Log.Errorf("[MPPlanningHandler.RejectStatusPartialMPPlanningHeaderUsingPT] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", err.Error())
+		return
+	}
+
+	err := h.UseCase.RejectStatusPartialMPPlanningHeaderUsingPT(&req)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.RejectStatusPartialMPPlanningHeaderUsingPT] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "reject status partial success", nil)
 }
 
 func (h *MPPlanningHandler) FindAllHeadersByStatusAndMPPeriodID(ctx *gin.Context) {
