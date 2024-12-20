@@ -321,6 +321,7 @@ func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderRes
 	mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
 	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
+	mpRequestHeader.RequestorEmployeeJob = portalResponse.RequestorEmployeeJob
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }

@@ -97,21 +97,22 @@ type MPRequestHeader struct {
 	MPRequestApprovalHistories []MPRequestApprovalHistory `json:"mp_request_approval_histories" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPPeriod                  MPPPeriod                  `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
-	OrganizationName         string `json:"organization_name" gorm:"-"`
-	OrganizationCategory     string `json:"organization_category" gorm:"-"`
-	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`
-	ForOrganizationName      string `json:"for_organization_name" gorm:"-"`
-	ForOrganizationLocation  string `json:"for_organization_location" gorm:"-"`
-	ForOrganizationStructure string `json:"for_organization_structure" gorm:"-"`
-	JobName                  string `json:"job_name" gorm:"-"`
-	RequestorName            string `json:"requestor_name" gorm:"-"`
-	DepartmentHeadName       string `json:"department_head_name" gorm:"-"`
-	VpGmDirectorName         string `json:"vp_gm_director_name" gorm:"-"`
-	CeoName                  string `json:"ceo_name" gorm:"-"`
-	HrdHoUnitName            string `json:"hrd_ho_unit_name" gorm:"-"`
-	EmpOrganizationName      string `json:"emp_organization_name" gorm:"-"`
-	JobLevelName             string `json:"job_level_name" gorm:"-"`
-	JobLevel                 int    `json:"job_level" gorm:"-"`
+	OrganizationName         string                 `json:"organization_name" gorm:"-"`
+	OrganizationCategory     string                 `json:"organization_category" gorm:"-"`
+	OrganizationLocationName string                 `json:"organization_location_name" gorm:"-"`
+	ForOrganizationName      string                 `json:"for_organization_name" gorm:"-"`
+	ForOrganizationLocation  string                 `json:"for_organization_location" gorm:"-"`
+	ForOrganizationStructure string                 `json:"for_organization_structure" gorm:"-"`
+	JobName                  string                 `json:"job_name" gorm:"-"`
+	RequestorName            string                 `json:"requestor_name" gorm:"-"`
+	DepartmentHeadName       string                 `json:"department_head_name" gorm:"-"`
+	VpGmDirectorName         string                 `json:"vp_gm_director_name" gorm:"-"`
+	CeoName                  string                 `json:"ceo_name" gorm:"-"`
+	HrdHoUnitName            string                 `json:"hrd_ho_unit_name" gorm:"-"`
+	EmpOrganizationName      string                 `json:"emp_organization_name" gorm:"-"`
+	JobLevelName             string                 `json:"job_level_name" gorm:"-"`
+	JobLevel                 int                    `json:"job_level" gorm:"-"`
+	RequestorEmployeeJob     map[string]interface{} `json:"requestor_employee_job" gorm:"-"`
 }
 
 func (m *MPRequestHeader) BeforeCreate(tx *gorm.DB) (err error) {

@@ -154,6 +154,8 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 		IsReplacement:              ent.IsReplacement,
 		EmpOrganizationID:          ent.EmpOrganizationID,
 		JobLevelID:                 ent.JobLevelID,
+		CreatedAt:                  ent.CreatedAt,
+		UpdatedAt:                  ent.UpdatedAt,
 
 		RequestCategory: map[string]interface{}{
 			"ID":            ent.RequestCategory.ID,
@@ -210,6 +212,7 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 		ApprovedByVpGmDirector:   approvedByVpGmDirector.Valid,
 		ApprovedByCEO:            approvedByCEO.Valid,
 		ApprovedByHrdHoUnit:      approvedByHrdHoUnit.Valid,
+		RequestorEmployeeJob:     ent.RequestorEmployeeJob,
 	}
 }
 

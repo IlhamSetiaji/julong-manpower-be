@@ -78,6 +78,7 @@ func convertInterfaceToEmployeeResponse(data map[string]interface{}) *response.E
 	retirementDate, _ := time.Parse("2006-01-02", data["retirement_date"].(string))
 	email := data["email"].(string)
 	mobilePhone := data["mobile_phone"].(string)
+	employeeJob := data["employee_job"].(map[string]interface{})
 
 	return &response.EmployeeResponse{
 		ID:             uuid.MustParse(id),
@@ -87,6 +88,7 @@ func convertInterfaceToEmployeeResponse(data map[string]interface{}) *response.E
 		RetirementDate: retirementDate,
 		Email:          email,
 		MobilePhone:    mobilePhone,
+		EmployeeJob:    employeeJob,
 	}
 }
 

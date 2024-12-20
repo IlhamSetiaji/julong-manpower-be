@@ -233,6 +233,8 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		return nil, errors.New("job level is not exist")
 	}
 
+	h.Log.Infof("[MPRequestHelper] check portal data success %v", requestorExist.EmployeeJob)
+
 	return &response.CheckPortalDataMPRequestResponse{
 		OrganizationName:             orgExist.Name,
 		OrganizationCategory:         orgExist.OrganizationCategory,
@@ -249,5 +251,6 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		EmpOrganizationName:          empOrgExist.Name,
 		JobLevelName:                 jobLevelExist.Name,
 		JobLevel:                     int(jobLevelExist.Level),
+		RequestorEmployeeJob:         requestorExist.EmployeeJob,
 	}, nil
 }
