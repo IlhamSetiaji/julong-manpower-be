@@ -15,6 +15,7 @@ type IMPPlanningRepository interface {
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
+	FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) (*[]entity.MPPlanningHeader, error)
 	CountTotalApprovalHistoryByStatus(mpPlanningHeaderId uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
@@ -68,6 +69,22 @@ func (r *MPPlanningRepository) FindAllHeaders() (*[]entity.MPPlanningHeader, err
 		} else {
 			r.Log.Errorf("[MPPlanningRepository.FindAllHeaders] " + err.Error())
 			return nil, errors.New("[MPPlanningRepository.FindAllHeaders] " + err.Error())
+		}
+	}
+
+	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) (*[]entity.MPPlanningHeader, error) {
+	var mppHeaders []entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("status = ? AND mpp_period_id = ?", status, mppPeriodID).Find(&mppHeaders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByStatusAndMPPeriodID] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByStatusAndMPPeriodID] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindAllHeadersByStatusAndMPPeriodID] " + err.Error())
 		}
 	}
 

@@ -22,6 +22,7 @@ type IMPPlanningUseCase interface {
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindAllHeadersForBatchPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
+	FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) ([]*response.MPPlanningHeaderResponse, error)
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
 	CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
@@ -267,6 +268,132 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}(),
 		Total: total,
 	}, nil
+}
+
+func (uc *MPPlanningUseCase) FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) ([]*response.MPPlanningHeaderResponse, error) {
+	mpPlanningHeaders, err := uc.MPPlanningRepository.FindAllHeadersByStatusAndMPPeriodID(status, mppPeriodID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByStatusAndMPPeriodID] " + err.Error())
+		return nil, err
+	}
+
+	for i, header := range *mpPlanningHeaders {
+		// Fetch organization names using RabbitMQ
+		messageResponse, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+			ID: header.OrganizationID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByStatusAndMPPeriodID Message] " + err.Error())
+			return nil, err
+		}
+		header.OrganizationName = messageResponse.Name
+
+		// Fetch emp organization names using RabbitMQ
+		message2Response, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+			ID: header.EmpOrganizationID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByStatusAndMPPeriodID Message] " + err.Error())
+			return nil, err
+		}
+		header.EmpOrganizationName = message2Response.Name
+
+		// Fetch job names using RabbitMQ
+		messageJobResposne, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+			ID: header.JobID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByStatusAndMPPeriodID Message] " + err.Error())
+			return nil, err
+		}
+		header.JobName = messageJobResposne.Name
+
+		// Fetch requestor names using RabbitMQ
+		messageUserResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+			ID: header.RequestorID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByRequestorIDPaginated Message] " + err.Error())
+			return nil, err
+		}
+		header.RequestorName = messageUserResponse.Name
+
+		// fetch organization location names using RabbitMQ
+		messageOrgLocResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+			ID: header.OrganizationLocationID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByStatusAndMPPeriodID Message] " + err.Error())
+			return nil, err
+		}
+		header.OrganizationLocationName = messageOrgLocResponse.Name
+
+		if header.ApproverManagerID != nil {
+			// fetch approver manager names using RabbitMQ
+			messageApprManagerResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+				ID: header.ApproverManagerID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByStatusAndMPPeriodID Message] " + err.Error())
+				return nil, err
+			}
+			header.ApproverManagerName = messageApprManagerResponse.Name
+		}
+
+		if header.ApproverRecruitmentID != nil {
+			// fetch approver recruitment names using RabbitMQ
+			messageApprRecruitmentResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+				ID: header.ApproverRecruitmentID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersByStatusAndMPPeriodID Message] " + err.Error())
+				return nil, err
+			}
+			header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
+		}
+
+		for i, line := range *&header.MPPlanningLines {
+			// Fetch organization location names using RabbitMQ
+			messageResponse, err := uc.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+				ID: line.OrganizationLocationID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+				return nil, err
+			}
+			line.OrganizationLocationName = messageResponse.Name
+
+			// Fetch job level names using RabbitMQ
+			message2Response, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+				ID: line.JobLevelID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+				return nil, err
+			}
+			line.JobLevelName = message2Response.Name
+
+			// Fetch job names using RabbitMQ
+			messageJobResposne, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+				ID: line.JobID.String(),
+			})
+			if err != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllLinesByHeaderIdPaginated Message] " + err.Error())
+				return nil, err
+			}
+			line.JobName = messageJobResposne.Name
+
+			header.MPPlanningLines[i] = line
+		}
+
+		(*mpPlanningHeaders)[i] = header
+	}
+
+	var responseHeaders []*response.MPPlanningHeaderResponse
+	for _, header := range *mpPlanningHeaders {
+		responseHeaders = append(responseHeaders, uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(&header))
+	}
+	return responseHeaders, nil
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error) {

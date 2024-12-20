@@ -197,6 +197,21 @@ func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeade
 
 	// loop through the batch lines and update the status
 	for _, bl := range batchHeader.BatchLines {
+		var mppPeriodCompleted entity.MPPPeriod
+		if err := r.DB.Where("status = ?", entity.MPPeriodStatusComplete).First(&mppPeriodCompleted).Error; err != nil {
+			if err == gorm.ErrRecordNotFound {
+				r.Log.Warnf("MPP Period with status %s not found", entity.MPPeriodStatusComplete)
+			} else {
+				r.Log.Error(err)
+				return err
+			}
+		}
+
+		if mppPeriodCompleted.ID != uuid.Nil {
+			r.Log.Warnf("MPP Period with status %s found: %v", entity.MPPeriodStatusComplete, mppPeriodCompleted)
+			return errors.New("MPP Period with status complete found")
+		}
+
 		if status != entity.BatchHeaderApprovalStatusCompleted {
 			var approvalHistory *entity.MPPlanningApprovalHistory
 

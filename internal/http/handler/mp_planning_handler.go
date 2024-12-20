@@ -26,6 +26,7 @@ type IMPPlanningHandler interface {
 	FindAllHeadersPaginated(ctx *gin.Context)
 	FindAllHeadersByRequestorIDPaginated(ctx *gin.Context)
 	FindAllHeadersForBatchPaginated(ctx *gin.Context)
+	FindAllHeadersByStatusAndMPPeriodID(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
 	CountTotalApprovalHistoryByStatus(ctx *gin.Context)
 	FindById(ctx *gin.Context)
@@ -126,6 +127,29 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers paginated success", resp)
+}
+
+func (h *MPPlanningHandler) FindAllHeadersByStatusAndMPPeriodID(ctx *gin.Context) {
+	status := ctx.Query("status")
+	if status == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "status is required")
+		return
+	}
+
+	mpPeriodID := ctx.Query("mpp_period_id")
+	if mpPeriodID == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "mpp_period_id is required")
+		return
+	}
+
+	resp, err := h.UseCase.FindAllHeadersByStatusAndMPPeriodID(entity.MPPlaningStatus(status), uuid.MustParse(mpPeriodID))
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.FindAllHeadersByStatusAndMPPeriodID] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find all headers by status and mpp period id success", resp)
 }
 
 func (h *MPPlanningHandler) CountTotalApprovalHistoryByStatus(ctx *gin.Context) {
