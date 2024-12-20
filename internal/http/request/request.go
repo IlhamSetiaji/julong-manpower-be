@@ -176,6 +176,42 @@ func ValidateDateMoreThanEqualToday(fl validator.FieldLevel) bool {
 	return !startDate.Before(today)
 }
 
+func MessageValidation(fe validator.FieldError) string {
+	switch fe.Tag() {
+	case "required":
+		return "This field is required"
+	case "email":
+		return "Invalid email"
+	case "datetime":
+		return "Invalid datetime format"
+	case "date_today_or_later":
+		return "Date must be today or later"
+	case "uuid":
+		return "Invalid UUID"
+	case "MaritalStatusValidation":
+		return "Invalid marital status"
+	case "MinimumEducationValidation":
+		return "Invalid minimum education"
+	case "MPRequestStatusValidation":
+		return "Invalid MP request status"
+	case "MPRequestTypeEnumValidation":
+		return "Invalid MP request type"
+	case "RecruitmentTypeEnumValidation":
+		return "Invalid recruitment type"
+	case "MPPlanningApprovalHistoryLevelValidation":
+		return "Invalid MP planning approval history level"
+	case "BatchHeaderApprovalStatusValidation":
+		return "Invalid batch header approval status"
+	case "MPRequestApprovalHistoryStatusValidation":
+		return "Invalid MP request approval history status"
+	case "MPRequestApprovalHistoryLevelValidation":
+		return "Invalid MP request approval history level"
+	case "dive":
+		return "Invalid array"
+	}
+	return fe.Error() // default error
+}
+
 type RabbitMQRequest struct {
 	ID          string                 `json:"id"`
 	MessageType string                 `json:"message_type"`
