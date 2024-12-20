@@ -27,6 +27,7 @@ type IMPPlanningHandler interface {
 	FindAllHeadersByRequestorIDPaginated(ctx *gin.Context)
 	FindAllHeadersForBatchPaginated(ctx *gin.Context)
 	FindAllHeadersByStatusAndMPPeriodID(ctx *gin.Context)
+	GetHeadersByMPPeriodCompleted(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
 	CountTotalApprovalHistoryByStatus(ctx *gin.Context)
 	FindById(ctx *gin.Context)
@@ -128,6 +129,17 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers paginated success", resp)
+}
+
+func (h *MPPlanningHandler) GetHeadersByMPPeriodCompleted(ctx *gin.Context) {
+	resp, err := h.UseCase.GetHeadersByMPPeriodComplete()
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.GetHeadersByMPPeriodCompleted] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "get headers by mpp period completed success", resp)
 }
 
 func (h *MPPlanningHandler) RejectStatusPartialMPPlanningHeaderUsingPT(ctx *gin.Context) {
