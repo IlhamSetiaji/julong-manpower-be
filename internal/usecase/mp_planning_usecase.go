@@ -941,13 +941,14 @@ func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uu
 }
 
 func (uc *MPPlanningUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
-	foundMpPlanningHeader, err := uc.MPPlanningRepository.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
+	foundMpPlanningHeader, err := uc.MPPlanningRepository.GetHeadersByCreatedAt(dateNow.Format("2006-01-02"))
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.GenerateDocumentNumber] " + err.Error())
 		return "", err
 	}
 
-	if foundMpPlanningHeader == nil {
+	if len(*foundMpPlanningHeader) == 0 {
+		uc.Log.Infof("[MPPlanningUseCase.GenerateDocumentNumber] foundMpPlanningHeader is nil")
 		return "MPP/" + dateNow.Format("20060102") + "/001", nil
 	}
 

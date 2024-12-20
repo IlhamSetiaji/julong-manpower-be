@@ -210,7 +210,8 @@ func (uc *MPRequestUseCase) Delete(id uuid.UUID) error {
 }
 
 func (uc *MPRequestUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
-	foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
+	// foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
+	foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByCreatedAt(dateNow.Format("2006-01-02"))
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.GenerateDocumentNumber] error when get headers by document date: %v", err)
 		return "", err

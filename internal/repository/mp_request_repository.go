@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -15,6 +16,7 @@ type IMPRequestRepository interface {
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) ([]entity.MPRequestHeader, int64, error)
 	FindAll() ([]entity.MPRequestHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.MPRequestHeader, error)
+	GetHeadersByCreatedAt(createdAt string) ([]entity.MPRequestHeader, error)
 	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]entity.MPRequestApprovalHistory, error)
 	FindById(id uuid.UUID) (*entity.MPRequestHeader, error)
 	Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
@@ -98,6 +100,45 @@ func (r *MPRequestRepository) Create(mpRequestHeader *entity.MPRequestHeader) (*
 	}
 
 	return mpRequestHeader, nil
+}
+
+func (r *MPRequestRepository) GetHeadersByCreatedAt(createdAt string) ([]entity.MPRequestHeader, error) {
+	var mpRequestHeaders []entity.MPRequestHeader
+
+	var formatTimeCreatedAt time.Time
+	var err error
+
+	formats := []string{
+		"2006-01-02",
+		time.RFC3339,
+	}
+
+	for _, format := range formats {
+		formatTimeCreatedAt, err = time.Parse(format, createdAt)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		r.Log.Errorf("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
+	}
+
+	// Use only the date part for comparison
+	dateOnly := formatTimeCreatedAt.Format("2006-01-02")
+
+	if err := r.DB.Where("DATE(created_at) = ?", dateOnly).Find(&mpRequestHeaders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warnf("[MPPlanningRepository.GetHeadersByCreatedAt] no records found")
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
+		}
+	}
+
+	return mpRequestHeaders, nil
 }
 
 func (r *MPRequestRepository) Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error) {

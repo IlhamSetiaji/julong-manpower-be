@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -23,6 +24,7 @@ type IMPPlanningRepository interface {
 	GetHeadersByStatus(status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
 	GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error)
+	GetHeadersByCreatedAt(createdAt string) (*[]entity.MPPlanningHeader, error)
 	CreateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	UpdateHeader(mppHeader *entity.MPPlanningHeader) (*entity.MPPlanningHeader, error)
 	StoreAttachmentToHeader(mppHeader *entity.MPPlanningHeader, attachment entity.ManpowerAttachment) (*entity.MPPlanningHeader, error)
@@ -262,6 +264,46 @@ func (r *MPPlanningRepository) GetHeadersByDocumentDate(documentDate string) (*[
 		} else {
 			r.Log.Errorf("[MPPlanningRepository.GetHeadersByDocumentDate] " + err.Error())
 			return nil, errors.New("[MPPlanningRepository.GetHeadersByDocumentDate] " + err.Error())
+		}
+	}
+
+	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) GetHeadersByCreatedAt(createdAt string) (*[]entity.MPPlanningHeader, error) {
+	var mppHeaders []entity.MPPlanningHeader
+
+	// Try parsing the date with multiple formats
+	var formatTimeCreatedAt time.Time
+	var err error
+
+	formats := []string{
+		"2006-01-02",
+		time.RFC3339,
+	}
+
+	for _, format := range formats {
+		formatTimeCreatedAt, err = time.Parse(format, createdAt)
+		if err == nil {
+			break
+		}
+	}
+
+	if err != nil {
+		r.Log.Errorf("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
+	}
+
+	// Use only the date part for comparison
+	dateOnly := formatTimeCreatedAt.Format("2006-01-02")
+
+	if err := r.DB.Where("DATE(created_at) = ?", dateOnly).Find(&mppHeaders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warnf("[MPPlanningRepository.GetHeadersByCreatedAt] no records found")
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.GetHeadersByCreatedAt] " + err.Error())
 		}
 	}
 
