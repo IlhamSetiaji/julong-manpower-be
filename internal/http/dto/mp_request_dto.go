@@ -8,29 +8,34 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
+	"github.com/spf13/viper"
 )
 
 type IMPRequestDTO interface {
 	ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader
 	ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse
 	ConvertEntityToRequest(ent *entity.MPRequestHeader) *request.CreateMPRequestHeaderRequest
+	ConvertMPRequestApprovalHistoryToResponse(approvalHistories *entity.MPRequestApprovalHistory) *response.MPRequestApprovalHistoryResponse
+	ConvertMPRequestApprovalHistoriesToResponse(approvalHistories *[]entity.MPRequestApprovalHistory) []*response.MPRequestApprovalHistoryResponse
 }
 
 type MPRequestDTO struct {
 	Log           *logrus.Logger
 	MPPlanningDTO IMPPlanningDTO
+	Viper         *viper.Viper
 }
 
-func NewMPRequestDTO(log *logrus.Logger, mpPlanningDTO IMPPlanningDTO) IMPRequestDTO {
+func NewMPRequestDTO(log *logrus.Logger, mpPlanningDTO IMPPlanningDTO, viper *viper.Viper) IMPRequestDTO {
 	return &MPRequestDTO{
 		Log:           log,
 		MPPlanningDTO: mpPlanningDTO,
+		Viper:         viper,
 	}
 }
 
-func MPRequestDTOFactory(log *logrus.Logger) IMPRequestDTO {
+func MPRequestDTOFactory(log *logrus.Logger, viper *viper.Viper) IMPRequestDTO {
 	mpPlanningDTO := MPPlanningDTOFactory(log)
-	return NewMPRequestDTO(log, mpPlanningDTO)
+	return NewMPRequestDTO(log, mpPlanningDTO, viper)
 }
 
 func (d *MPRequestDTO) ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader {
@@ -81,6 +86,27 @@ func (d *MPRequestDTO) ConvertToEntity(req *request.CreateMPRequestHeaderRequest
 		IsReplacement:              req.IsReplacement,
 		RecruitmentType:            req.RecruitmentType,
 	}
+}
+
+func (d *MPRequestDTO) ConvertMPRequestApprovalHistoryToResponse(approvalHistories *entity.MPRequestApprovalHistory) *response.MPRequestApprovalHistoryResponse {
+	return &response.MPRequestApprovalHistoryResponse{
+		ID:                approvalHistories.ID,
+		MPRequestHeaderID: approvalHistories.MPRequestHeaderID,
+		ApproverID:        approvalHistories.ApproverID,
+		ApproverName:      approvalHistories.ApproverName,
+		Notes:             approvalHistories.Notes,
+		Level:             approvalHistories.Level,
+		Status:            approvalHistories.Status,
+		Attachments:       ConvertManpowerAttachmentsToResponse(&approvalHistories.ManpowerAttachments, d.Viper),
+	}
+}
+
+func (d *MPRequestDTO) ConvertMPRequestApprovalHistoriesToResponse(approvalHistories *[]entity.MPRequestApprovalHistory) []*response.MPRequestApprovalHistoryResponse {
+	var response []*response.MPRequestApprovalHistoryResponse
+	for _, approvalHistory := range *approvalHistories {
+		response = append(response, d.ConvertMPRequestApprovalHistoryToResponse(&approvalHistory))
+	}
+	return response
 }
 
 func parseDate(dateStr string) time.Time {

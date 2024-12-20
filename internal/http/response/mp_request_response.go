@@ -102,3 +102,16 @@ type CheckPortalDataMPRequestResponse struct {
 	JobLevel                     int                    `json:"job_level"`
 	RequestorEmployeeJob         map[string]interface{} `json:"requestor_employee_job"`
 }
+
+type MPRequestApprovalHistoryResponse struct {
+	ID                uuid.UUID                             `json:"id"`
+	MPRequestHeaderID uuid.UUID                             `json:"mp_request_header_id"`
+	ApproverID        uuid.UUID                             `json:"approver_id"`
+	ApproverName      string                                `json:"approver_name"`
+	Notes             string                                `json:"notes"`
+	Level             string                                `json:"level"`
+	Status            entity.MPRequestApprovalHistoryStatus `json:"status"`
+	CreatedAt         time.Time                             `json:"created_at"`
+	UpdatedAt         time.Time                             `json:"updated_at"`
+	Attachments       []*ManpowerAttachmentResponse         `json:"attachments"`
+}

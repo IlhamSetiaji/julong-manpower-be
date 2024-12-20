@@ -15,6 +15,7 @@ type IMPRequestRepository interface {
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) ([]entity.MPRequestHeader, int64, error)
 	FindAll() ([]entity.MPRequestHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.MPRequestHeader, error)
+	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]entity.MPRequestApprovalHistory, error)
 	FindById(id uuid.UUID) (*entity.MPRequestHeader, error)
 	Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPRequestApprovalHistory) error
@@ -52,6 +53,17 @@ func (r *MPRequestRepository) GetHeadersByDocumentDate(documentDate string) ([]e
 	}
 
 	return mpRequestHeaders, nil
+}
+
+func (r *MPRequestRepository) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]entity.MPRequestApprovalHistory, error) {
+	var mpRequestApprovalHistories []entity.MPRequestApprovalHistory
+
+	if err := r.DB.Where("mp_request_header_id = ?", headerID).Find(&mpRequestApprovalHistories).Error; err != nil {
+		r.Log.Errorf("[MPRequestRepository.GetRequestApprovalHistoryByHeaderId] error when query mp request approval histories: %v", err)
+		return nil, errors.New("[MPRequestRepository.GetRequestApprovalHistoryByHeaderId] error when query mp request approval histories " + err.Error())
+	}
+
+	return mpRequestApprovalHistories, nil
 }
 
 func (r *MPRequestRepository) CountTotalApprovalHistoryByStatus(mpHeaderID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error) {

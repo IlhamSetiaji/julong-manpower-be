@@ -26,6 +26,7 @@ type IMPRequestHandler interface {
 	Delete(ctx *gin.Context)
 	FindAllPaginated(ctx *gin.Context)
 	FindByID(ctx *gin.Context)
+	GetRequestApprovalHistoryByHeaderId(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
 	UpdateStatusMPRequestHeader(ctx *gin.Context)
 	CountTotalApprovalHistoryByStatus(ctx *gin.Context)
@@ -68,6 +69,24 @@ func (h *MPRequestHandler) GenerateDocumentNumber(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "Document number generated", res)
+}
+
+func (h *MPRequestHandler) GetRequestApprovalHistoryByHeaderId(ctx *gin.Context) {
+	mpHeaderID := ctx.Param("mpr_header_id")
+	if mpHeaderID == "" {
+		h.Log.Errorf("[MPRequestHandler.GetRequestApprovalHistoryByHeaderId] error when get mp header ID from request")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request", "MP Header ID is required")
+		return
+	}
+
+	res, err := h.UseCase.GetRequestApprovalHistoryByHeaderId(uuid.MustParse(mpHeaderID))
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.GetRequestApprovalHistoryByHeaderId] error when get request approval history by header ID: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to get request approval history", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "Request approval history found", res)
 }
 
 func (h *MPRequestHandler) CountTotalApprovalHistoryByStatus(ctx *gin.Context) {

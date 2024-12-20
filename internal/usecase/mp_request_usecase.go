@@ -21,6 +21,7 @@ type IMPRequestUseCase interface {
 	Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	Delete(id uuid.UUID) error
+	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPRequestApprovalHistoryResponse, error)
 	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
@@ -137,6 +138,32 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.MPPPeriod = *mppPeriod
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPRequestApprovalHistoryResponse, error) {
+	mpRequestHeader, err := uc.MPRequestRepository.FindById(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.GetRequestApprovalHistoryByHeaderId] error when find mp request header by id: %v", err)
+		return nil, err
+	}
+
+	if mpRequestHeader == nil {
+		uc.Log.Errorf("[MPRequestUseCase.GetRequestApprovalHistoryByHeaderId] mp request header with id %s is not exist", headerID.String())
+		return nil, errors.New("mp request header is not exist")
+	}
+
+	approvalHistories, err := uc.MPRequestRepository.GetRequestApprovalHistoryByHeaderId(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.GetRequestApprovalHistoryByHeaderId] error when get approval history by header id: %v", err)
+		return nil, err
+	}
+
+	if approvalHistories == nil {
+		uc.Log.Errorf("[MPRequestUseCase.GetRequestApprovalHistoryByHeaderId] approval history is not exist")
+		return nil, errors.New("approval history is not exist")
+	}
+
+	return uc.MPRequestDTO.ConvertMPRequestApprovalHistoriesToResponse(&approvalHistories), nil
 }
 
 func (uc *MPRequestUseCase) CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error) {
@@ -500,7 +527,7 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 	mppPeriodRepo := repository.MPPPeriodRepositoryFactory(log)
 	em := messaging.EmployeeMessageFactory(log)
 	mprHelper := helper.MPRequestHelperFactory(log)
-	mprDTO := dto.MPRequestDTOFactory(log)
+	mprDTO := dto.MPRequestDTOFactory(log, viper)
 	mpPlanningRepo := repository.MPPlanningRepositoryFactory(log)
 	return NewMPRequestUseCase(
 		viper,
