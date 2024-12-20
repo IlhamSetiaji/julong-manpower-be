@@ -74,7 +74,7 @@ type UpdateHeaderMPPlanningRequest struct {
 	OrganizationLocationID uuid.UUID                   `json:"organization_location_id" validate:"required"`
 	JobID                  uuid.UUID                   `json:"job_id" validate:"required"` // job_id
 	DocumentNumber         string                      `json:"document_number" validate:"required"`
-	DocumentDate           string                      `json:"document_date" validate:"required,datetime=2006-01-02,date_today_or_later"`
+	DocumentDate           string                      `json:"document_date" validate:"required,datetime=2006-01-02"`
 	Notes                  string                      `json:"notes" validate:"omitempty"`
 	TotalRecruit           float64                     `json:"total_recruit" validate:"omitempty"`
 	TotalPromote           float64                     `json:"total_promote" validate:"omitempty"`

@@ -74,6 +74,10 @@ func NewMPRequestUseCase(
 }
 
 func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error) {
+	if req.DocumentDate < time.Now().Format("2006-01-02") {
+		uc.Log.Errorf("[MPRequestUseCase.Create] Document Date cannot be less than today")
+		return nil, errors.New("Document Date cannot be less than today")
+	}
 	// check if mpp period exist
 	mppPeriod, err := uc.MPPPeriodRepo.FindById(*req.MPPPeriodID)
 	if err != nil {
@@ -84,6 +88,11 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	if mppPeriod == nil {
 		uc.Log.Errorf("[MPRequestUseCase.Create] mpp period with id %s is not exist", req.MPPPeriodID.String())
 		return nil, errors.New("mpp period is not exist")
+	}
+
+	if req.DocumentDate < mppPeriod.BudgetStartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.BudgetEndDate.Format("2006-01-02") {
+		uc.Log.Errorf("[MPRequestUseCase.Create] document date %s is not in budget period", req.DocumentDate)
+		return nil, errors.New("document date is not in budget period")
 	}
 
 	// check portal data
@@ -200,6 +209,18 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 		return nil, errors.New("mp request header is not exist")
 	}
 
+	if mpRequestHeaderExist.DocumentDate.Format("2006-01-02") < time.Now().Format("2006-01-02") {
+		if req.DocumentDate < mpRequestHeaderExist.DocumentDate.Format("2006-01-02") {
+			uc.Log.Errorf("[MPRequestUseCase.Update] Document Date cannot be less than existing Document Date")
+			return nil, errors.New("Document Date cannot be less than existing Document Date")
+		}
+	} else {
+		if req.DocumentDate < time.Now().Format("2006-01-02") {
+			uc.Log.Errorf("[MPRequestUseCase.Update] Document Date cannot be less than today")
+			return nil, errors.New("Document Date cannot be less than today")
+		}
+	}
+
 	// check if mpp period exist
 	mppPeriod, err := uc.MPPPeriodRepo.FindById(*req.MPPPeriodID)
 	if err != nil {
@@ -210,6 +231,11 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 	if mppPeriod == nil {
 		uc.Log.Errorf("[MPRequestUseCase.Update] mpp period with id %s is not exist", req.MPPPeriodID.String())
 		return nil, errors.New("mpp period is not exist")
+	}
+
+	if req.DocumentDate < mppPeriod.BudgetStartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.BudgetEndDate.Format("2006-01-02") {
+		uc.Log.Errorf("[MPRequestUseCase.Update] document date %s is not in budget period", req.DocumentDate)
+		return nil, errors.New("document date is not in budget period")
 	}
 
 	// check portal data

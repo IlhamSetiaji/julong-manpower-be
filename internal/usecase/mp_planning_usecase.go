@@ -50,9 +50,10 @@ type MPPlanningUseCase struct {
 	UserMessage          messaging.IUserMessage
 	EmployeeMessage      messaging.IEmployeeMessage
 	MPPlanningDTO        dto.IMPPlanningDTO
+	MPPPeriodRepo        repository.IMPPPeriodRepository
 }
 
-func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage, jpr repository.IJobPlafonRepository, mpPlanningDTO dto.IMPPlanningDTO) IMPPlanningUseCase {
+func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage, jpr repository.IJobPlafonRepository, mpPlanningDTO dto.IMPPlanningDTO, mppPeriodRepo repository.IMPPPeriodRepository) IMPPlanningUseCase {
 	return &MPPlanningUseCase{
 		Viper:                viper,
 		Log:                  log,
@@ -63,6 +64,7 @@ func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repositor
 		EmployeeMessage:      em,
 		JobPlafonRepository:  jpr,
 		MPPlanningDTO:        mpPlanningDTO,
+		MPPPeriodRepo:        mppPeriodRepo,
 	}
 }
 
@@ -1051,6 +1053,23 @@ func (uc *MPPlanningUseCase) FindHeaderByMPPPeriodId(req *request.FindHeaderByMP
 }
 
 func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) (*response.CreateMPPlanningResponse, error) {
+	// check mpp period
+	mppPeriod, err := uc.MPPPeriodRepo.FindById(req.MPPPeriodID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	if mppPeriod == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.Create] MPP Period not found")
+		return nil, errors.New("MPP Period not found")
+	}
+
+	if req.DocumentDate < mppPeriod.BudgetStartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.BudgetEndDate.Format("2006-01-02") {
+		uc.Log.Errorf("[MPPlanningUseCase.Create] Document Date must be between Budget Start Date and Budget End Date")
+		return nil, errors.New("Document Date must be between Budget Start Date and Budget End Date")
+	}
+
 	// Check if organization exist
 	orgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
 		ID: req.OrganizationID.String(),
@@ -1211,6 +1230,23 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 }
 
 func (uc *MPPlanningUseCase) Update(req *request.UpdateHeaderMPPlanningRequest) (*response.UpdateMPPlanningResponse, error) {
+	// check mpp period
+	mppPeriod, err := uc.MPPPeriodRepo.FindById(req.MPPPeriodID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.Update] " + err.Error())
+		return nil, err
+	}
+
+	if mppPeriod == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.Update] MPP Period not found")
+		return nil, errors.New("MPP Period not found")
+	}
+
+	if req.DocumentDate < mppPeriod.BudgetStartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.BudgetEndDate.Format("2006-01-02") {
+		uc.Log.Errorf("[MPPlanningUseCase.Update] Document Date must be between Budget Start Date and Budget End Date")
+		return nil, errors.New("Document Date must be between Budget Start Date and Budget End Date")
+	}
+
 	exist, err := uc.MPPlanningRepository.FindHeaderById(req.ID)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Update] " + err.Error())
@@ -1220,6 +1256,18 @@ func (uc *MPPlanningUseCase) Update(req *request.UpdateHeaderMPPlanningRequest) 
 	if exist == nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Update] MP Planning Header not found")
 		return nil, errors.New("MP Planning Header not found")
+	}
+
+	if exist.DocumentDate.Format("2006-01-02") < time.Now().Format("2006-01-02") {
+		if req.DocumentDate < exist.DocumentDate.Format("2006-01-02") {
+			uc.Log.Errorf("[MPPlanningUseCase.Update] Document Date cannot be less than existing Document Date")
+			return nil, errors.New("Document Date cannot be less than existing Document Date")
+		}
+	} else {
+		if req.DocumentDate < time.Now().Format("2006-01-02") {
+			uc.Log.Errorf("[MPPlanningUseCase.Update] Document Date cannot be less than today")
+			return nil, errors.New("Document Date cannot be less than today")
+		}
 	}
 
 	// Check if there are new attachments
@@ -1861,5 +1909,6 @@ func MPPlanningUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPPlannin
 	em := messaging.EmployeeMessageFactory(log)
 	jpr := repository.JobPlafonRepositoryFactory(log)
 	mpPlanningDTO := dto.MPPlanningDTOFactory(log)
-	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em, jpr, mpPlanningDTO)
+	mppPeriodRepo := repository.MPPPeriodRepositoryFactory(log)
+	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em, jpr, mpPlanningDTO, mppPeriodRepo)
 }
