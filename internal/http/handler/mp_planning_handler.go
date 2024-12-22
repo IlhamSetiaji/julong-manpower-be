@@ -26,6 +26,7 @@ type IMPPlanningHandler interface {
 	FindAllHeadersPaginated(ctx *gin.Context)
 	FindAllHeadersByRequestorIDPaginated(ctx *gin.Context)
 	FindAllHeadersForBatchPaginated(ctx *gin.Context)
+	FindAllHeadersGroupedApproverPaginated(ctx *gin.Context)
 	FindAllHeadersByStatusAndMPPeriodID(ctx *gin.Context)
 	GetHeadersByMPPeriodCompleted(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
@@ -325,6 +326,50 @@ func (h *MPPlanningHandler) FindAllHeadersForBatchPaginated(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers for batch paginated success", resp)
+}
+
+func (h *MPPlanningHandler) FindAllHeadersGroupedApproverPaginated(ctx *gin.Context) {
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(ctx.Query("page_size"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	search := ctx.Query("search")
+	if search == "" {
+		search = ""
+	}
+
+	status := ctx.Query("status")
+	if status == "" {
+		status = ""
+	}
+
+	approverType := ctx.Query("approver_type")
+	if approverType == "" {
+		approverType = ""
+	}
+
+	req := request.FindAllHeadersPaginatedMPPlanningRequest{
+		Page:         page,
+		PageSize:     pageSize,
+		Search:       search,
+		Status:       status,
+		ApproverType: approverType,
+	}
+
+	resp, err := h.UseCase.FindAllHeadersGroupedApproverPaginated(&req)
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.FindAllHeadersGroupedApproverPaginated] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find all headers grouped approver paginated success", resp)
 }
 
 func (h *MPPlanningHandler) GenerateDocumentNumber(ctx *gin.Context) {

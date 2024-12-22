@@ -130,6 +130,8 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 		Status:                   mpPlanningHeader.Status,
 		RecommendedBy:            mpPlanningHeader.RecommendedBy,
 		ApprovedBy:               mpPlanningHeader.ApprovedBy,
+		ApproverManagerID:        mpPlanningHeader.ApproverManagerID,
+		ApproverRecruitmentID:    mpPlanningHeader.ApproverRecruitmentID,
 		RequestorID:              mpPlanningHeader.RequestorID,
 		NotesAttach:              mpPlanningHeader.NotesAttach,
 		OrganizationName:         mpPlanningHeader.OrganizationName,
