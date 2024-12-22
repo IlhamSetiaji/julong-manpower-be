@@ -1379,8 +1379,8 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 		return nil, errors.New("MPP Period not found")
 	}
 
-	if req.DocumentDate < mppPeriod.BudgetStartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.BudgetEndDate.Format("2006-01-02") {
-		uc.Log.Errorf("[MPPlanningUseCase.Create] Document Date must be between Budget Start Date and Budget End Date")
+	if req.DocumentDate < mppPeriod.StartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.StartDate.Format("2006-01-02") {
+		uc.Log.Errorf("[MPPlanningUseCase.Create] Document Date must be between MPP Period Start Date and MPP Period End Date")
 		return nil, errors.New("Document Date must be between Budget Start Date and Budget End Date")
 	}
 
@@ -1556,9 +1556,9 @@ func (uc *MPPlanningUseCase) Update(req *request.UpdateHeaderMPPlanningRequest) 
 		return nil, errors.New("MPP Period not found")
 	}
 
-	if req.DocumentDate < mppPeriod.BudgetStartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.BudgetEndDate.Format("2006-01-02") {
-		uc.Log.Errorf("[MPPlanningUseCase.Update] Document Date must be between Budget Start Date and Budget End Date")
-		return nil, errors.New("Document Date must be between Budget Start Date and Budget End Date")
+	if req.DocumentDate < mppPeriod.StartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.EndDate.Format("2006-01-02") {
+		uc.Log.Errorf("[MPPlanningUseCase.Update] Document Date must be between MPP Period Start Date and MPP Period End Date")
+		return nil, errors.New("Document Date must be between MPP Period Start Date and MPP Period End Date")
 	}
 
 	exist, err := uc.MPPlanningRepository.FindHeaderById(req.ID)
