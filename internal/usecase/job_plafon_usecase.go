@@ -96,7 +96,7 @@ func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPla
 
 		if req.Search != "" {
 			// if jobPlafon.OrganizationName contains req.Search (case-insensitive)
-			if !strings.Contains(strings.ToLower(jobPlafon.OrganizationName), strings.ToLower(req.Search)) {
+			if !strings.Contains(strings.ToLower(jobPlafon.OrganizationName), strings.ToLower(req.Search)) && !strings.Contains(strings.ToLower(jobPlafon.JobName), strings.ToLower(req.Search)) {
 				continue
 			}
 		}
