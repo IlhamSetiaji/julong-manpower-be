@@ -26,6 +26,7 @@ const (
 	MaritalStatusEnumMarried  MaritalStatusEnum = "married"
 	MaritalStatusEnumDivorced MaritalStatusEnum = "divorced"
 	MaritalStatusEnumWidowed  MaritalStatusEnum = "widowed"
+	MaritalStatusEnumAny      MaritalStatusEnum = "any"
 )
 
 type MPRequestTypeEnum string
