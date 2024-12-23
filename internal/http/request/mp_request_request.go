@@ -43,7 +43,7 @@ type CreateMPRequestHeaderRequest struct {
 	MPRequestType              entity.MPRequestTypeEnum   `json:"mp_request_type" validate:"required,MPRequestTypeEnumValidation"`
 	RecruitmentType            entity.RecruitmentTypeEnum `json:"recruitment_type" validate:"required,RecruitmentTypeEnumValidation"`
 	MajorIDs                   []uuid.UUID                `json:"major_ids" validate:"omitempty,dive,uuid"`
-	MPPPeriodID                *uuid.UUID                 `json:"mpp_period_id" validate:"omitempty,uuid"`
+	MPPPeriodID                *uuid.UUID                 `json:"mpp_period_id" validate:"required,uuid"`
 	EmpOrganizationID          *uuid.UUID                 `json:"emp_organization_id" validate:"required,uuid"`
 	JobLevelID                 *uuid.UUID                 `json:"job_level_id" validate:"required,uuid"`
 	IsReplacement              *bool                      `json:"is_replacement" validate:"required"`
