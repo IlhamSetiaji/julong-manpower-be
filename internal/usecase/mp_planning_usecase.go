@@ -21,6 +21,7 @@ type IMPPlanningUseCase interface {
 	FindAllHeadersPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindHeaderBySomething(request *request.MPPlanningHeaderRequest) (*response.MPPlanningHeaderResponse, error)
 	GetHeadersBySomething(request *request.MPPlanningHeaderRequest) ([]*response.MPPlanningHeaderResponse, error)
+	FindJobsByHeaderID(headerID uuid.UUID) (*[]response.JobResponse, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindAllHeadersForBatchPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
 	FindAllHeadersGroupedApproverPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
@@ -57,9 +58,10 @@ type MPPlanningUseCase struct {
 	EmployeeMessage      messaging.IEmployeeMessage
 	MPPlanningDTO        dto.IMPPlanningDTO
 	MPPPeriodRepo        repository.IMPPPeriodRepository
+	JobMessage           messaging.IJobMessage
 }
 
-func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage, jpr repository.IJobPlafonRepository, mpPlanningDTO dto.IMPPlanningDTO, mppPeriodRepo repository.IMPPPeriodRepository) IMPPlanningUseCase {
+func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repository.IMPPlanningRepository, message messaging.IOrganizationMessage, jpm messaging.IJobPlafonMessage, um messaging.IUserMessage, em messaging.IEmployeeMessage, jpr repository.IJobPlafonRepository, mpPlanningDTO dto.IMPPlanningDTO, mppPeriodRepo repository.IMPPPeriodRepository, jobMessage messaging.IJobMessage) IMPPlanningUseCase {
 	return &MPPlanningUseCase{
 		Viper:                viper,
 		Log:                  log,
@@ -71,6 +73,7 @@ func NewMPPlanningUseCase(viper *viper.Viper, log *logrus.Logger, repo repositor
 		JobPlafonRepository:  jpr,
 		MPPlanningDTO:        mpPlanningDTO,
 		MPPPeriodRepo:        mppPeriodRepo,
+		JobMessage:           jobMessage,
 	}
 }
 
@@ -273,6 +276,34 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}(),
 		Total: total,
 	}, nil
+}
+
+func (uc *MPPlanningUseCase) FindJobsByHeaderID(headerID uuid.UUID) (*[]response.JobResponse, error) {
+	header, err := uc.MPPlanningRepository.FindHeaderById(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindJobsByHeaderID] " + err.Error())
+		return nil, err
+	}
+
+	if header == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindJobsByHeaderID] MP Planning Header not found")
+		return nil, errors.New("MP Planning Header not found")
+	}
+
+	// get job ids from mp planning lines
+	jobIDs := make([]string, 0)
+	for _, line := range header.MPPlanningLines {
+		jobIDs = append(jobIDs, line.JobID.String())
+	}
+
+	// get jobs by ids
+	jobs, err := uc.JobMessage.SendFindAllJobsIDsMessage(jobIDs)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindJobsByHeaderID] " + err.Error())
+		return nil, err
+	}
+
+	return jobs, nil
 }
 
 func (uc *MPPlanningUseCase) FindHeaderBySomething(req *request.MPPlanningHeaderRequest) (*response.MPPlanningHeaderResponse, error) {
@@ -2358,5 +2389,6 @@ func MPPlanningUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPPlannin
 	jpr := repository.JobPlafonRepositoryFactory(log)
 	mpPlanningDTO := dto.MPPlanningDTOFactory(log)
 	mppPeriodRepo := repository.MPPPeriodRepositoryFactory(log)
-	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em, jpr, mpPlanningDTO, mppPeriodRepo)
+	jobMessage := messaging.JobMessageFactory(log)
+	return NewMPPlanningUseCase(viper, log, repo, message, jpm, um, em, jpr, mpPlanningDTO, mppPeriodRepo, jobMessage)
 }
