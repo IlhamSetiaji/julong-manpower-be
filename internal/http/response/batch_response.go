@@ -44,6 +44,8 @@ type OrganizationOverallResponse struct {
 type DocumentBatchResponse struct {
 	OperatingUnit string             `json:"operating_unit"`
 	BudgetYear    string             `json:"budget_year"`
+	BudgetRange   string             `json:"budget_range"`
+	ExistingDate  string             `json:"existing_date"`
 	Grade         GradeBatchResponse `json:"grade"`
 }
 
