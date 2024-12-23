@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
@@ -78,17 +79,9 @@ func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPla
 		return nil, err
 	}
 
-	for i, jobPlafon := range *jobPlafons {
-		// messageResponse, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
-		// 	ID: jobPlafon.JobID.String(),
-		// })
+	var filteredJobPlafons []entity.JobPlafon
 
-		// if err != nil {
-		// 	uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated Message] " + err.Error())
-		// 	return nil, err
-		// }
-
-		// jobPlafon.JobName = messageResponse.Name
+	for _, jobPlafon := range *jobPlafons {
 		messageResponse, err := uc.JobMessage.SendFindJobDataByIdMessage(request.SendFindJobByIDMessageRequest{
 			ID: jobPlafon.JobID.String(),
 		})
@@ -101,8 +94,19 @@ func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPla
 		jobPlafon.JobName = messageResponse.Name
 		jobPlafon.OrganizationName = messageResponse.OrganizationName
 
-		(*jobPlafons)[i] = jobPlafon
+		if req.Search != "" {
+			// if jobPlafon.OrganizationName contains req.Search (case-insensitive)
+			if !strings.Contains(strings.ToLower(jobPlafon.OrganizationName), strings.ToLower(req.Search)) {
+				continue
+			}
+		}
+
+		filteredJobPlafons = append(filteredJobPlafons, jobPlafon)
 	}
+
+	// Update the original slice with the filtered results
+	*jobPlafons = filteredJobPlafons
+	total = int64(len(filteredJobPlafons))
 
 	return &response.FindAllPaginatedJobPlafonResponse{
 		JobPlafons: jobPlafons,

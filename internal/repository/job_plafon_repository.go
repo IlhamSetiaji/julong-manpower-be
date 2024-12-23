@@ -37,9 +37,9 @@ func (r *JobPlafonRepository) FindAllPaginated(page int, pageSize int, search st
 
 	query := r.DB.Model(&entity.JobPlafon{})
 
-	if search != "" {
-		query = query.Where("name LIKE ?", "%"+search+"%")
-	}
+	// if search != "" {
+	// 	query = query.Where("name LIKE ?", "%"+search+"%")
+	// }
 
 	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&jobPlafons).Error; err != nil {
 		r.Log.Errorf("[JobPlafonRepository.FindAllPaginated] " + err.Error())
