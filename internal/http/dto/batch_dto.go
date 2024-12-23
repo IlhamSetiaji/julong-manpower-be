@@ -111,7 +111,7 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 	var existingDate string = "Sep24"
 	if currentMppPeriod != nil {
 		budgetYear = currentMppPeriod.BudgetStartDate.Format("2006") + "/" + currentMppPeriod.BudgetEndDate.Format("2006")
-		budgetRange = currentMppPeriod.BudgetStartDate.Format("Jan06") + " - " + currentMppPeriod.BudgetEndDate.Format("Dec06")
+		budgetRange = currentMppPeriod.BudgetStartDate.Format("Jan06") + "-" + currentMppPeriod.BudgetEndDate.Format("Dec06")
 		existingDate = currentMppPeriod.BudgetStartDate.Format("Jan06")
 	}
 	return &response.DocumentBatchResponse{
