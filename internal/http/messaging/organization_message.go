@@ -18,6 +18,7 @@ type IOrganizationMessage interface {
 	SendFindOrganizationStructureByIDMessage(request request.SendFindOrganizationStructureByIDMessageRequest) (*orgResponse.SendFindOrganizationStructureByIDMessageResponse, error)
 	SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string, isNull bool) (*orgResponse.OrganizationLocationPaginatedResponse, error)
 	SendFindAllOrganizationMessage(includedIDs []string) (*[]orgResponse.OrganizationResponse, error)
+	SendFindAllOrganizationLocationsMessage(includedIDs []string) (*[]orgResponse.OrganizationLocationResponse, error)
 }
 
 type OrganizationMessage struct {
@@ -270,6 +271,60 @@ func (m *OrganizationMessage) SendFindOrganizationLocationsPaginatedMessage(page
 		OrganizationLocations: orgLocs,
 		Total:                 int64(resp.MessageData["total"].(float64)),
 	}, nil
+}
+
+func (m *OrganizationMessage) SendFindAllOrganizationLocationsMessage(includedIDs []string) (*[]orgResponse.OrganizationLocationResponse, error) {
+	payload := map[string]interface{}{
+		"included_ids": includedIDs,
+	}
+
+	docMsg := &request.RabbitMQRequest{
+		ID:          uuid.New().String(),
+		MessageType: "find_all_organization_locations_by_ids",
+		MessageData: payload,
+		ReplyTo:     "julong_manpower",
+	}
+
+	log.Printf("INFO: document message: %v", docMsg)
+
+	// create channel and add to rchans with uid
+	rchan := make(chan response.RabbitMQResponse)
+	utils.Rchans[docMsg.ID] = rchan
+
+	// publish rabbit message
+	msg := utils.RabbitMsg{
+		QueueName: "julong_sso",
+		Message:   *docMsg,
+	}
+
+	utils.Pchan <- msg
+
+	// wait for reply
+	resp, err := waitReply(docMsg.ID, rchan)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("INFO: response: %v", resp)
+
+	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
+		return nil, errors.New("[SendFindAllOrganizationLocationsMessage] " + errMsg)
+	}
+
+	orgLocs := make([]orgResponse.OrganizationLocationResponse, 0)
+	for _, orgLoc := range resp.MessageData["organization_locations"].([]interface{}) {
+		orgLocMap := orgLoc.(map[string]interface{})
+		orgLocs = append(orgLocs, orgResponse.OrganizationLocationResponse{
+			ID:               uuid.MustParse(orgLocMap["id"].(string)),
+			OrganizationID:   uuid.MustParse(orgLocMap["organization_id"].(string)),
+			OrganizationName: orgLocMap["organization_name"].(string),
+			Name:             orgLocMap["name"].(string),
+			CreatedAt:        orgLocMap["created_at"].(string),
+			UpdatedAt:        orgLocMap["updated_at"].(string),
+		})
+	}
+
+	return &orgLocs, nil
 }
 
 func OrganizationMessageFactory(log *logrus.Logger) IOrganizationMessage {

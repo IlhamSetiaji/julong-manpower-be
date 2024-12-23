@@ -28,6 +28,7 @@ type IMPPlanningHandler interface {
 	FindAllHeadersForBatchPaginated(ctx *gin.Context)
 	FindAllHeadersGroupedApproverPaginated(ctx *gin.Context)
 	FindJobsByHeaderID(ctx *gin.Context)
+	FindOrganizationLocationsByHeaderID(ctx *gin.Context)
 	FindHeaderBySomething(ctx *gin.Context)
 	GetHeadersBySomething(ctx *gin.Context)
 	FindAllHeadersByStatusAndMPPeriodID(ctx *gin.Context)
@@ -150,6 +151,23 @@ func (h *MPPlanningHandler) FindJobsByHeaderID(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find jobs by header id success", resp)
+}
+
+func (h *MPPlanningHandler) FindOrganizationLocationsByHeaderID(ctx *gin.Context) {
+	headerID := ctx.Param("header_id")
+	if headerID == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "header_id is required")
+		return
+	}
+
+	resp, err := h.UseCase.FindOrganizationLocationsByHeaderID(uuid.MustParse(headerID))
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.FindOrganizationLocationsByHeaderID] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find organization locations by header id success", resp)
 }
 
 func (h *MPPlanningHandler) FindHeaderBySomething(ctx *gin.Context) {

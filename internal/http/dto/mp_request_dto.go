@@ -83,7 +83,7 @@ func (d *MPRequestDTO) ConvertToEntity(req *request.CreateMPRequestHeaderRequest
 		MPPPeriodID:                *req.MPPPeriodID,
 		EmpOrganizationID:          req.EmpOrganizationID,
 		JobLevelID:                 req.JobLevelID,
-		IsReplacement:              req.IsReplacement,
+		IsReplacement:              *req.IsReplacement,
 		RecruitmentType:            req.RecruitmentType,
 	}
 }
@@ -282,6 +282,6 @@ func (d *MPRequestDTO) ConvertEntityToRequest(ent *entity.MPRequestHeader) *requ
 		MPPPeriodID:                &ent.MPPPeriodID,
 		EmpOrganizationID:          ent.EmpOrganizationID,
 		JobLevelID:                 ent.JobLevelID,
-		IsReplacement:              ent.IsReplacement,
+		IsReplacement:              &ent.IsReplacement,
 	}
 }

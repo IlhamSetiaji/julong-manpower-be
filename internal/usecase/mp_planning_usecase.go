@@ -22,6 +22,7 @@ type IMPPlanningUseCase interface {
 	FindHeaderBySomething(request *request.MPPlanningHeaderRequest) (*response.MPPlanningHeaderResponse, error)
 	GetHeadersBySomething(request *request.MPPlanningHeaderRequest) ([]*response.MPPlanningHeaderResponse, error)
 	FindJobsByHeaderID(headerID uuid.UUID) (*[]response.JobResponse, error)
+	FindOrganizationLocationsByHeaderID(headerID uuid.UUID) (*[]response.OrganizationLocationResponse, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindAllHeadersForBatchPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
 	FindAllHeadersGroupedApproverPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
@@ -304,6 +305,34 @@ func (uc *MPPlanningUseCase) FindJobsByHeaderID(headerID uuid.UUID) (*[]response
 	}
 
 	return jobs, nil
+}
+
+func (uc *MPPlanningUseCase) FindOrganizationLocationsByHeaderID(headerID uuid.UUID) (*[]response.OrganizationLocationResponse, error) {
+	header, err := uc.MPPlanningRepository.FindHeaderById(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindOrganizationLocationsByHeaderID] " + err.Error())
+		return nil, err
+	}
+
+	if header == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindOrganizationLocationsByHeaderID] MP Planning Header not found")
+		return nil, errors.New("MP Planning Header not found")
+	}
+
+	// get organization location ids from mp planning lines
+	orgLocIDs := make([]string, 0)
+	for _, line := range header.MPPlanningLines {
+		orgLocIDs = append(orgLocIDs, line.OrganizationLocationID.String())
+	}
+
+	// get organization locations by ids
+	orgLocs, err := uc.OrganizationMessage.SendFindAllOrganizationLocationsMessage(orgLocIDs)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindOrganizationLocationsByHeaderID] " + err.Error())
+		return nil, err
+	}
+
+	return orgLocs, nil
 }
 
 func (uc *MPPlanningUseCase) FindHeaderBySomething(req *request.MPPlanningHeaderRequest) (*response.MPPlanningHeaderResponse, error) {
