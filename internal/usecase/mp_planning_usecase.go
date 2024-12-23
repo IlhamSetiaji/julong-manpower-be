@@ -1431,7 +1431,7 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 
 	if req.DocumentDate < mppPeriod.StartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.StartDate.Format("2006-01-02") {
 		uc.Log.Errorf("[MPPlanningUseCase.Create] Document Date must be between MPP Period Start Date and MPP Period End Date")
-		return nil, errors.New("Document Date must be between Budget Start Date and Budget End Date")
+		return nil, errors.New("Document Date must be between Start Date and End Date")
 	}
 
 	// Check if organization exist
