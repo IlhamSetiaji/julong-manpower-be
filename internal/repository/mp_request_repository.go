@@ -229,7 +229,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 	var mpRequestHeaders []entity.MPRequestHeader
 	var total int64
 
-	query := r.DB.Preload("MPPPeriod").Model(&entity.MPRequestHeader{})
+	query := r.DB.Model(&entity.MPRequestHeader{})
 
 	if search != "" {
 		query = query.Where("document_number LIKE ?", "%"+search+"%")
@@ -237,16 +237,32 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 
 	if filter != nil {
 		if _, ok := filter["department_head"]; ok {
-			query = query.Where("department_head IS NOT NULL")
+			if filter["department_head"] == "NULL" {
+				query = query.Where("department_head IS NULL")
+			} else {
+				query = query.Where("department_head IS NOT NULL")
+			}
 		}
 		if _, ok := filter["vp_gm_director"]; ok {
-			query = query.Where("vp_gm_director IS NOT NULL")
+			if filter["vp_gm_director"] == "NULL" {
+				query = query.Where("vp_gm_director IS NULL")
+			} else {
+				query = query.Where("vp_gm_director IS NOT NULL")
+			}
 		}
 		if _, ok := filter["ceo"]; ok {
-			query = query.Where("ceo IS NOT NULL")
+			if filter["ceo"] == "NULL" {
+				query = query.Where("ceo IS NULL")
+			} else {
+				query = query.Where("ceo IS NOT NULL")
+			}
 		}
 		if _, ok := filter["hrd_ho_unit"]; ok {
-			query = query.Where("hrd_ho_unit IS NOT NULL")
+			if filter["hrd_ho_unit"] == "NULL" {
+				query = query.Where("hrd_ho_unit IS NULL")
+			} else {
+				query = query.Where("hrd_ho_unit IS NOT NULL")
+			}
 		}
 		if status, ok := filter["status"]; ok {
 			query = query.Where("status = ?", status)
@@ -258,7 +274,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 		return nil, 0, errors.New("[MPRequestRepository.FindAllPaginated] error when count mp request headers " + err.Error())
 	}
 
-	if err := query.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Offset((page - 1) * pageSize).Limit(pageSize).Find(&mpRequestHeaders).Error; err != nil {
+	if err := query.Preload("MPPPeriod").Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Offset((page - 1) * pageSize).Limit(pageSize).Find(&mpRequestHeaders).Error; err != nil {
 		r.Log.Errorf("[MPRequestRepository.FindAllPaginated] error when find mp request headers: %v", err)
 		return nil, 0, errors.New("[MPRequestRepository.FindAllPaginated] error when find mp request headers " + err.Error())
 	}
