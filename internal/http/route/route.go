@@ -62,6 +62,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 
 			// mp plannings
 			apiRoute.GET("/mp-plannings", c.MPPlanningHandler.FindAllHeadersPaginated)
+			apiRoute.GET("/mp-plannings/something", c.MPPlanningHandler.FindHeaderBySomething)
 			apiRoute.GET("/mp-plannings/status-period", c.MPPlanningHandler.FindAllHeadersByStatusAndMPPeriodID)
 			apiRoute.GET("/mp-plannings/completed", c.MPPlanningHandler.GetHeadersByMPPeriodCompleted)
 			apiRoute.GET("/mp-plannings/total-histories", c.MPPlanningHandler.CountTotalApprovalHistoryByStatus)

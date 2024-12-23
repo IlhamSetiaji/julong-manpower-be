@@ -16,6 +16,7 @@ type IMPPlanningRepository interface {
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
+	FindHeaderBySomething(something map[string]interface{}) (*entity.MPPlanningHeader, error)
 	GetHeadersByOrganizationID(organizationID uuid.UUID) (*[]entity.MPPlanningHeader, error)
 	FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) (*[]entity.MPPlanningHeader, error)
 	CountTotalApprovalHistoryByStatus(mpPlanningHeaderId uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
@@ -109,6 +110,22 @@ func (r *MPPlanningRepository) FindAllHeadersByStatusAndMPPeriodID(status entity
 	}
 
 	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) FindHeaderBySomething(something map[string]interface{}) (*entity.MPPlanningHeader, error) {
+	var mppHeader entity.MPPlanningHeader
+
+	if err := r.DB.Where(something).First(&mppHeader).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderBySomething] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderBySomething] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindHeaderBySomething] " + err.Error())
+		}
+	}
+
+	return &mppHeader, nil
 }
 
 func (r *MPPlanningRepository) CountTotalApprovalHistoryByStatus(mpPlanningHeaderId uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error) {

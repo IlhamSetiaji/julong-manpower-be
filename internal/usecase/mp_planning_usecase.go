@@ -19,6 +19,7 @@ import (
 
 type IMPPlanningUseCase interface {
 	FindAllHeadersPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
+	FindHeaderBySomething(request *request.MPPlanningHeaderRequest) (*response.MPPlanningHeaderResponse, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
 	FindAllHeadersForBatchPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
 	FindAllHeadersGroupedApproverPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
@@ -271,6 +272,47 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}(),
 		Total: total,
 	}, nil
+}
+
+func (uc *MPPlanningUseCase) FindHeaderBySomething(req *request.MPPlanningHeaderRequest) (*response.MPPlanningHeaderResponse, error) {
+	reqHeader := make(map[string]interface{})
+
+	if req.ID != "" {
+		reqHeader["id"] = req.ID
+	}
+	if req.DocumentNumber != "" {
+		reqHeader["document_number"] = req.DocumentNumber
+	}
+	if req.EmpOrganizationID != "" {
+		reqHeader["emp_organization_id"] = req.EmpOrganizationID
+	}
+	if req.OrganizationID != "" {
+		reqHeader["organization_id"] = req.OrganizationID
+	}
+	if req.JobID != "" {
+		reqHeader["job_id"] = req.JobID
+	}
+	if req.OrganizationLocationID != "" {
+		reqHeader["organization_location_id"] = req.OrganizationLocationID
+	}
+	if req.Status != "" {
+		reqHeader["status"] = req.Status
+	}
+
+	uc.Log.Infof("[MPPlanningUseCase.FindHeaderBySomething] reqHeader: %v", reqHeader)
+
+	header, err := uc.MPPlanningRepository.FindHeaderBySomething(reqHeader)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderBySomething] " + err.Error())
+		return nil, err
+	}
+
+	if header == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.FindHeaderBySomething] MP Planning Header not found")
+		return nil, errors.New("MP Planning Header not found")
+	}
+
+	return uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(header), nil
 }
 
 func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlanningHeaderResponse, error) {

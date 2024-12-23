@@ -16,6 +16,16 @@ type FindAllHeadersPaginatedMPPlanningRequest struct {
 	IsNull        string `json:"is_null"`
 }
 
+type MPPlanningHeaderRequest struct {
+	ID                     string                 `json:"id" validate:"omitempty"`
+	DocumentNumber         string                 `json:"document_number" validate:"omitempty"`
+	OrganizationID         string                 `json:"organization_id" validate:"omitempty"`
+	EmpOrganizationID      string                 `json:"emp_organization_id" validate:"omitempty"`
+	OrganizationLocationID string                 `json:"organization_location_id" validate:"omitempty"`
+	JobID                  string                 `json:"job_id" validate:"omitempty"`
+	Status                 entity.MPPlaningStatus `json:"status" validate:"omitempty"`
+}
+
 type FindHeaderByIdMPPlanningRequest struct {
 	ID string `json:"id" validate:"required"`
 }

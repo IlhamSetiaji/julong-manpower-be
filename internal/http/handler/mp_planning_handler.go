@@ -27,6 +27,7 @@ type IMPPlanningHandler interface {
 	FindAllHeadersByRequestorIDPaginated(ctx *gin.Context)
 	FindAllHeadersForBatchPaginated(ctx *gin.Context)
 	FindAllHeadersGroupedApproverPaginated(ctx *gin.Context)
+	FindHeaderBySomething(ctx *gin.Context)
 	FindAllHeadersByStatusAndMPPeriodID(ctx *gin.Context)
 	GetHeadersByMPPeriodCompleted(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
@@ -130,6 +131,61 @@ func (h *MPPlanningHandler) FindAllHeadersPaginated(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find all headers paginated success", resp)
+}
+
+func (h *MPPlanningHandler) FindHeaderBySomething(ctx *gin.Context) {
+	id := ctx.Query("id")
+	if id != "" {
+		id = ""
+	}
+
+	documentNumber := ctx.Query("document_number")
+	if documentNumber == "" {
+		documentNumber = ""
+	}
+
+	organizationId := ctx.Query("organization_id")
+	if organizationId == "" {
+		organizationId = ""
+	}
+
+	empOrganizationId := ctx.Query("emp_organization_id")
+	if empOrganizationId == "" {
+		empOrganizationId = ""
+	}
+
+	organizationLocationId := ctx.Query("organization_location_id")
+	if organizationLocationId == "" {
+		organizationLocationId = ""
+	}
+
+	jobId := ctx.Query("job_id")
+	if jobId == "" {
+		jobId = ""
+	}
+
+	status := ctx.Query("status")
+	if status == "" {
+		status = ""
+	}
+
+	resp, err := h.UseCase.FindHeaderBySomething(&request.MPPlanningHeaderRequest{
+		ID:                     id,
+		DocumentNumber:         documentNumber,
+		OrganizationID:         organizationId,
+		EmpOrganizationID:      empOrganizationId,
+		OrganizationLocationID: organizationLocationId,
+		JobID:                  jobId,
+		Status:                 entity.MPPlaningStatus(status),
+	})
+
+	if err != nil {
+		h.Log.Errorf("[MPPlanningHandler.FindHeaderBySomething] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find header by something success", resp)
 }
 
 func (h *MPPlanningHandler) GetHeadersByMPPeriodCompleted(ctx *gin.Context) {
