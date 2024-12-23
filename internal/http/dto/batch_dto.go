@@ -102,12 +102,12 @@ func (d *BatchDTO) ConvertBatchHeaderEntityToResponse(batch *entity.BatchHeader)
 }
 
 func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, operatingUnit string) *response.DocumentBatchResponse {
-	currentMppPeriod, err := d.mppPeriodRepo.FindByCurrentDateAndStatus(entity.MPPeriodStatusOpen)
+	currentMppPeriod, err := d.mppPeriodRepo.FindByStatus(entity.MPPeriodStatusOpen)
 	if err != nil {
 		d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
 	}
 	var budgetYear string = "2024"
-	var budgetRange string = "Sep24 - Aug25"
+	var budgetRange string = "Sep24-Aug25"
 	var existingDate string = "Sep24"
 	if currentMppPeriod != nil {
 		budgetYear = currentMppPeriod.BudgetStartDate.Format("2006") + "/" + currentMppPeriod.BudgetEndDate.Format("2006")
