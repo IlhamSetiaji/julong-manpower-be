@@ -13,6 +13,7 @@ type IMPPlanningDTO interface {
 	ConvertMPPlanningApprovalHistoryToResponse(approvalHistories *entity.MPPlanningApprovalHistory, viper *viper.Viper) *response.MPPlanningApprovalHistoryResponse
 	ConvertMPPlanningApprovalHistoriesToResponse(approvalHistories *[]entity.MPPlanningApprovalHistory, viper *viper.Viper) []*response.MPPlanningApprovalHistoryResponse
 	ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader *entity.MPPlanningHeader) *response.MPPlanningHeaderResponse
+	ConvertMPPlanningHeaderEntititesToResponse(mpPlanningHeaders *[]entity.MPPlanningHeader) []*response.MPPlanningHeaderResponse
 }
 
 type MPPlanningDTO struct {
@@ -209,6 +210,14 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 			return lines
 		}(),
 	}
+}
+
+func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntititesToResponse(mpPlanningHeaders *[]entity.MPPlanningHeader) []*response.MPPlanningHeaderResponse {
+	var response []*response.MPPlanningHeaderResponse
+	for _, mpPlanningHeader := range *mpPlanningHeaders {
+		response = append(response, d.ConvertMPPlanningHeaderEntityToResponse(&mpPlanningHeader))
+	}
+	return response
 }
 
 func MPPlanningDTOFactory(log *logrus.Logger) IMPPlanningDTO {
