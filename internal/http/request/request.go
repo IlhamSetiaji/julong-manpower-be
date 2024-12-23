@@ -52,7 +52,7 @@ func MaritalStatusValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.MaritalStatusEnum(status) {
-	case entity.MaritalStatusEnumSingle, entity.MaritalStatusEnumMarried, entity.MaritalStatusEnumDivorced, entity.MaritalStatusEnumWidowed:
+	case entity.MaritalStatusEnumSingle, entity.MaritalStatusEnumMarried, entity.MaritalStatusEnumDivorced, entity.MaritalStatusEnumWidowed, entity.MaritalStatusEnumAny:
 		return true
 	default:
 		return false
