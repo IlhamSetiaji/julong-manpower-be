@@ -1328,15 +1328,6 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 	}
 	mpPlanningHeader.JobName = messageJobResposne.Name
 
-	// Fetch requestor names using RabbitMQ
-	// messageUserResponse, err := uc.UserMessage.SendFindUserByIDMessage(request.SendFindUserByIDMessageRequest{
-	// 	ID: mpPlanningHeader.RequestorID.String(),
-	// })
-	// if err != nil {
-	// 	uc.Log.Errorf("[MPPlanningUseCase.FindById Message] " + err.Error())
-	// 	return nil, err
-	// }
-	// mpPlanningHeader.RequestorName = messageUserResponse.Name
 	messageEmployeeResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
 		ID: mpPlanningHeader.RequestorID.String(),
 	})
@@ -1356,6 +1347,47 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		return nil, err
 	}
 	mpPlanningHeader.OrganizationLocationName = messageOrgLocResponse.Name
+
+	// fetch approved by rabbit mq
+	if mpPlanningHeader.ApprovedBy != "" {
+		messageApprovedByResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+			ID: mpPlanningHeader.ApprovedBy,
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindById Message] " + err.Error())
+			mpPlanningHeader.ApproverCEOName = ""
+		} else {
+			mpPlanningHeader.ApproverCEOName = messageApprovedByResponse.Name
+		}
+	}
+
+	// fetch approver manager names using RabbitMQ
+	if mpPlanningHeader.ApproverManagerID != nil {
+		messageApprManagerResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+			ID: mpPlanningHeader.ApproverManagerID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			// return nil, err
+			mpPlanningHeader.ApproverManagerName = ""
+		} else {
+			mpPlanningHeader.ApproverManagerName = messageApprManagerResponse.Name
+		}
+	}
+
+	// fetch approver recruitment names using RabbitMQ
+	if mpPlanningHeader.ApproverRecruitmentID != nil {
+		messageApprRecruitmentResponse, err := uc.EmployeeMessage.SendFindEmployeeByIDMessage(request.SendFindEmployeeByIDMessageRequest{
+			ID: mpPlanningHeader.ApproverRecruitmentID.String(),
+		})
+		if err != nil {
+			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersPaginated Message] " + err.Error())
+			// return nil, err
+			mpPlanningHeader.ApproverRecruitmentName = ""
+		} else {
+			mpPlanningHeader.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
+		}
+	}
 
 	for i, line := range *&mpPlanningHeader.MPPlanningLines {
 		// Fetch organization location names using RabbitMQ
@@ -1434,6 +1466,13 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		OrganizationLocationName: mpPlanningHeader.OrganizationLocationName,
 		CreatedAt:                mpPlanningHeader.CreatedAt,
 		UpdatedAt:                mpPlanningHeader.UpdatedAt,
+		ApproverManagerID:        mpPlanningHeader.ApproverManagerID,
+		ApproverRecruitmentID:    mpPlanningHeader.ApproverRecruitmentID,
+		NotesManager:             mpPlanningHeader.NotesManager,
+		NotesRecruitment:         mpPlanningHeader.NotesRecruitment,
+		ApproverManagerName:      mpPlanningHeader.ApproverManagerName,
+		ApproverRecruitmentName:  mpPlanningHeader.ApproverRecruitmentName,
+		ApproverCEOName:          mpPlanningHeader.ApproverCEOName,
 		CurrentApproval:          currentApproval,
 		MPPPeriod: &response.MPPeriodResponse{
 			ID:              mpPlanningHeader.MPPPeriod.ID,

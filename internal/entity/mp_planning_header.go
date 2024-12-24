@@ -55,6 +55,7 @@ type MPPlanningHeader struct {
 	JobName                  string `json:"job_name" gorm:"-"`
 	RequestorName            string `json:"requestor_name" gorm:"-"`
 	OrganizationLocationName string `json:"organization_location_name" gorm:"-"`
+	ApproverCEOName          string `json:"approver_ceo_name" gorm:"-"`
 	ApproverManagerName      string `json:"approver_manager_name" gorm:"-"`
 	ApproverRecruitmentName  string `json:"approver_recruitment_name" gorm:"-"`
 }
