@@ -23,6 +23,7 @@ type IMPPPeriodHander interface {
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
 	FindByCurrentDateAndStatus(ctx *gin.Context)
+	FindByStatus(ctx *gin.Context)
 }
 
 type MPPPeriodHandler struct {
@@ -180,4 +181,23 @@ func (h *MPPPeriodHandler) FindByCurrentDateAndStatus(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find by current date and status success", resp.MPPPeriod)
+}
+
+func (h *MPPPeriodHandler) FindByStatus(ctx *gin.Context) {
+	status := ctx.Query("status")
+
+	if status == "" {
+		h.Log.Errorf("[MPPPeriodHandler.FindByStatus] " + "status is required")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "status is required")
+		return
+	}
+
+	resp, err := h.UseCase.FindByStatus(entity.MPPPeriodStatus(status))
+	if err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.FindByStatus] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "find by status success", resp)
 }

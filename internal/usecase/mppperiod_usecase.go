@@ -14,6 +14,7 @@ import (
 type IMPPPeriodUseCase interface {
 	FindAllPaginated(request request.FindAllPaginatedMPPPeriodRequest) (*response.FindAllPaginatedMPPPeriodResponse, error)
 	FindById(request request.FindByIdMPPPeriodRequest) (*response.FindByIdMPPPeriodResponse, error)
+	FindByStatus(status entity.MPPPeriodStatus) (*response.FindByCurrentDateAndStatusMPPPeriodResponse, error)
 	Create(request request.CreateMPPPeriodRequest) (*response.CreateMPPPeriodResponse, error)
 	Update(request request.UpdateMPPPeriodRequest) (*response.UpdateMPPPeriodResponse, error)
 	Delete(request request.DeleteMPPPeriodRequest) error
@@ -42,6 +43,18 @@ func (uc *MPPPeriodUseCase) FindAllPaginated(req request.FindAllPaginatedMPPPeri
 	return &response.FindAllPaginatedMPPPeriodResponse{
 		MPPPeriods: mppPeriods,
 		Total:      total,
+	}, nil
+}
+
+func (uc *MPPPeriodUseCase) FindByStatus(status entity.MPPPeriodStatus) (*response.FindByCurrentDateAndStatusMPPPeriodResponse, error) {
+	mppPeriod, err := uc.MPPPeriodRepository.FindByStatus(status)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodUseCase.FindByStatus] " + err.Error())
+		return nil, err
+	}
+
+	return &response.FindByCurrentDateAndStatusMPPPeriodResponse{
+		MPPPeriod: mppPeriod,
 	}, nil
 }
 
