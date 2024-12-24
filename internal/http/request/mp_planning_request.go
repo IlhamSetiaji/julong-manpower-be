@@ -23,6 +23,7 @@ type MPPlanningHeaderRequest struct {
 	EmpOrganizationID      string                 `json:"emp_organization_id" validate:"omitempty"`
 	OrganizationLocationID string                 `json:"organization_location_id" validate:"omitempty"`
 	JobID                  string                 `json:"job_id" validate:"omitempty"`
+	MPPPeriodID            string                 `json:"mpp_period_id" validate:"omitempty"`
 	Status                 entity.MPPlaningStatus `json:"status" validate:"omitempty"`
 }
 

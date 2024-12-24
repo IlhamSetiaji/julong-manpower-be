@@ -397,6 +397,9 @@ func (uc *MPPlanningUseCase) GetHeadersBySomething(req *request.MPPlanningHeader
 	if req.OrganizationLocationID != "" {
 		reqHeader["organization_location_id"] = req.OrganizationLocationID
 	}
+	if req.MPPPeriodID != "" {
+		reqHeader["mpp_period_id"] = req.MPPPeriodID
+	}
 	if req.Status != "" {
 		reqHeader["status"] = req.Status
 	}
