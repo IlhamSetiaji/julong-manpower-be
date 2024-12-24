@@ -15,6 +15,7 @@ type IMPPlanningRepository interface {
 	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
+	FindAllHeadersByOrganizationLocationID(organizationLocationID uuid.UUID) (*[]entity.MPPlanningHeader, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderBySomething(something map[string]interface{}) (*entity.MPPlanningHeader, error)
 	GetHeadersBySomething(something map[string]interface{}) (*[]entity.MPPlanningHeader, error)
@@ -23,7 +24,7 @@ type IMPPlanningRepository interface {
 	CountTotalApprovalHistoryByStatus(mpPlanningHeaderId uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
-	FindAllHeadersGroupedApprover(organizationLocationID uuid.UUID, status entity.MPPlaningStatus, approver string) (*entity.MPPlanningHeader, error)
+	FindAllHeadersGroupedApprover(organizationLocationID uuid.UUID, status entity.MPPlaningStatus, approver string, requestorId string) (*entity.MPPlanningHeader, error)
 	GetHeadersByStatus(status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
 	GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error)
@@ -75,6 +76,22 @@ func (r *MPPlanningRepository) FindAllHeaders() (*[]entity.MPPlanningHeader, err
 		} else {
 			r.Log.Errorf("[MPPlanningRepository.FindAllHeaders] " + err.Error())
 			return nil, errors.New("[MPPlanningRepository.FindAllHeaders] " + err.Error())
+		}
+	}
+
+	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) FindAllHeadersByOrganizationLocationID(organizationLocationID uuid.UUID) (*[]entity.MPPlanningHeader, error) {
+	var mppHeaders []entity.MPPlanningHeader
+
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("organization_location_id = ?", organizationLocationID).Find(&mppHeaders).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByOrganizationLocationID] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByOrganizationLocationID] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindAllHeadersByOrganizationLocationID] " + err.Error())
 		}
 	}
 
@@ -257,12 +274,13 @@ func (r *MPPlanningRepository) FindHeaderByOrganizationLocationID(organizationLo
 	return &mppHeader, nil
 }
 
-func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocationID uuid.UUID, status entity.MPPlaningStatus, approver string) (*entity.MPPlanningHeader, error) {
+func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocationID uuid.UUID, status entity.MPPlaningStatus, approver string, requestorId string) (*entity.MPPlanningHeader, error) {
 	var mppHeader entity.MPPlanningHeader
+	var whereStatus string
+	var whereRequestor string
 
 	if approver != "" || status != "" {
 		var whereApprover string
-		var whereStatus string
 		switch approver {
 		case "ceo":
 			whereApprover = "approved_by IS NOT NULL"
@@ -272,14 +290,18 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 			whereApprover = "approver_recruitment_id IS NOT NULL"
 		default:
 			whereApprover = ""
+			if requestorId != "" {
+				whereRequestor = "requestor_id = '" + requestorId + "'"
+			} else {
+				whereRequestor = ""
+			}
 		}
-
 		if status != "" {
 			whereStatus = "status = '" + string(status) + "'"
 		}
 
 		r.Log.Infof("Approver: %s", whereApprover)
-		if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where(whereApprover).First(&mppHeader).Error; err != nil {
+		if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where(whereApprover).Where(whereRequestor).First(&mppHeader).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
 				return nil, nil
@@ -291,7 +313,20 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 			r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
 		}
 	} else {
-		if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).First(&mppHeader).Error; err != nil {
+		whereStatus = ""
+		if requestorId != "" {
+			whereRequestor = "requestor_id = '" + requestorId + "'"
+		} else {
+			whereRequestor = ""
+		}
+
+		if whereRequestor != "" {
+			whereStatus = "status != 'COMPLETED'"
+		}
+
+		r.Log.Infof("Where Requestor: %s", whereRequestor)
+
+		if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where(whereRequestor).First(&mppHeader).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
 				return nil, nil

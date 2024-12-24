@@ -777,10 +777,20 @@ func (uc *MPPlanningUseCase) FindAllHeadersGroupedApproverPaginated(req *request
 			return nil, error
 		}
 
-		mpPlanningHeaders, err := uc.MPPlanningRepository.FindAllHeaders()
-		if err != nil {
-			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + err.Error())
-			return nil, err
+		var mpPlanningHeaders *[]entity.MPPlanningHeader
+
+		if req.OrgLocationID == "" {
+			mpPlanningHeaders, error = uc.MPPlanningRepository.FindAllHeaders()
+			if error == nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + error.Error())
+				return nil, error
+			}
+		} else {
+			mpPlanningHeaders, error = uc.MPPlanningRepository.FindAllHeadersByOrganizationLocationID(uuid.MustParse(req.OrgLocationID))
+			if error == nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + error.Error())
+				return nil, error
+			}
 		}
 
 		for _, header := range *mpPlanningHeaders {
@@ -803,7 +813,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersGroupedApproverPaginated(req *request
 	for i, orgLoc := range orgLocs.OrganizationLocations {
 		var header *entity.MPPlanningHeader
 
-		header, err = uc.MPPlanningRepository.FindAllHeadersGroupedApprover(orgLoc.ID, entity.MPPlaningStatus(req.Status), req.ApproverType)
+		header, err = uc.MPPlanningRepository.FindAllHeadersGroupedApprover(orgLoc.ID, entity.MPPlaningStatus(req.Status), req.ApproverType, req.RequestorID)
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + err.Error())
 			return nil, err

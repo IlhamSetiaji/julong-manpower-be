@@ -14,6 +14,7 @@ type FindAllHeadersPaginatedMPPlanningRequest struct {
 	OrgID         string `json:"org_id"`
 	Status        string `json:"status"`
 	IsNull        string `json:"is_null"`
+	RequestorID   string `json:"requestor_id"`
 }
 
 type MPPlanningHeaderRequest struct {

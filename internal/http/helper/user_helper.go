@@ -9,6 +9,7 @@ import (
 
 type IUserHelper interface {
 	CheckOrganizationLocation(user map[string]interface{}) (uuid.UUID, error)
+	GetEmployeeId(user map[string]interface{}) (uuid.UUID, error)
 }
 
 type UserHelper struct {
@@ -61,4 +62,37 @@ func (h *UserHelper) CheckOrganizationLocation(user map[string]interface{}) (uui
 
 	h.Log.Infof("Organization Location ID: %s", organizationLocationID)
 	return organizationLocationID, nil
+}
+
+func (h *UserHelper) GetEmployeeId(user map[string]interface{}) (uuid.UUID, error) {
+	// Check if the "user" key exists and is a map
+	userData, ok := user["user"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("User information is missing or invalid")
+		return uuid.Nil, errors.New("User information is missing or invalid")
+	}
+
+	// Check if the "employee" key exists and is a map
+	employee, ok := userData["employee"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("Employee information is missing or invalid")
+		return uuid.Nil, errors.New("Employee information is missing or invalid")
+	}
+
+	// Check if the "ID" key exists and is a string
+	employeeIDStr, ok := employee["id"].(string)
+	if !ok {
+		h.Log.Errorf("Employee ID is missing or invalid")
+		return uuid.Nil, errors.New("Employee ID is missing or invalid")
+	}
+
+	// Parse the employee ID to uuid.UUID
+	employeeID, err := uuid.Parse(employeeIDStr)
+	if err != nil {
+		h.Log.Errorf("Invalid employee ID format: %v", err)
+		return uuid.Nil, errors.New("Invalid employee ID format")
+	}
+
+	h.Log.Infof("Employee ID: %s", employeeID)
+	return employeeID, nil
 }
