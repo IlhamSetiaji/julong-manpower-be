@@ -207,11 +207,6 @@ func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeade
 			}
 		}
 
-		if mppPeriodCompleted.ID != uuid.Nil {
-			r.Log.Warnf("MPP Period with status %s found: %v", entity.MPPeriodStatusComplete, mppPeriodCompleted)
-			return errors.New("MPP Period with status complete found")
-		}
-
 		if status != entity.BatchHeaderApprovalStatusCompleted {
 			var approvalHistory *entity.MPPlanningApprovalHistory
 
@@ -303,6 +298,10 @@ func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeade
 				return err
 			}
 		} else {
+			if mppPeriodCompleted.ID != uuid.Nil {
+				r.Log.Warnf("MPP Period with status %s found: %v", entity.MPPeriodStatusComplete, mppPeriodCompleted)
+				return errors.New("MPP Period with status complete found")
+			}
 			if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
 				Status: entity.MPPlaningStatus(status),
 			}).Error; err != nil {
