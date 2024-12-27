@@ -712,7 +712,14 @@ func (r *MPPlanningRepository) DeleteHeader(id uuid.UUID) error {
 		return errors.New("[MPPlanningRepository.DeleteHeader] " + tx.Error.Error())
 	}
 
-	if err := tx.Where("id = ?", id).Delete(&entity.MPPlanningHeader{}).Error; err != nil {
+	var mppHeader entity.MPPlanningHeader
+
+	if err := tx.Where("id = ?", id).First(&mppHeader).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.DeleteHeader] " + err.Error())
+		return errors.New("[MPPlanningRepository.DeleteHeader] " + err.Error())
+	}
+
+	if err := tx.Where("id = ?", id).Delete(mppHeader).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPPlanningRepository.DeleteHeader] " + err.Error())
 		return errors.New("[MPPlanningRepository.DeleteHeader] " + err.Error())

@@ -172,7 +172,15 @@ func (r *MPRequestRepository) DeleteHeader(id uuid.UUID) error {
 		return errors.New("[MPRequestRepository.DeleteHeader] " + tx.Error.Error())
 	}
 
-	if err := tx.Where("id = ?", id).Delete(&entity.MPRequestHeader{}).Error; err != nil {
+	var mprHeader entity.MPRequestHeader
+
+	if err := tx.First(&mprHeader, id).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPRequestRepository.DeleteHeader] error when query mp request header: %v", err)
+		return errors.New("[MPRequestRepository.DeleteHeader] error when query mp request header " + err.Error())
+	}
+
+	if err := tx.Where("id = ?", id).Delete(mprHeader).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPRequestRepository.DeleteHeader] error when delete mp request header: %v", err)
 		return errors.New("[MPRequestRepository.DeleteHeader] error when delete mp request header " + err.Error())
