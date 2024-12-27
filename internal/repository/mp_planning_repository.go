@@ -405,7 +405,6 @@ func (r *MPPlanningRepository) GetHeadersByCreatedAt(createdAt string) (*[]entit
 
 	formats := []string{
 		"2006-01-02",
-		time.RFC3339,
 	}
 
 	for _, format := range formats {

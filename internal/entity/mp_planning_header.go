@@ -74,6 +74,20 @@ func (m *MPPlanningHeader) BeforeUpdate(tx *gorm.DB) (err error) {
 	return nil
 }
 
+func (m *MPPlanningHeader) BeforeDelete(tx *gorm.DB) (err error) {
+	if m.DeletedAt.Valid {
+		return nil
+	}
+
+	m.DocumentNumber = m.DocumentNumber + "_deleted"
+
+	if err := tx.Model(&MPPlanningLine{}).Where("id = ?", m.ID).Updates(m).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (MPPlanningHeader) TableName() string {
 	return "mp_planning_headers"
 }
