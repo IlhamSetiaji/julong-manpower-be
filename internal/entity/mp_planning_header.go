@@ -64,7 +64,7 @@ func (m *MPPlanningHeader) BeforeCreate(tx *gorm.DB) (err error) {
 	m.ID = uuid.New()
 	// m.CreatedAt = time.Now().Add(time.Hour * 7)
 	// m.UpdatedAt = time.Now().Add(time.Hour * 7)
-	m.CreatedAt = time.Now()
+	// m.CreatedAt = time.Now()
 	m.UpdatedAt = time.Now()
 	return nil
 }

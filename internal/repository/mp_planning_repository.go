@@ -535,6 +535,8 @@ func (r *MPPlanningRepository) CreateHeader(mppHeader *entity.MPPlanningHeader) 
 		return nil, errors.New("[MPPlanningRepository.CreateHeader] " + tx.Error.Error())
 	}
 
+	mppHeader.CreatedAt = time.Now()
+
 	if err := tx.Create(mppHeader).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPPlanningRepository.CreateHeader] " + err.Error())
