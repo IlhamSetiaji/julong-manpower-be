@@ -43,6 +43,8 @@ func (d *MPPlanningDTO) ConvertMPPlanningApprovalHistoryToResponse(approvalHisto
 		Notes:              approvalHistories.Notes,
 		Level:              approvalHistories.Level,
 		Status:             approvalHistories.Status,
+		CreatedAt:          approvalHistories.CreatedAt,
+		UpdatedAt:          approvalHistories.UpdatedAt,
 		Attachments:        ConvertManpowerAttachmentsToResponse(&approvalHistories.ManpowerAttachments, viper),
 	}
 }

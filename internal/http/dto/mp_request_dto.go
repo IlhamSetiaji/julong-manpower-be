@@ -97,6 +97,8 @@ func (d *MPRequestDTO) ConvertMPRequestApprovalHistoryToResponse(approvalHistori
 		Notes:             approvalHistories.Notes,
 		Level:             approvalHistories.Level,
 		Status:            approvalHistories.Status,
+		CreatedAt:         approvalHistories.CreatedAt,
+		UpdatedAt:         approvalHistories.UpdatedAt,
 		Attachments:       ConvertManpowerAttachmentsToResponse(&approvalHistories.ManpowerAttachments, d.Viper),
 	}
 }
