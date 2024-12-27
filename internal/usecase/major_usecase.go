@@ -3,6 +3,7 @@ package usecase
 import (
 	"errors"
 
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/repository"
@@ -12,6 +13,7 @@ import (
 type IMajorUsecase interface {
 	FindAll() (*[]response.FindAllMajorResponse, error)
 	FindById(request request.FindByIdMajorRequest) (*response.FindAllMajorResponse, error)
+	GetMajorsByEducationLevel(educationLevel string) (*[]response.FindAllMajorResponse, error)
 }
 
 type MajorUsecase struct {
@@ -59,6 +61,24 @@ func (u *MajorUsecase) FindById(request request.FindByIdMajorRequest) (*response
 	}
 
 	return &majorResponse, nil
+}
+
+func (u *MajorUsecase) GetMajorsByEducationLevel(educationLevel string) (*[]response.FindAllMajorResponse, error) {
+	majors, err := u.Repo.GetMajorsByEducationLevel(entity.EducationLevelEnum(educationLevel))
+	if err != nil {
+		return nil, err
+	}
+
+	var majorResponses []response.FindAllMajorResponse
+	for _, major := range *majors {
+		majorResponses = append(majorResponses, response.FindAllMajorResponse{
+			ID:             major.ID.String(),
+			Major:          major.Major,
+			EducationLevel: major.EducationLevel,
+		})
+	}
+
+	return &majorResponses, nil
 }
 
 func MajorUsecaseFactory(log *logrus.Logger) *MajorUsecase {

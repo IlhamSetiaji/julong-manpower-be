@@ -13,6 +13,7 @@ import (
 type IMajorRepository interface {
 	FindAll() (*[]entity.Major, error)
 	FindById(id uuid.UUID) (*entity.Major, error)
+	GetMajorsByEducationLevel(educationLevel entity.EducationLevelEnum) (*[]entity.Major, error)
 }
 
 type MajorRepository struct {
@@ -46,6 +47,15 @@ func (r *MajorRepository) FindById(id uuid.UUID) (*entity.Major, error) {
 	}
 
 	return &major, nil
+}
+
+func (r *MajorRepository) GetMajorsByEducationLevel(educationLevel entity.EducationLevelEnum) (*[]entity.Major, error) {
+	var majors []entity.Major
+	err := r.DB.Where("education_level = ?", educationLevel).Find(&majors).Error
+	if err != nil {
+		return nil, err
+	}
+	return &majors, nil
 }
 
 func MajorRepositoryFactory(log *logrus.Logger) *MajorRepository {

@@ -100,6 +100,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 
 			// majors
 			apiRoute.GET("/majors", c.MajorHandler.FindAll)
+			apiRoute.GET("/majors/education-level/:education_level", c.MajorHandler.GetMajorsByEducationLevel)
 			apiRoute.GET("/majors/:id", c.MajorHandler.FindById)
 
 			// mp requests

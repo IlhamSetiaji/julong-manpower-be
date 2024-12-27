@@ -17,6 +17,7 @@ import (
 type IMajorHandler interface {
 	FindAll(ctx *gin.Context)
 	FindById(ctx *gin.Context)
+	GetMajorsByEducationLevel(ctx *gin.Context)
 }
 
 type MajorHandler struct {
@@ -63,6 +64,23 @@ func (h *MajorHandler) FindById(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "Success finding major by id", major)
+}
+
+func (h *MajorHandler) GetMajorsByEducationLevel(ctx *gin.Context) {
+	educationLevel := ctx.Param("education_level")
+	if educationLevel == "" {
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Education level is required", "Education level is required")
+		return
+	}
+
+	majors, err := h.Uc.GetMajorsByEducationLevel(educationLevel)
+	if err != nil {
+		h.Log.Errorf("[MajorHandler.GetMajorsByEducationLevel] error when getting majors by education level. Error: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Error when getting majors by education level", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "Success getting majors by education level", majors)
 }
 
 func MajorHandlerFactory(log *logrus.Logger, viper *viper.Viper) *MajorHandler {
