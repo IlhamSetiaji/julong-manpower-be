@@ -81,7 +81,9 @@ func (m *MPPlanningHeader) BeforeDelete(tx *gorm.DB) (err error) {
 
 	m.DocumentNumber = m.DocumentNumber + "_deleted"
 
-	if err := tx.Model(&MPPlanningLine{}).Where("id = ?", m.ID).Updates(m).Error; err != nil {
+	if err := tx.Model(&m).Where("id = ?", m.ID).Updates((map[string]interface{}{
+		"document_number": m.DocumentNumber,
+	})).Error; err != nil {
 		return err
 	}
 
