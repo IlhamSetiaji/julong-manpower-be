@@ -719,7 +719,7 @@ func (r *MPPlanningRepository) DeleteHeader(id uuid.UUID) error {
 		return errors.New("[MPPlanningRepository.DeleteHeader] " + err.Error())
 	}
 
-	if err := tx.Where("id = ?", id).Delete(mppHeader).Error; err != nil {
+	if err := tx.Where("id = ?", id).Delete(&mppHeader).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPPlanningRepository.DeleteHeader] " + err.Error())
 		return errors.New("[MPPlanningRepository.DeleteHeader] " + err.Error())

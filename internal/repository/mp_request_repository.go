@@ -180,7 +180,7 @@ func (r *MPRequestRepository) DeleteHeader(id uuid.UUID) error {
 		return errors.New("[MPRequestRepository.DeleteHeader] error when query mp request header " + err.Error())
 	}
 
-	if err := tx.Where("id = ?", id).Delete(mprHeader).Error; err != nil {
+	if err := tx.Where("id = ?", id).Delete(&mprHeader).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPRequestRepository.DeleteHeader] error when delete mp request header: %v", err)
 		return errors.New("[MPRequestRepository.DeleteHeader] error when delete mp request header " + err.Error())
