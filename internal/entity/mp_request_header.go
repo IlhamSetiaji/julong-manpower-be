@@ -133,7 +133,9 @@ func (m *MPRequestHeader) BeforeDelete(tx *gorm.DB) (err error) {
 		return nil
 	}
 
-	m.DocumentNumber = m.DocumentNumber + "_deleted"
+	randomString := uuid.New().String()
+
+	m.DocumentNumber = m.DocumentNumber + "_deleted" + randomString
 
 	if err := tx.Model(&m).Where("id = ?", m.ID).Updates((map[string]interface{}{
 		"document_number": m.DocumentNumber,
