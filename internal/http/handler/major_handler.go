@@ -67,7 +67,7 @@ func (h *MajorHandler) FindById(ctx *gin.Context) {
 }
 
 func (h *MajorHandler) GetMajorsByEducationLevel(ctx *gin.Context) {
-	educationLevel := ctx.Param("education_level")
+	educationLevel := ctx.Query("education_level")
 	if educationLevel == "" {
 		utils.ErrorResponse(ctx, http.StatusBadRequest, "Education level is required", "Education level is required")
 		return
