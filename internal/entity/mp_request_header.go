@@ -128,6 +128,22 @@ func (m *MPRequestHeader) BeforeUpdate(tx *gorm.DB) (err error) {
 	return nil
 }
 
+func (m *MPRequestHeader) BeforeDelete(tx *gorm.DB) (err error) {
+	if m.DeletedAt.Valid {
+		return nil
+	}
+
+	m.DocumentNumber = m.DocumentNumber + "_deleted"
+
+	if err := tx.Model(&m).Where("id = ?", m.ID).Updates((map[string]interface{}{
+		"document_number": m.DocumentNumber,
+	})).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (MPRequestHeader) TableName() string {
 	return "mp_request_headers"
 }
