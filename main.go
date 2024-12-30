@@ -81,6 +81,10 @@ func main() {
 		if err != nil {
 			log.Errorf("Failed to update status to open by date: %v", err)
 		}
+		err = schedulerFactory.UpdateStatusToCloseByDate()
+		if err != nil {
+			log.Errorf("Failed to update status to close by date: %v", err)
+		}
 	})
 	if err != nil {
 		log.Fatalf("failed to add cron job: %v", err)
