@@ -281,38 +281,57 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 
 	if approver != "" || status != "" {
 		var whereApprover string
-		switch approver {
-		case "ceo":
-			whereApprover = "approved_by IS NOT NULL"
-		case "manager":
-			whereApprover = "approver_manager_id IS NOT NULL"
-		case "recruitment":
-			whereApprover = "approver_recruitment_id IS NOT NULL"
-		case "direktur":
-			whereApprover = "recommended_by IS NOT NULL"
-		default:
-			whereApprover = ""
-			if requestorId != "" {
-				whereRequestor = "requestor_id = '" + requestorId + "'"
-			} else {
-				whereRequestor = ""
+		if approver != "admin" {
+			switch approver {
+			case "ceo":
+				whereApprover = "approved_by IS NOT NULL"
+			case "manager":
+				whereApprover = "approver_manager_id IS NOT NULL"
+			case "recruitment":
+				whereApprover = "approver_recruitment_id IS NOT NULL"
+			case "direktur":
+				whereApprover = "recommended_by IS NOT NULL"
+			default:
+				whereApprover = ""
+				if requestorId != "" {
+					whereRequestor = "requestor_id = '" + requestorId + "'"
+				} else {
+					whereRequestor = ""
+				}
 			}
-		}
-		if status != "" {
-			whereStatus = "status = '" + string(status) + "'"
-		}
+			if status != "" {
+				whereStatus = "status = '" + string(status) + "'"
+			}
 
-		r.Log.Infof("Approver: %s", whereApprover)
-		if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where(whereApprover).Where(whereRequestor).First(&mppHeader).Error; err != nil {
-			if errors.Is(err, gorm.ErrRecordNotFound) {
-				r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
-				return nil, nil
+			r.Log.Infof("Approver: %s", whereApprover)
+			if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where(whereApprover).Where(whereRequestor).First(&mppHeader).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					return nil, nil
+				} else {
+					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+				}
 			} else {
-				r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
-				return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+				r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
 			}
 		} else {
-			r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
+			if status != "" {
+				whereStatus = "status = '" + string(status) + "'"
+			}
+
+			r.Log.Infof("Approver: %s", whereApprover)
+			if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).First(&mppHeader).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					return nil, nil
+				} else {
+					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+				}
+			} else {
+				r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
+			}
 		}
 	} else {
 		whereStatus = ""

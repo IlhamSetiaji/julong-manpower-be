@@ -19,6 +19,8 @@ type IMPPPeriodRepository interface {
 	Delete(id uuid.UUID) error
 	FindByCurrentDateAndStatus(status entity.MPPPeriodStatus) (*entity.MPPPeriod, error)
 	FindByStatus(status entity.MPPPeriodStatus) (*entity.MPPPeriod, error)
+	GetMPPPeriodsByStartDate(date time.Time) (*[]entity.MPPPeriod, error)
+	GetMPPPeriodsByEndDate(date time.Time) (*[]entity.MPPPeriod, error)
 }
 
 type MPPPeriodRepository struct {
@@ -190,4 +192,42 @@ func (r *MPPPeriodRepository) FindByCurrentDateAndStatus(status entity.MPPPeriod
 	}
 
 	return &mppPeriod, nil
+}
+
+func (r *MPPPeriodRepository) GetMPPPeriodsByStartDate(date time.Time) (*[]entity.MPPPeriod, error) {
+	var mppPeriods []entity.MPPPeriod
+
+	// err := r.DB.Where("start_date <= ? AND end_date >= ?", date.Format("2006-01-02"), date.Format("2006-01-02")).Find(&mppPeriods).Error
+	err := r.DB.Where("start_date = ", date.Format("2006-01-02")).Find(&mppPeriods).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warn("[MPPPeriodRepository.GetMPPPeriodsByDate] User not found")
+			return nil, nil
+		} else {
+			r.Log.Error("[MPPPeriodRepository.GetMPPPeriodsByDate] " + err.Error())
+			return nil, errors.New("[UserRepository.FindByEmail] " + err.Error())
+		}
+	}
+
+	return &mppPeriods, nil
+}
+
+func (r *MPPPeriodRepository) GetMPPPeriodsByEndDate(date time.Time) (*[]entity.MPPPeriod, error) {
+	var mppPeriods []entity.MPPPeriod
+
+	// err := r.DB.Where("start_date <= ? AND end_date >= ?", date.Format("2006-01-02"), date.Format("2006-01-02")).Find(&mppPeriods).Error
+	err := r.DB.Where("end_date = ", date.Format("2006-01-02")).Find(&mppPeriods).Error
+
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Warn("[MPPPeriodRepository.GetMPPPeriodsByDate] User not found")
+			return nil, nil
+		} else {
+			r.Log.Error("[MPPPeriodRepository.GetMPPPeriodsBFyDate] " + err.Error())
+			return nil, errors.New("[UserRepository.FindByEmail] " + err.Error())
+		}
+	}
+
+	return &mppPeriods, nil
 }

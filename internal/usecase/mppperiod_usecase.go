@@ -19,6 +19,8 @@ type IMPPPeriodUseCase interface {
 	Update(request request.UpdateMPPPeriodRequest) (*response.UpdateMPPPeriodResponse, error)
 	Delete(request request.DeleteMPPPeriodRequest) error
 	FindByCurrentDateAndStatus(request request.FindByCurrentDateAndStatusMPPPeriodRequest) (*response.FindByCurrentDateAndStatusMPPPeriodResponse, error)
+	UpdateStatusToOpenByDate(date time.Time) error
+	UpdateStatusToCloseByDate(date time.Time) error
 }
 
 type MPPPeriodUseCase struct {
@@ -231,6 +233,48 @@ func (uc *MPPPeriodUseCase) FindByCurrentDateAndStatus(req request.FindByCurrent
 	return &response.FindByCurrentDateAndStatusMPPPeriodResponse{
 		MPPPeriod: mppPeriod,
 	}, nil
+}
+
+func (uc *MPPPeriodUseCase) UpdateStatusToOpenByDate(date time.Time) error {
+	// get all mpp period by date
+	mppPeriods, err := uc.MPPPeriodRepository.GetMPPPeriodsByStartDate(date)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodScheduler.UpdateStatusToOpenByDate] " + err.Error())
+		return err
+	}
+
+	// loop mpp period to update status
+	for _, mppPeriod := range *mppPeriods {
+		mppPeriod.Status = "open"
+		_, err := uc.MPPPeriodRepository.Update(&mppPeriod)
+		if err != nil {
+			uc.Log.Errorf("[MPPPeriodScheduler.UpdateStatusToOpenByDate] " + err.Error())
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (uc *MPPPeriodUseCase) UpdateStatusToCloseByDate(date time.Time) error {
+	// get all mpp period by date
+	mppPeriods, err := uc.MPPPeriodRepository.GetMPPPeriodsByEndDate(date)
+	if err != nil {
+		uc.Log.Errorf("[MPPPeriodScheduler.UpdateStatusToCloseByDate] " + err.Error())
+		return err
+	}
+
+	// loop mpp period to update status
+	for _, mppPeriod := range *mppPeriods {
+		mppPeriod.Status = "close"
+		_, err := uc.MPPPeriodRepository.Update(&mppPeriod)
+		if err != nil {
+			uc.Log.Errorf("[MPPPeriodScheduler.UpdateStatusToCloseByDate] " + err.Error())
+			return err
+		}
+	}
+
+	return nil
 }
 
 func MPPPeriodUseCaseFactory(log *logrus.Logger) IMPPPeriodUseCase {
