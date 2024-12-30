@@ -149,7 +149,7 @@ func (r *MPPlanningRepository) FindHeaderBySomething(something map[string]interf
 func (r *MPPlanningRepository) GetHeadersBySomething(something map[string]interface{}) (*[]entity.MPPlanningHeader, error) {
 	var mppHeaders []entity.MPPlanningHeader
 
-	if err := r.DB.Where(something).Find(&mppHeaders).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where(something).Find(&mppHeaders).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.GetHeadersBySomething] " + err.Error())
 			return nil, nil

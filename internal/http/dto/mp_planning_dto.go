@@ -119,6 +119,9 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 		}
 	}
 
+	var remainingBalanceMT int = 0
+	var remainingBalancePH int = 0
+
 	return &response.MPPlanningHeaderResponse{
 		ID:                       mpPlanningHeader.ID,
 		MPPPeriodID:              mpPlanningHeader.MPPPeriodID,
@@ -189,6 +192,9 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 					line.OrganizationLocationName = organizationLocation.Name
 				}
 
+				remainingBalanceMT += line.RemainingBalanceMT
+				remainingBalancePH += line.RemainingBalancePH
+
 				lines = append(lines, &response.MPPlanningLineResponse{
 					ID:                       line.ID,
 					MPPlanningHeaderID:       line.MPPlanningHeaderID,
@@ -211,6 +217,8 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 			}
 			return lines
 		}(),
+		RemainingBalancePH: remainingBalancePH,
+		RemainingBalanceMT: remainingBalanceMT,
 	}
 }
 

@@ -823,8 +823,6 @@ func (uc *MPPlanningUseCase) FindAllHeadersGroupedApproverPaginated(req *request
 			continue
 		}
 
-		uc.Log.Info("Kontol")
-
 		orgLoc.MPPlanningHeader = uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(header)
 
 		orgLocs.OrganizationLocations[i] = orgLoc

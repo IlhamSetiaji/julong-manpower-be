@@ -41,6 +41,9 @@ type MPPlanningHeaderResponse struct {
 	ApproverRecruitmentName  string                    `json:"approver_recruitment_name" gorm:"-"`
 	MPPPeriod                *MPPeriodResponse         `json:"mpp_period"`
 	MPPlanningLines          []*MPPlanningLineResponse `json:"mp_planning_lines"`
+
+	RemainingBalancePH int `json:"remaining_balance_ph"`
+	RemainingBalanceMT int `json:"remaining_balance_mt"`
 }
 
 type MPPlanningApprovalHistoryResponse struct {
