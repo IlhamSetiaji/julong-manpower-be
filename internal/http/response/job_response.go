@@ -10,6 +10,7 @@ type JobResponse struct {
 	OrganizationID            uuid.UUID          `json:"organization_id"`
 	OrganizationName          string             `json:"organization_name"`
 	ParentID                  *uuid.UUID         `json:"parent_id"`
+	JobLevel                  JobLevelResponse   `json:"job_level"`
 	Level                     int                `json:"level"` // Add level for hierarchy depth
 	Path                      string             `json:"path"`  // Store full path for easy traversal
 	Existing                  int                `json:"existing"`
