@@ -41,7 +41,7 @@ type MPPlanningHeader struct {
 	NotesManager           string          `json:"notes_manager" gorm:"type:text;"`
 	ApproverRecruitmentID  *uuid.UUID      `json:"approver_recruitment_id" gorm:"type:char(36);"` // user_id
 	NotesRecruitment       string          `json:"notes_recruitment" gorm:"type:text;"`
-	CreatedAt              time.Time       `json:"created_at" gorm:"type:timestamp"`
+	CreatedAt              time.Time       `json:"created_at" gorm:"type:timestampz"`
 
 	MPPPeriod                   MPPPeriod                   `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPlanningLines             []MPPlanningLine            `json:"mp_planning_lines" gorm:"foreignKey:MPPlanningHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
