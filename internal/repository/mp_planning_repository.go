@@ -592,6 +592,12 @@ func (r *MPPlanningRepository) CreateHeader(mppHeader *entity.MPPlanningHeader) 
 		return nil, errors.New("[MPPlanningRepository.CreateHeader] " + err.Error())
 	}
 
+	// update created at to now
+	if err := r.DB.Model(&entity.MPPlanningHeader{}).Where("id = ?", mppHeader.ID).Update("created_at", time.Now()).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.CreateHeader] " + err.Error())
+		return nil, errors.New("[MPPlanningRepository.CreateHeader] " + err.Error())
+	}
+
 	return mppHeader, nil
 }
 
