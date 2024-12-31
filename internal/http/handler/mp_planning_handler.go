@@ -522,7 +522,7 @@ func (h *MPPlanningHandler) FindAllHeadersGroupedApproverPaginated(ctx *gin.Cont
 
 	isNull := ctx.Query("is_null")
 	if isNull == "" {
-		isNull = "false"
+		isNull = ""
 	}
 
 	organizationLocationId := ctx.Query("organization_location_id")

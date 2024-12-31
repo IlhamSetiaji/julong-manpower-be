@@ -16,7 +16,7 @@ type IOrganizationMessage interface {
 	SendFindOrganizationByIDMessage(request request.SendFindOrganizationByIDMessageRequest) (*orgResponse.SendFindOrganizationByIDMessageResponse, error)
 	SendFindOrganizationLocationByIDMessage(request request.SendFindOrganizationLocationByIDMessageRequest) (*orgResponse.SendFindOrganizationLocationByIDMessageResponse, error)
 	SendFindOrganizationStructureByIDMessage(request request.SendFindOrganizationStructureByIDMessageRequest) (*orgResponse.SendFindOrganizationStructureByIDMessageResponse, error)
-	SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string, isNull bool) (*orgResponse.OrganizationLocationPaginatedResponse, error)
+	SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string, isNull bool, orgID string) (*orgResponse.OrganizationLocationPaginatedResponse, error)
 	SendFindAllOrganizationMessage(includedIDs []string) (*[]orgResponse.OrganizationResponse, error)
 	SendFindAllOrganizationLocationsMessage(includedIDs []string) (*[]orgResponse.OrganizationLocationResponse, error)
 }
@@ -212,14 +212,15 @@ func (m *OrganizationMessage) SendFindOrganizationStructureByIDMessage(req reque
 	}, nil
 }
 
-func (m *OrganizationMessage) SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string, isNull bool) (*orgResponse.OrganizationLocationPaginatedResponse, error) {
+func (m *OrganizationMessage) SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string, isNull bool, orgID string) (*orgResponse.OrganizationLocationPaginatedResponse, error) {
 	m.Log.Infof("Included IDs: %v", includedIDs)
 	payload := map[string]interface{}{
-		"page":         page,
-		"page_size":    pageSize,
-		"search":       search,
-		"included_ids": includedIDs,
-		"is_null":      isNull,
+		"page":            page,
+		"page_size":       pageSize,
+		"search":          search,
+		"included_ids":    includedIDs,
+		"is_null":         isNull,
+		"organization_id": orgID,
 	}
 
 	docMsg := &request.RabbitMQRequest{

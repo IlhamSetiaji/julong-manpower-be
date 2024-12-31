@@ -726,7 +726,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 		}
 	}
 	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] includedIDs: %v", includedIDs)
-	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs, isNull)
+	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs, isNull, "")
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersForBatchPaginated] " + err.Error())
 		return nil, err
@@ -815,7 +815,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersGroupedApproverPaginated(req *request
 	}
 	uc.Log.Info("Ini malah masuk sini")
 	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] includedIDs: %v", includedIDs)
-	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs, isNull)
+	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs, isNull, req.OrgID)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + err.Error())
 		return nil, err
