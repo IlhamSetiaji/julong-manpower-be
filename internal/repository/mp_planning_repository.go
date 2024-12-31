@@ -12,7 +12,7 @@ import (
 )
 
 type IMPPlanningRepository interface {
-	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, int64, error)
+	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus, requestorId string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
 	FindAllHeadersByOrganizationLocationID(organizationLocationID uuid.UUID) (*[]entity.MPPlanningHeader, error)
@@ -173,7 +173,7 @@ func (r *MPPlanningRepository) CountTotalApprovalHistoryByStatus(mpPlanningHeade
 	return total, nil
 }
 
-func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, int64, error) {
+func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus, requestorId string) (*[]entity.MPPlanningHeader, int64, error) {
 	var mppHeaders []entity.MPPlanningHeader
 	var total int64
 
@@ -192,6 +192,10 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 		}
 	}
 
+	if requestorId != "" {
+		query = query.Where("requestor_id = ?", requestorId)
+	}
+
 	if orgLocationId != "" {
 		query = query.Where("organization_location_id = ?", orgLocationId)
 	}
@@ -202,6 +206,8 @@ func (r *MPPlanningRepository) FindAllHeadersPaginated(page int, pageSize int, s
 
 	if status != "" {
 		query = query.Where("status = ?", status)
+	} else {
+		query = query.Where("status != 'COMPLETED'")
 	}
 
 	countQuery := query.Session(&gorm.Session{})
