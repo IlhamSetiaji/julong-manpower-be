@@ -770,7 +770,8 @@ func (uc *MPPlanningUseCase) FindAllHeadersGroupedApproverPaginated(req *request
 	var isNull bool
 	var error error
 	uc.Log.Info("is null value ", req.IsNull)
-	if req.IsNull != "" && req.Status == "" {
+	if req.IsNull != "" {
+		uc.Log.Info("Mlebu rene")
 		isNull, error = strconv.ParseBool(req.IsNull)
 		if error != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + error.Error())
@@ -781,13 +782,27 @@ func (uc *MPPlanningUseCase) FindAllHeadersGroupedApproverPaginated(req *request
 
 		if req.OrgLocationID == "" {
 			mpPlanningHeaders, error = uc.MPPlanningRepository.FindAllHeaders()
-			if error == nil {
+			if error != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + error.Error())
 				return nil, error
 			}
 		} else {
 			mpPlanningHeaders, error = uc.MPPlanningRepository.FindAllHeadersByOrganizationLocationID(uuid.MustParse(req.OrgLocationID))
-			if error == nil {
+			if error != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + error.Error())
+				return nil, error
+			}
+		}
+		if req.OrgID == "" {
+			mpPlanningHeaders, error = uc.MPPlanningRepository.FindAllHeaders()
+			if error != nil {
+				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + error.Error())
+				return nil, error
+			}
+		} else {
+			uc.Log.Info("Org ID:", req.OrgID)
+			mpPlanningHeaders, error = uc.MPPlanningRepository.GetHeadersByOrganizationID(uuid.MustParse(req.OrgID))
+			if error != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] " + error.Error())
 				return nil, error
 			}
@@ -798,6 +813,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersGroupedApproverPaginated(req *request
 			uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] header id: %v", header.OrganizationLocationID.String())
 		}
 	}
+	uc.Log.Info("Ini malah masuk sini")
 	uc.Log.Infof("[MPPlanningUseCase.FindAllHeadersGroupedApproverPaginated] includedIDs: %v", includedIDs)
 	orgLocs, err := uc.OrganizationMessage.SendFindOrganizationLocationsPaginatedMessage(req.Page, req.PageSize, req.Search, includedIDs, isNull)
 	if err != nil {

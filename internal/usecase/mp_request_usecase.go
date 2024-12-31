@@ -355,6 +355,7 @@ func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderRes
 }
 
 func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error) {
+
 	mpRequestHeaders, total, err := uc.MPRequestRepository.FindAllPaginated(page, pageSize, search, filter)
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.FindAllPaginated] error when find all paginated mp request headers: %v", err)
@@ -423,7 +424,8 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 
 	var approvalHistory *entity.MPRequestApprovalHistory
 
-	if req.Status != entity.MPRequestStatusDraft && req.Status != entity.MPRequestStatusSubmitted && req.Status != entity.MPRequestStatusCompleted {
+	if req.Status != entity.MPRequestStatusDraft && req.Status != entity.MPRequestStatusSubmitted {
+		uc.Log.Info("Ini masuk kesini ya kan")
 		approvalHistory = &entity.MPRequestApprovalHistory{
 			MPRequestHeaderID: mpRequestHeader.ID,
 			ApproverID:        req.ApproverID,
@@ -437,6 +439,8 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 					return entity.MPRequestApprovalHistoryStatusApproved
 				} else if req.Status == entity.MPRequestStatusNeedApproval {
 					return entity.MPRequestApprovalHistoryStatusNeedApproval
+				} else if req.Status == entity.MPRequestStatusCompleted {
+					return entity.MPRequestApprovalHistoryStatusCompleted
 				}
 				return entity.MPRequestApprovalHistoryStatusRejected
 			}(),

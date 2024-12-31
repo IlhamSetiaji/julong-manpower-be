@@ -13,6 +13,7 @@ const (
 	MPRequestApprovalHistoryStatusApproved     MPRequestApprovalHistoryStatus = "APPROVED"
 	MPRequestApprovalHistoryStatusRejected     MPRequestApprovalHistoryStatus = "REJECTED"
 	MPRequestApprovalHistoryStatusNeedApproval MPRequestApprovalHistoryStatus = "NEED APPROVAL"
+	MPRequestApprovalHistoryStatusCompleted    MPRequestApprovalHistoryStatus = "COMPLETED"
 )
 
 type MPRequestApprovalHistoryLevel string

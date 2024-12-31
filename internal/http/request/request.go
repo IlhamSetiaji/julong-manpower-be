@@ -145,7 +145,7 @@ func MPRequestApprovalHistoryStatusValidation(fl validator.FieldLevel) bool {
 		return true
 	}
 	switch entity.MPRequestApprovalHistoryStatus(status) {
-	case entity.MPRequestApprovalHistoryStatusApproved, entity.MPRequestApprovalHistoryStatusRejected, entity.MPRequestApprovalHistoryStatusNeedApproval:
+	case entity.MPRequestApprovalHistoryStatusApproved, entity.MPRequestApprovalHistoryStatusRejected, entity.MPRequestApprovalHistoryStatusNeedApproval, entity.MPRequestApprovalHistoryStatusCompleted:
 		return true
 	default:
 		return false

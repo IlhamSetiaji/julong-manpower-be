@@ -236,6 +236,8 @@ func (r *MPRequestRepository) StoreAttachmentToApprovalHistory(mpApprovalHistory
 func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) ([]entity.MPRequestHeader, int64, error) {
 	var mpRequestHeaders []entity.MPRequestHeader
 	var total int64
+	var isAdmin bool = false
+	var includedIDs []string = []string{}
 
 	query := r.DB.Model(&entity.MPRequestHeader{})
 
@@ -272,8 +274,17 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 				query = query.Where("hrd_ho_unit IS NOT NULL")
 			}
 		}
+		if _, ok := filter["is_admin"]; ok {
+			isAdmin = true
+		}
 		if status, ok := filter["status"]; ok {
 			query = query.Where("status = ?", status)
+		}
+		if !isAdmin {
+			if filter["included_ids"] != nil {
+				includedIDs = filter["included_ids"].([]string)
+				query = query.Where("id IN (?)", includedIDs)
+			}
 		}
 	}
 

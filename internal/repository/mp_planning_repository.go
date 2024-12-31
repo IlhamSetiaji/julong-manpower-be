@@ -283,6 +283,8 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 		var whereApprover string
 		if approver != "admin" {
 			switch approver {
+			case "requestor":
+				whereApprover = "requestor_id = '" + requestorId + "'"
 			case "ceo":
 				whereApprover = "approved_by IS NOT NULL"
 			case "manager":

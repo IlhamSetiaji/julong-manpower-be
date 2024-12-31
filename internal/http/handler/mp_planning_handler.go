@@ -497,9 +497,19 @@ func (h *MPPlanningHandler) FindAllHeadersGroupedApproverPaginated(ctx *gin.Cont
 		status = ""
 	}
 
+	isNull := ctx.Query("is_null")
+	if isNull == "" {
+		isNull = ""
+	}
+
 	organizationLocationId := ctx.Query("organization_location_id")
 	if organizationLocationId == "" {
 		organizationLocationId = ""
+	}
+
+	organizationId := ctx.Query("organization_id")
+	if organizationId == "" {
+		organizationId = ""
 	}
 
 	approverType := ctx.Query("approver_type")
@@ -508,7 +518,7 @@ func (h *MPPlanningHandler) FindAllHeadersGroupedApproverPaginated(ctx *gin.Cont
 	}
 
 	var requestorID string
-	if approverType == "" {
+	if approverType == "" || approverType == "requestor" {
 		user, err := middleware.GetUser(ctx, h.Log)
 		if err != nil {
 			h.Log.Errorf("Error when getting user: %v", err)
@@ -539,6 +549,8 @@ func (h *MPPlanningHandler) FindAllHeadersGroupedApproverPaginated(ctx *gin.Cont
 		ApproverType:  approverType,
 		RequestorID:   requestorID,
 		OrgLocationID: organizationLocationId,
+		OrgID:         organizationId,
+		IsNull:        isNull,
 	}
 
 	resp, err := h.UseCase.FindAllHeadersGroupedApproverPaginated(&req)
