@@ -1733,6 +1733,18 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 		return nil, errors.New("organization location is not exist")
 	}
 
+	// check if mp planning header is exist by requestor, org loc, status != completed
+	exist, err := uc.MPPlanningRepository.FindHeaderByRequestorOrganizationLocationStatus(req.RequestorID, req.OrganizationLocationID, entity.MPPlaningStatusComplete)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	if exist != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.Create] MP Planning Header already exist")
+		return nil, errors.New("MP Planning Header already exist")
+	}
+
 	documentDate, err := time.Parse("2006-01-02", req.DocumentDate)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
