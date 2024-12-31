@@ -252,5 +252,8 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		JobLevelName:                 jobLevelExist.Name,
 		JobLevel:                     int(jobLevelExist.Level),
 		RequestorEmployeeJob:         requestorExist.EmployeeJob,
+		DepartmentHeadEmployeeJob:    deptHeadExist.EmployeeJob,
+		VpGmDirectorEmployeeJob:      vpGmDirectorExist.EmployeeJob,
+		CeoEmployeeJob:               ceoExist.EmployeeJob,
 	}, nil
 }
