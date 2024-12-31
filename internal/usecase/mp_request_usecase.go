@@ -21,7 +21,7 @@ type IMPRequestUseCase interface {
 	Create(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error)
 	Delete(id uuid.UUID) error
-	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPRequestApprovalHistoryResponse, error)
+	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status string) ([]*response.MPRequestApprovalHistoryResponse, error)
 	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
@@ -140,7 +140,7 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }
 
-func (uc *MPRequestUseCase) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPRequestApprovalHistoryResponse, error) {
+func (uc *MPRequestUseCase) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status string) ([]*response.MPRequestApprovalHistoryResponse, error) {
 	mpRequestHeader, err := uc.MPRequestRepository.FindById(headerID)
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.GetRequestApprovalHistoryByHeaderId] error when find mp request header by id: %v", err)
@@ -152,7 +152,7 @@ func (uc *MPRequestUseCase) GetRequestApprovalHistoryByHeaderId(headerID uuid.UU
 		return nil, errors.New("mp request header is not exist")
 	}
 
-	approvalHistories, err := uc.MPRequestRepository.GetRequestApprovalHistoryByHeaderId(headerID)
+	approvalHistories, err := uc.MPRequestRepository.GetRequestApprovalHistoryByHeaderId(headerID, entity.MPRequestApprovalHistoryStatus(status))
 	if err != nil {
 		uc.Log.Errorf("[MPRequestUseCase.GetRequestApprovalHistoryByHeaderId] error when get approval history by header id: %v", err)
 		return nil, err

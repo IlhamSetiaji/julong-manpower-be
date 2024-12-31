@@ -17,7 +17,7 @@ type IMPRequestRepository interface {
 	FindAll() ([]entity.MPRequestHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.MPRequestHeader, error)
 	GetHeadersByCreatedAt(createdAt string) ([]entity.MPRequestHeader, error)
-	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]entity.MPRequestApprovalHistory, error)
+	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) ([]entity.MPRequestApprovalHistory, error)
 	FindById(id uuid.UUID) (*entity.MPRequestHeader, error)
 	Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPRequestApprovalHistory) error
@@ -57,10 +57,14 @@ func (r *MPRequestRepository) GetHeadersByDocumentDate(documentDate string) ([]e
 	return mpRequestHeaders, nil
 }
 
-func (r *MPRequestRepository) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID) ([]entity.MPRequestApprovalHistory, error) {
+func (r *MPRequestRepository) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) ([]entity.MPRequestApprovalHistory, error) {
 	var mpRequestApprovalHistories []entity.MPRequestApprovalHistory
+	var whereStatus string = ""
+	if status != "" {
+		whereStatus = "status = '" + string(status) + "'"
+	}
 
-	if err := r.DB.Where("mp_request_header_id = ?", headerID).Find(&mpRequestApprovalHistories).Error; err != nil {
+	if err := r.DB.Where("mp_request_header_id = ?", headerID).Where(whereStatus).Find(&mpRequestApprovalHistories).Error; err != nil {
 		r.Log.Errorf("[MPRequestRepository.GetRequestApprovalHistoryByHeaderId] error when query mp request approval histories: %v", err)
 		return nil, errors.New("[MPRequestRepository.GetRequestApprovalHistoryByHeaderId] error when query mp request approval histories " + err.Error())
 	}

@@ -1047,6 +1047,17 @@ func (uc *MPPlanningUseCase) RejectStatusPartialMPPlanningHeaderUsingPT(req *req
 }
 
 func (uc *MPPlanningUseCase) GetPlanningApprovalHistoryByHeaderId(headerID uuid.UUID) ([]*response.MPPlanningApprovalHistoryResponse, error) {
+	mpHeader, err := uc.MPPlanningRepository.FindHeaderById(headerID)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.GetPlanningApprovalHistoryByHeaderId] " + err.Error())
+		return nil, err
+	}
+
+	if mpHeader == nil {
+		uc.Log.Errorf("[MPPlanningUseCase.GetPlanningApprovalHistoryByHeaderId] MP Planning Header not found")
+		return nil, errors.New("MP Planning Header not found")
+	}
+
 	approvalHistories, err := uc.MPPlanningRepository.GetPlanningApprovalHistoryByHeaderId(headerID)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.GetPlanningApprovalHistoryByHeaderId] " + err.Error())
