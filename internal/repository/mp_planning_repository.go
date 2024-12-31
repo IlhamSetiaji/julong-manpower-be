@@ -311,9 +311,9 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 			case "ceo":
 				whereApprover = "approved_by IS NULL AND approver_manager_id IS NOT NULL AND approver_recruitment_id IS NOT NULL AND recommended_by IS NOT NULL"
 			case "manager":
-				whereApprover = "approver_manager_id IS NULL"
+				whereApprover = "approver_manager_id IS NULL OR approver_manager_id IS NOT NULL"
 			case "recruitment":
-				whereApprover = "approver_recruitment_id IS NULL"
+				whereApprover = "approver_recruitment_id IS NULL OR approver_recruitment_id IS NOT NULL"
 			case "direktur":
 				whereApprover = "recommended_by = '' AND approver_manager_id IS NOT NULL"
 			default:
