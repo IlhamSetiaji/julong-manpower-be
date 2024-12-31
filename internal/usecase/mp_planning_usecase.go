@@ -1734,7 +1734,7 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 	}
 
 	// check if mp planning header is exist by requestor, org loc, status != completed
-	exist, err := uc.MPPlanningRepository.FindHeaderByRequestorOrganizationLocationStatus(req.RequestorID, req.OrganizationLocationID, entity.MPPlaningStatusComplete)
+	exist, err := uc.MPPlanningRepository.FindHeaderByRequestorOrganizationLocationNotStatus(req.RequestorID, req.OrganizationLocationID, entity.MPPlaningStatusComplete)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
 		return nil, err

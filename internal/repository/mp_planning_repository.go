@@ -15,7 +15,7 @@ type IMPPlanningRepository interface {
 	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus, requestorId string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
-	FindHeaderByRequestorOrganizationLocationStatus(requestorID uuid.UUID, organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
+	FindHeaderByRequestorOrganizationLocationNotStatus(requestorID uuid.UUID, organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
 	FindAllHeadersByOrganizationLocationID(organizationLocationID uuid.UUID) (*[]entity.MPPlanningHeader, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderBySomething(something map[string]interface{}) (*entity.MPPlanningHeader, error)
@@ -99,16 +99,16 @@ func (r *MPPlanningRepository) FindAllHeadersByOrganizationLocationID(organizati
 	return &mppHeaders, nil
 }
 
-func (r *MPPlanningRepository) FindHeaderByRequestorOrganizationLocationStatus(requestorID uuid.UUID, organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error) {
+func (r *MPPlanningRepository) FindHeaderByRequestorOrganizationLocationNotStatus(requestorID uuid.UUID, organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error) {
 	var mppHeader entity.MPPlanningHeader
 
-	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("requestor_id = ? AND organization_location_id = ? AND status = ?", requestorID, organizationLocationID, status).First(&mppHeader).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("requestor_id = ? AND organization_location_id = ? AND status != ?", requestorID, organizationLocationID, status).First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			r.Log.Errorf("[MPPlanningRepository.FindHeaderByRequestorOrganizationLocationStatus] " + err.Error())
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByRequestorOrganizationLocationNotStatus] " + err.Error())
 			return nil, nil
 		} else {
-			r.Log.Errorf("[MPPlanningRepository.FindHeaderByRequestorOrganizationLocationStatus] " + err.Error())
-			return nil, errors.New("[MPPlanningRepository.FindHeaderByRequestorOrganizationLocationStatus] " + err.Error())
+			r.Log.Errorf("[MPPlanningRepository.FindHeaderByRequestorOrganizationLocationNotStatus] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindHeaderByRequestorOrganizationLocationNotStatus] " + err.Error())
 		}
 	}
 
