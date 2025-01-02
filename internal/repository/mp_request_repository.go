@@ -272,6 +272,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 				query = query.Where("department_head IS NOT NULL")
 			}
 		}
+		
 		if _, ok := filter["vp_gm_director"]; ok {
 			if filter["vp_gm_director"] == "NULL" {
 				query = query.Where("vp_gm_director IS NULL")
