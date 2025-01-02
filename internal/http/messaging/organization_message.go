@@ -19,6 +19,7 @@ type IOrganizationMessage interface {
 	SendFindOrganizationLocationsPaginatedMessage(page int, pageSize int, search string, includedIDs []string, isNull bool, orgID string) (*orgResponse.OrganizationLocationPaginatedResponse, error)
 	SendFindAllOrganizationMessage(includedIDs []string) (*[]orgResponse.OrganizationResponse, error)
 	SendFindAllOrganizationLocationsMessage(includedIDs []string) (*[]orgResponse.OrganizationLocationResponse, error)
+	SendFindAllOrgStructureChildrenIDsMessage(parentID string) (*[]string, error)
 }
 
 type OrganizationMessage struct {
@@ -326,6 +327,52 @@ func (m *OrganizationMessage) SendFindAllOrganizationLocationsMessage(includedID
 	}
 
 	return &orgLocs, nil
+}
+
+func (m *OrganizationMessage) SendFindAllOrgStructureChildrenIDsMessage(parentID string) (*[]string, error) {
+	payload := map[string]interface{}{
+		"parent_id": parentID,
+	}
+
+	docMsg := &request.RabbitMQRequest{
+		ID:          uuid.New().String(),
+		MessageType: "find_all_org_structure_children_ids",
+		MessageData: payload,
+		ReplyTo:     "julong_manpower",
+	}
+
+	log.Printf("INFO: document message: %v", docMsg)
+
+	// create channel and add to rchans with uid
+	rchan := make(chan response.RabbitMQResponse)
+	utils.Rchans[docMsg.ID] = rchan
+
+	// publish rabbit message
+	msg := utils.RabbitMsg{
+		QueueName: "julong_sso",
+		Message:   *docMsg,
+	}
+
+	utils.Pchan <- msg
+
+	// wait for reply
+	resp, err := waitReply(docMsg.ID, rchan)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Printf("INFO: response: %v", resp)
+
+	if errMsg, ok := resp.MessageData["error"].(string); ok && errMsg != "" {
+		return nil, errors.New("[SendFindAllOrgStructureChildrenIDsMessage] " + errMsg)
+	}
+
+	ids := make([]string, 0)
+	for _, id := range resp.MessageData["children_ids"].([]interface{}) {
+		ids = append(ids, id.(string))
+	}
+
+	return &ids, nil
 }
 
 func OrganizationMessageFactory(log *logrus.Logger) IOrganizationMessage {

@@ -11,6 +11,7 @@ type IUserHelper interface {
 	CheckOrganizationLocation(user map[string]interface{}) (uuid.UUID, error)
 	GetEmployeeId(user map[string]interface{}) (uuid.UUID, error)
 	GetOrganizationStructureID(user map[string]interface{}) (uuid.UUID, error)
+	GetOrganizationID(user map[string]interface{}) (uuid.UUID, error)
 }
 
 type UserHelper struct {
@@ -143,4 +144,51 @@ func (h *UserHelper) GetOrganizationStructureID(user map[string]interface{}) (uu
 
 	h.Log.Infof("Organization Structure ID: %s", organizationStructureID)
 	return organizationStructureID, nil
+}
+
+func (h *UserHelper) GetOrganizationID(user map[string]interface{}) (uuid.UUID, error) {
+	// Check if the "user" key exists and is a map
+	userData, ok := user["user"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("User information is missing or invalid")
+		return uuid.Nil, errors.New("User information is missing or invalid")
+	}
+
+	// Check if the "employee" key exists and is a map
+	employee, ok := userData["employee"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("Employee information is missing or invalid")
+		return uuid.Nil, errors.New("Employee information is missing or invalid")
+	}
+
+	// Check if the "employee_job" key exists and is a map
+	employeeJob, ok := employee["employee_job"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("Employee job information is missing or invalid")
+		return uuid.Nil, errors.New("Employee job information is missing or invalid")
+	}
+
+	// Check if the "organization" key exists and is a map
+	organization, ok := employeeJob["organization"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("Organization information is missing or invalid")
+		return uuid.Nil, errors.New("Organization information is missing or invalid")
+	}
+
+	// Check if the "ID" key exists and is a string
+	organizationIDStr, ok := organization["id"].(string)
+	if !ok {
+		h.Log.Errorf("Organization ID is missing or invalid")
+		return uuid.Nil, errors.New("Organization ID is missing or invalid")
+	}
+
+	// Parse the organization ID to uuid.UUID
+	organizationID, err := uuid.Parse(organizationIDStr)
+	if err != nil {
+		h.Log.Errorf("Invalid organization ID format: %v", err)
+		return uuid.Nil, errors.New("Invalid organization ID format")
+	}
+
+	h.Log.Infof("Organization ID: %s", organizationID)
+	return organizationID, nil
 }

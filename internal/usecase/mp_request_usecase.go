@@ -368,6 +368,19 @@ func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderRes
 }
 
 func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error) {
+	var includedIDs []string
+	if filter["approver_type"] == "department_head" {
+		// find_all_org_structure_children_ids
+		orgStructureChildrenIDs, err := uc.OrganizationMessage.SendFindAllOrgStructureChildrenIDsMessage(filter["organization_structure_id"].(string))
+		if err != nil {
+			uc.Log.Errorf("[MPRequestUseCase.FindAllPaginated] error when find all org structure children ids: %v", err)
+			return nil, err
+		}
+
+		includedIDs = append(includedIDs, filter["organization_structure_id"].(string))
+		includedIDs = append(includedIDs, *orgStructureChildrenIDs...)
+		filter["included_ids"] = includedIDs
+	}
 
 	mpRequestHeaders, total, err := uc.MPRequestRepository.FindAllPaginated(page, pageSize, search, filter)
 	if err != nil {

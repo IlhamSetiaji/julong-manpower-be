@@ -220,6 +220,14 @@ func (h *MPRequestHandler) FindAllPaginated(ctx *gin.Context) {
 	}
 	filter["organization_structure_id"] = orgStructureUUID.String()
 
+	orgUUID, err := h.UserHelper.GetOrganizationID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization id: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	filter["organization_id"] = orgUUID.String()
+
 	h.Log.Infof("requestor id: %s", requestorID)
 
 	isAdmin := ctx.Query("is_admin")
