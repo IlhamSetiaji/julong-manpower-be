@@ -258,7 +258,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 	var isAdmin bool = false
 	var includedIDs []string = []string{}
 
-	query := r.DB.Model(&entity.MPRequestHeader{})
+	query := r.DB.Preload("MPPPeriod").Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Model(&entity.MPRequestHeader{})
 
 	if search != "" {
 		query = query.Where("document_number LIKE ?", "%"+search+"%")
@@ -312,7 +312,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 		return nil, 0, errors.New("[MPRequestRepository.FindAllPaginated] error when count mp request headers " + err.Error())
 	}
 
-	if err := query.Preload("MPPPeriod").Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Offset((page - 1) * pageSize).Limit(pageSize).Find(&mpRequestHeaders).Error; err != nil {
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mpRequestHeaders).Error; err != nil {
 		r.Log.Errorf("[MPRequestRepository.FindAllPaginated] error when find mp request headers: %v", err)
 		return nil, 0, errors.New("[MPRequestRepository.FindAllPaginated] error when find mp request headers " + err.Error())
 	}

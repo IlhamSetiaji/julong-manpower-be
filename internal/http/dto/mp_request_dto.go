@@ -203,7 +203,12 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 			}
 			return majors
 		}(),
-		MPPlanningHeader: &mpPlanningHeader,
+		MPPlanningHeader: func() *response.MPPlanningHeaderResponse {
+			if mpPlanningHeader.ID == uuid.Nil {
+				return nil
+			}
+			return &mpPlanningHeader
+		}(),
 		// MPPlanningHeader: map[string]interface{}{
 		// 	"ID":             ent.MPPlanningHeader.ID,
 		// 	"DocumentNumber": ent.MPPlanningHeader.DocumentNumber,

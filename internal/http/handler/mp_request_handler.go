@@ -181,6 +181,11 @@ func (h *MPRequestHandler) FindAllPaginated(ctx *gin.Context) {
 		filter["hrd_ho_unit"] = hrdHoUnit
 	}
 
+	isAdmin := ctx.Query("is_admin")
+	if isAdmin != "" {
+		filter["is_admin"] = isAdmin
+	}
+
 	res, err := h.UseCase.FindAllPaginated(page, pageSize, search, filter)
 	if err != nil {
 		h.Log.Errorf("[MPRequestHandler.FindAllPaginated] error when find all paginated: %v", err)
