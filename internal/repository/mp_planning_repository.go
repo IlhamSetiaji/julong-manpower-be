@@ -13,6 +13,7 @@ import (
 
 type IMPPlanningRepository interface {
 	GetHighestDocumentNumberByDate(date string) (int, error)
+	CountMPPlanningHeaderByMPPPeriodIDAndApproverType(mppPeriodID uuid.UUID, approverType string) (int64, error)
 	FindAllHeadersPaginated(page int, pageSize int, search string, approverType string, orgLocationId string, orgId string, status entity.MPPlaningStatus, requestorId string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeadersByRequestorIDPaginated(requestorID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
@@ -45,6 +46,7 @@ type IMPPlanningRepository interface {
 	FindLineById(id uuid.UUID) (*entity.MPPlanningLine, error)
 	CreateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	UpdateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
+	UpdateLineRemainingBalances(id uuid.UUID, remainingBalanceMT int, remainingBalancePH int) error
 	UpdateLineByHeaderIDAndJobID(headerID uuid.UUID, jobID uuid.UUID, mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	FindLineByHeaderIDAndJobID(headerID uuid.UUID, jobID uuid.UUID) (*entity.MPPlanningLine, error)
 	GetLinesByHeaderAndJobID(headerID uuid.UUID, jobID uuid.UUID) (*[]entity.MPPlanningLine, error)
@@ -96,6 +98,33 @@ func (r *MPPlanningRepository) GetHighestDocumentNumberByDate(date string) (int,
 		return 0, err
 	}
 	return maxNumber, nil
+}
+
+func (r *MPPlanningRepository) CountMPPlanningHeaderByMPPPeriodIDAndApproverType(mppPeriodID uuid.UUID, approverType string) (int64, error) {
+	var total int64
+
+	var whereApprover string = ""
+	if approverType != "" {
+		switch approverType {
+		case "manager":
+			whereApprover = "approver_manager_id IS NOT NULL"
+		case "recruitment":
+			whereApprover = "approver_recruitment_id IS NOT NULL"
+		case "direktur":
+			whereApprover = "recommended_by IS NOT NULL"
+		case "ceo":
+			whereApprover = "approved_by IS NULL AND approver_manager_id IS NOT NULL AND approver_recruitment_id IS NOT NULL AND recommended_by IS NOT NULL"
+		default:
+			whereApprover = ""
+		}
+	}
+
+	if err := r.DB.Model(&entity.MPPlanningHeader{}).Where("mpp_period_id = ?", mppPeriodID).Where(whereApprover).Where("status != 'COMPLETED'").Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.CountMPPlanningHeaderByMPPPeriodIDAndApproverType] " + err.Error())
+		return 0, errors.New("[MPPlanningRepository.CountMPPlanningHeaderByMPPPeriodIDAndApproverType] " + err.Error())
+	}
+
+	return total, nil
 }
 
 func (r *MPPlanningRepository) FindAllHeadersByOrganizationLocationID(organizationLocationID uuid.UUID) (*[]entity.MPPlanningHeader, error) {
@@ -414,7 +443,7 @@ func (r *MPPlanningRepository) FindHeaderByOrganizationLocationIDAndStatus(organ
 	if status != "" {
 		whereStatus = "status = '" + string(status) + "'"
 	}
-	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where("approver_manager_id IS NOT NULL AND recommend_by IS NOT NULL AND requestor_id IS NOT NULL").First(&mppHeader).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where("approver_manager_id IS NOT NULL AND recommended_by IS NOT NULL AND requestor_id IS NOT NULL").First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
 			return nil, nil
@@ -903,6 +932,29 @@ func (r *MPPlanningRepository) UpdateLine(mppLine *entity.MPPlanningLine) (*enti
 	}
 
 	return mppLine, nil
+}
+
+func (r *MPPlanningRepository) UpdateLineRemainingBalances(id uuid.UUID, remainingBalanceMT int, remainingBalancePH int) error {
+	tx := r.DB.Begin()
+
+	if tx.Error != nil {
+		r.Log.Errorf("[MPPlanningRepository.UpdateLineRemainingBalances] " + tx.Error.Error())
+		return errors.New("[MPPlanningRepository.UpdateLineRemainingBalances] " + tx.Error.Error())
+	}
+
+	if err := tx.Model(&entity.MPPlanningLine{}).Where("id = ?", id).Updates(map[string]interface{}{"remaining_balance_mt": remainingBalanceMT, "remaining_balance_ph": remainingBalancePH}).Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.UpdateLineRemainingBalances] " + err.Error())
+		return errors.New("[MPPlanningRepository.UpdateLineRemainingBalances] " + err.Error())
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		tx.Rollback()
+		r.Log.Errorf("[MPPlanningRepository.UpdateLineRemainingBalances] " + err.Error())
+		return errors.New("[MPPlanningRepository.UpdateLineRemainingBalances] " + err.Error())
+	}
+
+	return nil
 }
 
 func (r *MPPlanningRepository) UpdateLineByHeaderIDAndJobID(headerID uuid.UUID, jobID uuid.UUID, mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error) {

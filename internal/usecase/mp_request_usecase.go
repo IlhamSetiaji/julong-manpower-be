@@ -475,16 +475,13 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 
 			for _, mpPlanningLine := range *mpPlanningLines {
 				if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumMT {
-					mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.TotalNeeds
+					uc.Log.Info("Mantappp")
+					mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.MaleNeeds - mpRequestHeader.FemaleNeeds
 				} else if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumPH {
-					mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.TotalNeeds
+					mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.MaleNeeds - mpRequestHeader.FemaleNeeds
 				}
-				// _, err = uc.MPPlanningRepository.UpdateLineByHeaderIDAndJobID(*mpRequestHeader.MPPlanningHeaderID, *mpRequestHeader.JobID, &mpPlanningLine)
-				// if err != nil {
-				// 	uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line by header id and job id: %v", err)
-				// 	return err
-				// }
-				_, err = uc.MPPlanningRepository.UpdateLine(&mpPlanningLine)
+
+				err = uc.MPPlanningRepository.UpdateLineRemainingBalances(mpPlanningLine.ID, mpPlanningLine.RemainingBalanceMT, mpPlanningLine.RemainingBalancePH)
 				if err != nil {
 					uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line: %v", err)
 					return err

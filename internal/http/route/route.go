@@ -72,6 +72,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.GET("/mp-plannings/document-number", c.MPPlanningHandler.GenerateDocumentNumber)
 			apiRoute.GET("/mp-plannings/requestor", c.MPPlanningHandler.FindAllHeadersByRequestorIDPaginated)
 			apiRoute.GET("/mp-plannings/batch", c.MPPlanningHandler.FindAllHeadersForBatchPaginated)
+			apiRoute.GET("/mp-plannings/count", c.MPPlanningHandler.CountMPPlanningHeaderByMPPPeriodIDAndApproverType)
 			apiRoute.GET("/mp-plannings/approver-type", c.MPPlanningHandler.FindAllHeadersGroupedApproverPaginated)
 			apiRoute.GET("/mp-plannings/jobs/:header_id", c.MPPlanningHandler.FindJobsByHeaderID)
 			apiRoute.GET("/mp-plannings/locations/:header_id", c.MPPlanningHandler.FindOrganizationLocationsByHeaderID)

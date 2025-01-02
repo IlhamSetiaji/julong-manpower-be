@@ -19,6 +19,7 @@ import (
 
 type IMPPlanningUseCase interface {
 	FindAllHeadersPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.FindAllHeadersPaginatedMPPlanningResponse, error)
+	CountMPPlanningHeaderByMPPPeriodIDAndApproverType(mppPeriodID uuid.UUID, approverType string) (int64, error)
 	FindHeaderBySomething(request *request.MPPlanningHeaderRequest) (*response.MPPlanningHeaderResponse, error)
 	GetHeadersBySomething(request *request.MPPlanningHeaderRequest) ([]*response.MPPlanningHeaderResponse, error)
 	FindJobsByHeaderID(headerID uuid.UUID) (*[]response.JobResponse, error)
@@ -277,6 +278,16 @@ func (uc *MPPlanningUseCase) FindAllHeadersPaginated(req *request.FindAllHeaders
 		}(),
 		Total: total,
 	}, nil
+}
+
+func (uc *MPPlanningUseCase) CountMPPlanningHeaderByMPPPeriodIDAndApproverType(mppPeriodID uuid.UUID, approverType string) (int64, error) {
+	total, err := uc.MPPlanningRepository.CountMPPlanningHeaderByMPPPeriodIDAndApproverType(mppPeriodID, approverType)
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.CountMPPlanningHeaderByMPPPeriodIDAndApproverType] " + err.Error())
+		return 0, err
+	}
+
+	return total, nil
 }
 
 func (uc *MPPlanningUseCase) FindJobsByHeaderID(headerID uuid.UUID) (*[]response.JobResponse, error) {
