@@ -265,33 +265,51 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 	}
 
 	if filter != nil {
-		if _, ok := filter["department_head"]; ok {
-			if filter["department_head"] == "NULL" {
-				query = query.Where("department_head IS NULL")
-			} else {
+		// if _, ok := filter["requestor_id"]; ok {
+		// 	query = query.Where("requestor_id = ?", filter["requestor_id"])
+		// }
+		// if _, ok := filter["department_head"]; ok {
+		// 	if filter["department_head"] == "NULL" {
+		// 		query = query.Where("department_head IS NULL")
+		// 	} else {
+		// 		query = query.Where("department_head IS NOT NULL")
+		// 	}
+		// }
+		// if _, ok := filter["vp_gm_director"]; ok {
+		// 	if filter["vp_gm_director"] == "NULL" {
+		// 		query = query.Where("vp_gm_director IS NULL")
+		// 	} else {
+		// 		query = query.Where("vp_gm_director IS NOT NULL")
+		// 	}
+		// }
+		// if _, ok := filter["ceo"]; ok {
+		// 	if filter["ceo"] == "NULL" {
+		// 		query = query.Where("ceo IS NULL")
+		// 	} else {
+		// 		query = query.Where("ceo IS NOT NULL")
+		// 	}
+		// }
+		// if _, ok := filter["hrd_ho_unit"]; ok {
+		// 	if filter["hrd_ho_unit"] == "NULL" {
+		// 		query = query.Where("hrd_ho_unit IS NULL")
+		// 	} else {
+		// 		query = query.Where("hrd_ho_unit IS NOT NULL")
+		// 	}
+		// }
+		if _, ok := filter["approver_type"]; ok {
+			switch filter["approver_type"] {
+			case "requestor":
+				query = query.Where("requestor_id = ?", filter["requestor_id"]).Where("status != ?", entity.MPRequestStatusCompleted)
+			case "department_head":
 				query = query.Where("department_head IS NOT NULL")
-			}
-		}
-		
-		if _, ok := filter["vp_gm_director"]; ok {
-			if filter["vp_gm_director"] == "NULL" {
-				query = query.Where("vp_gm_director IS NULL")
-			} else {
+			case "vp_gm_director":
 				query = query.Where("vp_gm_director IS NOT NULL")
-			}
-		}
-		if _, ok := filter["ceo"]; ok {
-			if filter["ceo"] == "NULL" {
-				query = query.Where("ceo IS NULL")
-			} else {
+			case "ceo":
 				query = query.Where("ceo IS NOT NULL")
-			}
-		}
-		if _, ok := filter["hrd_ho_unit"]; ok {
-			if filter["hrd_ho_unit"] == "NULL" {
-				query = query.Where("hrd_ho_unit IS NULL")
-			} else {
+			case "hrd_ho_unit":
 				query = query.Where("hrd_ho_unit IS NOT NULL")
+			default:
+				query = query.Where("requestor_id = ?", filter["requestor_id"]).Where("status != ?", entity.MPRequestStatusCompleted)
 			}
 		}
 		if _, ok := filter["is_admin"]; ok {

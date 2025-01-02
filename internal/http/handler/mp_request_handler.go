@@ -10,6 +10,8 @@ import (
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
@@ -33,10 +35,11 @@ type IMPRequestHandler interface {
 }
 
 type MPRequestHandler struct {
-	Log      *logrus.Logger
-	Viper    *viper.Viper
-	UseCase  usecase.IMPRequestUseCase
-	Validate *validator.Validate
+	Log        *logrus.Logger
+	Viper      *viper.Viper
+	UseCase    usecase.IMPRequestUseCase
+	Validate   *validator.Validate
+	UserHelper helper.IUserHelper
 }
 
 func NewMPRequestHandler(
@@ -44,19 +47,22 @@ func NewMPRequestHandler(
 	viper *viper.Viper,
 	useCase usecase.IMPRequestUseCase,
 	validate *validator.Validate,
+	uh helper.IUserHelper,
 ) IMPRequestHandler {
 	return &MPRequestHandler{
-		Log:      log,
-		Viper:    viper,
-		UseCase:  useCase,
-		Validate: validate,
+		Log:        log,
+		Viper:      viper,
+		UseCase:    useCase,
+		Validate:   validate,
+		UserHelper: uh,
 	}
 }
 
 func MPRequestHandlerFactory(log *logrus.Logger, viper *viper.Viper) IMPRequestHandler {
 	useCase := usecase.MPRequestUseCaseFactory(viper, log)
 	validate := config.NewValidator(viper)
-	return NewMPRequestHandler(log, viper, useCase, validate)
+	uh := helper.UserHelperFactory(log)
+	return NewMPRequestHandler(log, viper, useCase, validate, uh)
 }
 
 func (h *MPRequestHandler) GenerateDocumentNumber(ctx *gin.Context) {
@@ -161,25 +167,60 @@ func (h *MPRequestHandler) FindAllPaginated(ctx *gin.Context) {
 		filter["status"] = status
 	}
 
-	departmentHead := ctx.Query("department_head")
-	if departmentHead != "" {
-		filter["department_head"] = departmentHead
+	// departmentHead := ctx.Query("department_head")
+	// if departmentHead != "" {
+	// 	filter["department_head"] = departmentHead
+	// }
+
+	// vpGmDirector := ctx.Query("vp_gm_director")
+	// if vpGmDirector != "" {
+	// 	filter["vp_gm_director"] = vpGmDirector
+	// }
+
+	// ceo := ctx.Query("ceo")
+	// if ceo != "" {
+	// 	filter["ceo"] = ceo
+	// }
+
+	// hrdHoUnit := ctx.Query("hrd_ho_unit")
+	// if hrdHoUnit != "" {
+	// 	filter["hrd_ho_unit"] = hrdHoUnit
+	// }
+	approverType := ctx.Query("approver_type")
+	if approverType != "" {
+		filter["approver_type"] = approverType
 	}
 
-	vpGmDirector := ctx.Query("vp_gm_director")
-	if vpGmDirector != "" {
-		filter["vp_gm_director"] = vpGmDirector
+	var requestorID string
+	user, err := middleware.GetUser(ctx, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
 	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		return
+	}
+	requestorUUID, err := h.UserHelper.GetEmployeeId(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting employee id: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	requestorID = requestorUUID.String()
+	filter["requestor_id"] = requestorID
 
-	ceo := ctx.Query("ceo")
-	if ceo != "" {
-		filter["ceo"] = ceo
+	orgStructureUUID, err := h.UserHelper.GetOrganizationStructureID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization structure id: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
 	}
+	filter["organization_structure_id"] = orgStructureUUID.String()
 
-	hrdHoUnit := ctx.Query("hrd_ho_unit")
-	if hrdHoUnit != "" {
-		filter["hrd_ho_unit"] = hrdHoUnit
-	}
+	h.Log.Infof("requestor id: %s", requestorID)
 
 	isAdmin := ctx.Query("is_admin")
 	if isAdmin != "" {
