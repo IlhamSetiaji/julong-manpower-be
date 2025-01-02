@@ -348,11 +348,11 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 			r.Log.Infof("Approver: %s", whereApprover)
 			if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where(whereApprover).Where(whereRequestor).First(&mppHeader).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
 					return nil, nil
 				} else {
-					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
-					return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
+					return nil, errors.New("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
 				}
 			} else {
 				r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
@@ -367,11 +367,11 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 			r.Log.Infof("Approver: %s", whereApprover)
 			if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).First(&mppHeader).Error; err != nil {
 				if errors.Is(err, gorm.ErrRecordNotFound) {
-					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
 					return nil, nil
 				} else {
-					r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
-					return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
+					return nil, errors.New("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
 				}
 			} else {
 				r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
@@ -393,11 +393,11 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 
 		if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where(whereRequestor).First(&mppHeader).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
-				r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+				r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
 				return nil, nil
 			} else {
-				r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
-				return nil, errors.New("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
+				r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
+				return nil, errors.New("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
 			}
 		}
 	}
@@ -414,7 +414,7 @@ func (r *MPPlanningRepository) FindHeaderByOrganizationLocationIDAndStatus(organ
 	if status != "" {
 		whereStatus = "status = '" + string(status) + "'"
 	}
-	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).First(&mppHeader).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where("approver_manager_id IS NOT NULL AND recommend_by IS NOT NULL AND requestor_id IS NOT NULL").First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.FindHeaderByOrganizationLocationIDAndStatus] " + err.Error())
 			return nil, nil
