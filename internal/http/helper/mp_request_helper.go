@@ -2,6 +2,7 @@ package helper
 
 import (
 	"errors"
+	"strings"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
@@ -243,11 +244,11 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		ForOrganizationLocationName:  forOrgLocExist.Name,
 		ForOrganizationStructureName: forOrgStructExist.Name,
 		JobName:                      jobExist.Name,
-		RequestorName:                requestorExist.Name,
-		DepartmentHeadName:           deptHeadExist.Name,
-		VpGmDirectorName:             vpGmDirectorExist.Name,
-		CeoName:                      ceoExist.Name,
-		HrdHoUnitName:                hrdHoUnitExist.Name,
+		RequestorName:                getFirstThreeWords(requestorExist.Name),
+		DepartmentHeadName:           getFirstThreeWords(deptHeadExist.Name),
+		VpGmDirectorName:             getFirstThreeWords(vpGmDirectorExist.Name),
+		CeoName:                      getFirstThreeWords(ceoExist.Name),
+		HrdHoUnitName:                getFirstThreeWords(hrdHoUnitExist.Name),
 		EmpOrganizationName:          empOrgExist.Name,
 		JobLevelName:                 jobLevelExist.Name,
 		JobLevel:                     int(jobLevelExist.Level),
@@ -256,4 +257,12 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		VpGmDirectorEmployeeJob:      vpGmDirectorExist.EmployeeJob,
 		CeoEmployeeJob:               ceoExist.EmployeeJob,
 	}, nil
+}
+
+func getFirstThreeWords(name string) string {
+	words := strings.Fields(name)
+	if len(words) > 3 {
+		return strings.Join(words[:3], " ")
+	}
+	return name
 }
