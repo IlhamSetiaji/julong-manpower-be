@@ -12,6 +12,7 @@ import (
 )
 
 type IMPRequestRepository interface {
+	GetHighestDocumentNumberByDate(date string) (int, error)
 	Create(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) ([]entity.MPRequestHeader, int64, error)
 	FindAll() ([]entity.MPRequestHeader, error)
@@ -44,6 +45,20 @@ func (r *MPRequestRepository) FindAll() ([]entity.MPRequestHeader, error) {
 	}
 
 	return mpRequestHeaders, nil
+}
+
+func (r *MPRequestRepository) GetHighestDocumentNumberByDate(date string) (int, error) {
+	var maxNumber int
+	err := r.DB.Raw(`
+			SELECT COALESCE(MAX(CAST(SUBSTRING(document_number FROM '[0-9]+$') AS INTEGER)), 0)
+			FROM mp_request_headers
+			WHERE DATE(created_at) = ?
+	`, date).Scan(&maxNumber).Error
+	if err != nil {
+		r.Log.Errorf("[MPPlanningRepository.GetHighestDocumentNumberByDate] error when querying max document number: %v", err)
+		return 0, err
+	}
+	return maxNumber, nil
 }
 
 func (r *MPRequestRepository) GetHeadersByDocumentDate(documentDate string) ([]entity.MPRequestHeader, error) {

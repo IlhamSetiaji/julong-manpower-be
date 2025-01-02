@@ -209,19 +209,32 @@ func (uc *MPRequestUseCase) Delete(id uuid.UUID) error {
 	return nil
 }
 
+// func (uc *MPRequestUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
+// 	// foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
+// 	foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByCreatedAt(dateNow.Format("2006-01-02"))
+// 	if err != nil {
+// 		uc.Log.Errorf("[MPRequestUseCase.GenerateDocumentNumber] error when get headers by document date: %v", err)
+// 		return "", err
+// 	}
+
+// 	if len(foundMpRequestHeader) == 0 || foundMpRequestHeader == nil {
+// 		return "MPR/" + dateNow.Format("20060102") + "/001", nil
+// 	}
+
+// 	return "MPR/" + dateNow.Format("20060102") + "/" + fmt.Sprintf("%03d", len(*&foundMpRequestHeader)+1), nil
+// }
+
 func (uc *MPRequestUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
-	// foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByDocumentDate(dateNow.Format("2006-01-02"))
-	foundMpRequestHeader, err := uc.MPRequestRepository.GetHeadersByCreatedAt(dateNow.Format("2006-01-02"))
+	dateStr := dateNow.Format("2006-01-02")
+	highestNumber, err := uc.MPRequestRepository.GetHighestDocumentNumberByDate(dateStr)
 	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.GenerateDocumentNumber] error when get headers by document date: %v", err)
+		uc.Log.Errorf("[MPRequestUseCase.GenerateDocumentNumber] " + err.Error())
 		return "", err
 	}
 
-	if len(foundMpRequestHeader) == 0 || foundMpRequestHeader == nil {
-		return "MPR/" + dateNow.Format("20060102") + "/001", nil
-	}
-
-	return "MPR/" + dateNow.Format("20060102") + "/" + fmt.Sprintf("%03d", len(*&foundMpRequestHeader)+1), nil
+	newNumber := highestNumber + 1
+	documentNumber := fmt.Sprintf("MPR/%s/%03d", dateNow.Format("20060102"), newNumber)
+	return documentNumber, nil
 }
 
 func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*response.MPRequestHeaderResponse, error) {

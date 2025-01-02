@@ -1309,19 +1309,31 @@ func (uc *MPPlanningUseCase) FindAllHeadersByRequestorIDPaginated(requestorID uu
 	}, nil
 }
 
+// func (uc *MPPlanningUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
+// 	foundMpPlanningHeader, err := uc.MPPlanningRepository.GetHeadersByCreatedAt(dateNow.Format("2006-01-02"))
+// 	if err != nil {
+// 		uc.Log.Errorf("[MPPlanningUseCase.GenerateDocumentNumber] " + err.Error())
+// 		return "", err
+// 	}
+
+// 	if len(*foundMpPlanningHeader) == 0 {
+// 		uc.Log.Infof("[MPPlanningUseCase.GenerateDocumentNumber] foundMpPlanningHeader is nil")
+// 		return "MPP/" + dateNow.Format("20060102") + "/001", nil
+// 	}
+
+//		return "MPP/" + dateNow.Format("20060102") + "/" + fmt.Sprintf("%03d", len(*foundMpPlanningHeader)+1), nil
+//	}
 func (uc *MPPlanningUseCase) GenerateDocumentNumber(dateNow time.Time) (string, error) {
-	foundMpPlanningHeader, err := uc.MPPlanningRepository.GetHeadersByCreatedAt(dateNow.Format("2006-01-02"))
+	dateStr := dateNow.Format("2006-01-02")
+	highestNumber, err := uc.MPPlanningRepository.GetHighestDocumentNumberByDate(dateStr)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.GenerateDocumentNumber] " + err.Error())
 		return "", err
 	}
 
-	if len(*foundMpPlanningHeader) == 0 {
-		uc.Log.Infof("[MPPlanningUseCase.GenerateDocumentNumber] foundMpPlanningHeader is nil")
-		return "MPP/" + dateNow.Format("20060102") + "/001", nil
-	}
-
-	return "MPP/" + dateNow.Format("20060102") + "/" + fmt.Sprintf("%03d", len(*foundMpPlanningHeader)+1), nil
+	newNumber := highestNumber + 1
+	documentNumber := fmt.Sprintf("MPP/%s/%03d", dateNow.Format("20060102"), newNumber)
+	return documentNumber, nil
 }
 
 func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error) {
