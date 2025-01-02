@@ -1,6 +1,7 @@
 package dto
 
 import (
+	"sort"
 	"strconv"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -164,6 +165,13 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 					executive = append(executive, *v)
 				}
 
+				// Sort executive by JobLevel
+				sort.Slice(executive, func(i, j int) bool {
+					levelI, _ := strconv.Atoi(executive[i].JobLevelName)
+					levelJ, _ := strconv.Atoi(executive[j].JobLevelName)
+					return levelI < levelJ
+				})
+
 				return executive
 			}(),
 			NonExecutive: func() []response.DocumentCalculationBatchResponse {
@@ -210,6 +218,13 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 				for _, v := range groupedByJobLevel {
 					nonExecutive = append(nonExecutive, *v)
 				}
+
+				// Sort nonExecutive by JobLevel
+				sort.Slice(nonExecutive, func(i, j int) bool {
+					levelI, _ := strconv.Atoi(nonExecutive[i].JobLevelName)
+					levelJ, _ := strconv.Atoi(nonExecutive[j].JobLevelName)
+					return levelI < levelJ
+				})
 
 				return nonExecutive
 			}(),
