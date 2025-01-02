@@ -326,6 +326,8 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 			}
 			if status != "" {
 				whereStatus = "status = '" + string(status) + "'"
+			} else {
+				whereStatus = "status != 'COMPLETED'"
 			}
 
 			r.Log.Infof("Approver: %s", whereApprover)
@@ -343,6 +345,8 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 		} else {
 			if status != "" {
 				whereStatus = "status = '" + string(status) + "'"
+			} else {
+				whereStatus = "status != 'COMPLETED'"
 			}
 
 			r.Log.Infof("Approver: %s", whereApprover)
