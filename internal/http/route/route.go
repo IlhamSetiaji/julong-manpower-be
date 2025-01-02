@@ -47,6 +47,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.GET("/mpp-periods", c.MPPPeriodHandler.FindAllPaginated)
 			apiRoute.GET("/mpp-periods/current", c.MPPPeriodHandler.FindByCurrentDateAndStatus)
 			apiRoute.GET("/mpp-periods/status", c.MPPPeriodHandler.FindByStatus)
+			apiRoute.GET("/mpp-periods/update-status", c.MPPPeriodHandler.UpdateStatusByDate)
 			apiRoute.GET("/mpp-periods/:id", c.MPPPeriodHandler.FindById)
 			apiRoute.POST("/mpp-periods", c.MPPPeriodHandler.Create)
 			apiRoute.PUT("/mpp-periods", c.MPPPeriodHandler.Update)

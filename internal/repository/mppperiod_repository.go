@@ -198,7 +198,7 @@ func (r *MPPPeriodRepository) GetMPPPeriodsByStartDate(date time.Time) (*[]entit
 	var mppPeriods []entity.MPPPeriod
 
 	// err := r.DB.Where("start_date <= ? AND end_date >= ?", date.Format("2006-01-02"), date.Format("2006-01-02")).Find(&mppPeriods).Error
-	err := r.DB.Where("start_date = ", date.Format("2006-01-02")).Find(&mppPeriods).Error
+	err := r.DB.Where("start_date = ?", date.Format("2006-01-02")).Find(&mppPeriods).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -217,7 +217,7 @@ func (r *MPPPeriodRepository) GetMPPPeriodsByEndDate(date time.Time) (*[]entity.
 	var mppPeriods []entity.MPPPeriod
 
 	// err := r.DB.Where("start_date <= ? AND end_date >= ?", date.Format("2006-01-02"), date.Format("2006-01-02")).Find(&mppPeriods).Error
-	err := r.DB.Where("end_date = ", date.Format("2006-01-02")).Find(&mppPeriods).Error
+	err := r.DB.Where("end_date = ?", date.Format("2006-01-02")).Find(&mppPeriods).Error
 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {

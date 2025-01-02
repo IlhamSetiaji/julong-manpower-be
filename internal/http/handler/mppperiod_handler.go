@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -24,6 +25,7 @@ type IMPPPeriodHander interface {
 	Delete(ctx *gin.Context)
 	FindByCurrentDateAndStatus(ctx *gin.Context)
 	FindByStatus(ctx *gin.Context)
+	UpdateStatusByDate(ctx *gin.Context)
 }
 
 type MPPPeriodHandler struct {
@@ -200,4 +202,48 @@ func (h *MPPPeriodHandler) FindByStatus(ctx *gin.Context) {
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "find by status success", resp)
+}
+
+func (h *MPPPeriodHandler) UpdateStatusByDate(ctx *gin.Context) {
+	date := ctx.Query("date")
+
+	if date == "" {
+		h.Log.Errorf("[MPPPeriodHandler.UpdateStatusByDate] " + "date is required")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "date is required")
+		return
+	}
+
+	status := ctx.Query("status")
+	if status == "" {
+		h.Log.Errorf("[MPPPeriodHandler.UpdateStatusByDate] " + "status is required")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "status is required")
+		return
+	}
+	parsedDate, err := time.Parse("2006-01-02", date)
+	if err != nil {
+		h.Log.Errorf("[MPPPeriodHandler.UpdateStatusByDate] " + err.Error())
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "invalid date format")
+		return
+	}
+	if status == "open" {
+		err = h.UseCase.UpdateStatusToOpenByDate(parsedDate)
+		if err != nil {
+			h.Log.Errorf("[MPPPeriodHandler.UpdateStatusByDate] " + err.Error())
+			utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+			return
+		}
+	} else if status == "close" {
+		err := h.UseCase.UpdateStatusToCloseByDate(parsedDate)
+		if err != nil {
+			h.Log.Errorf("[MPPPeriodHandler.UpdateStatusByDate] " + err.Error())
+			utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+			return
+		}
+	} else {
+		h.Log.Errorf("[MPPPeriodHandler.UpdateStatusByDate] " + "status is invalid")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "error", "status is invalid")
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "update status by date success", nil)
 }
