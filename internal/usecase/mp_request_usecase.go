@@ -460,32 +460,9 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 		}
 	}
 
-	err = uc.MPRequestRepository.UpdateStatusHeader(uuid.MustParse(req.ID), string(req.Status), req.ApproverID.String(), approvalHistory)
-	if err != nil {
-		uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp request header: %v", err)
-		return err
-	}
-
-	if req.Attachments != nil {
-		for _, attachment := range req.Attachments {
-			_, err := uc.MPRequestRepository.StoreAttachmentToApprovalHistory(approvalHistory, entity.ManpowerAttachment{
-				FileName:  attachment.FileName,
-				FileType:  attachment.FileType,
-				FilePath:  attachment.FilePath,
-				OwnerType: "mp_request_approval_histories",
-				OwnerID:   approvalHistory.ID,
-			})
-
-			if err != nil {
-				uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when store attachment to approval history: %v", err)
-				return err
-			}
-		}
-	}
-
 	if req.Level == entity.MPPRequestApprovalHistoryLevelHRDHO && req.Status == entity.MPRequestStatusCompleted {
 		if mpRequestHeader.MPPlanningHeaderID != nil {
-			mpPlanningLines, err := uc.MPPlanningRepository.GetLinesByHeaderAndJobID(*mpRequestHeader.MPPlanningHeaderID, *mpRequestHeader.MPPlanningHeader.JobID)
+			mpPlanningLines, err := uc.MPPlanningRepository.GetLinesByHeaderAndJobID(*mpRequestHeader.MPPlanningHeaderID, *mpRequestHeader.JobID)
 			if err != nil {
 				uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when get mp planning lines by header and job id: %v", err)
 				return err
@@ -507,6 +484,29 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 					uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line by header id and job id: %v", err)
 					return err
 				}
+			}
+		}
+	}
+
+	err = uc.MPRequestRepository.UpdateStatusHeader(uuid.MustParse(req.ID), string(req.Status), req.ApproverID.String(), approvalHistory)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp request header: %v", err)
+		return err
+	}
+
+	if req.Attachments != nil {
+		for _, attachment := range req.Attachments {
+			_, err := uc.MPRequestRepository.StoreAttachmentToApprovalHistory(approvalHistory, entity.ManpowerAttachment{
+				FileName:  attachment.FileName,
+				FileType:  attachment.FileType,
+				FilePath:  attachment.FilePath,
+				OwnerType: "mp_request_approval_histories",
+				OwnerID:   approvalHistory.ID,
+			})
+
+			if err != nil {
+				uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when store attachment to approval history: %v", err)
+				return err
 			}
 		}
 	}
