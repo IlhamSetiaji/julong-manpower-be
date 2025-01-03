@@ -299,7 +299,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 		if _, ok := filter["approver_type"]; ok {
 			switch filter["approver_type"] {
 			case "requestor":
-				query = query.Where("requestor_id = ?", filter["requestor_id"]).Where("status != ?", entity.MPRequestStatusCompleted)
+				query = query.Where("requestor_id = ?", filter["requestor_id"])
 			case "department_head":
 				r.Log.Info("Included IDs: ", filter["included_ids"])
 				query = query.Where("department_head IS NULL OR department_head IS NOT NULL").Where("for_organization_structure_id IN (?)", filter["included_ids"])
@@ -310,7 +310,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 			case "hrd_ho_unit":
 				query = query.Where("hrd_ho_unit IS NULL OR hrd_ho_unit IS NOT NULL").Where("status IN (?)", []entity.MPRequestStatus{entity.MPRequestStatusApproved, entity.MPRequestStatusCompleted})
 			default:
-				query = query.Where("requestor_id = ?", filter["requestor_id"]).Where("status != ?", entity.MPRequestStatusCompleted)
+				query = query.Where("requestor_id = ?", filter["requestor_id"])
 			}
 		}
 		if _, ok := filter["is_admin"]; ok {
