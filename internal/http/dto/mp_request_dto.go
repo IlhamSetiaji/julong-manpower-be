@@ -84,6 +84,7 @@ func (d *MPRequestDTO) ConvertToEntity(req *request.CreateMPRequestHeaderRequest
 		EmpOrganizationID:          req.EmpOrganizationID,
 		JobLevelID:                 req.JobLevelID,
 		IsReplacement:              *req.IsReplacement,
+		TotalNeeds:                 req.MaleNeeds + req.FemaleNeeds,
 		RecruitmentType:            req.RecruitmentType,
 	}
 }
