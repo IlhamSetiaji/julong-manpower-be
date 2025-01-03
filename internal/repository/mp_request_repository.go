@@ -305,9 +305,9 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 			case "vp_gm_director":
 				query = query.Where("vp_gm_director IS NOT NULL").Where("organization_id = ?", filter["organization_id"]).Where("mp_request_type = ?", entity.MPRequestTypeEnumOffBudget)
 			case "ceo":
-				query = query.Where("ceo IS NOT NULL")
+				query = query.Where("ceo IS NOT NULL").Where("mp_request_type = ?", entity.MPRequestTypeEnumOffBudget)
 			case "hrd_ho_unit":
-				query = query.Where("hrd_ho_unit IS NOT NULL")
+				query = query.Where("hrd_ho_unit IS NOT NULL").Where("status IN (?)", []entity.MPRequestStatus{entity.MPRequestStatusApproved, entity.MPRequestStatusCompleted})
 			default:
 				query = query.Where("requestor_id = ?", filter["requestor_id"]).Where("status != ?", entity.MPRequestStatusCompleted)
 			}

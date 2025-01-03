@@ -162,21 +162,14 @@ func (h *UserHelper) GetOrganizationID(user map[string]interface{}) (uuid.UUID, 
 	}
 
 	// Check if the "employee_job" key exists and is a map
-	employeeJob, ok := employee["employee_job"].(map[string]interface{})
-	if !ok {
-		h.Log.Errorf("Employee job information is missing or invalid")
-		return uuid.Nil, errors.New("Employee job information is missing or invalid")
-	}
-
-	// Check if the "organization" key exists and is a map
-	organization, ok := employeeJob["organization"].(map[string]interface{})
-	if !ok {
-		h.Log.Errorf("Organization information is missing or invalid")
-		return uuid.Nil, errors.New("Organization information is missing or invalid")
-	}
+	// employeeJob, ok := employee["employee_job"].(map[string]interface{})
+	// if !ok {
+	// 	h.Log.Errorf("Employee job information is missing or invalid")
+	// 	return uuid.Nil, errors.New("Employee job information is missing or invalid")
+	// }
 
 	// Check if the "ID" key exists and is a string
-	organizationIDStr, ok := organization["id"].(string)
+	organizationIDStr, ok := employee["organization_id"].(string)
 	if !ok {
 		h.Log.Errorf("Organization ID is missing or invalid")
 		return uuid.Nil, errors.New("Organization ID is missing or invalid")
