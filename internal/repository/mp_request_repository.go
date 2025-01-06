@@ -302,13 +302,13 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 				query = query.Where("requestor_id = ?", filter["requestor_id"])
 			case "department_head":
 				r.Log.Info("Included IDs: ", filter["included_ids"])
-				query = query.Where("department_head IS NULL OR department_head IS NOT NULL").Where("for_organization_structure_id IN (?)", filter["included_ids"])
+				query = query.Where("department_head IS NULL OR department_head IS NOT NULL OR requestor_id = ?", filter["requestor_id"]).Where("for_organization_structure_id IN (?)", filter["included_ids"])
 			case "vp_gm_director":
-				query = query.Where("vp_gm_director IS NULL OR vp_gm_director IS NOT NULL").Where("organization_id = ?", filter["organization_id"]).Where("mp_request_type = ?", entity.MPRequestTypeEnumOffBudget)
+				query = query.Where("vp_gm_director IS NULL OR vp_gm_director IS NOT NULL OR requestor_id = ?", filter["requestor_id"]).Where("organization_id = ?", filter["organization_id"]).Where("mp_request_type = ?", entity.MPRequestTypeEnumOffBudget)
 			case "ceo":
-				query = query.Where("ceo IS NULL OR ceo IS NOT NULL").Where("mp_request_type = ?", entity.MPRequestTypeEnumOffBudget)
+				query = query.Where("ceo IS NULL OR ceo IS NOT NULL OR requestor_id = ?", filter["requestor_id"]).Where("mp_request_type = ?", entity.MPRequestTypeEnumOffBudget)
 			case "hrd_ho_unit":
-				query = query.Where("hrd_ho_unit IS NULL OR hrd_ho_unit IS NOT NULL").Where("status IN (?)", []entity.MPRequestStatus{entity.MPRequestStatusApproved, entity.MPRequestStatusCompleted})
+				query = query.Where("hrd_ho_unit IS NULL OR hrd_ho_unit IS NOT NULL OR requestor_id = ?", filter["requestor_id"]).Where("status IN (?)", []entity.MPRequestStatus{entity.MPRequestStatusApproved, entity.MPRequestStatusCompleted})
 			default:
 				query = query.Where("requestor_id = ?", filter["requestor_id"])
 			}
