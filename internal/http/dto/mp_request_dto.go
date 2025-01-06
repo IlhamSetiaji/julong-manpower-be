@@ -123,7 +123,7 @@ func parseDate(dateStr string) time.Time {
 
 func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse {
 	var mpPlanningHeader response.MPPlanningHeaderResponse
-	if ent.MPPlanningHeaderID != nil {
+	if ent.MPPlanningHeaderID != nil && ent.MPPlanningHeader.ID != uuid.Nil {
 		mpPlanningHeader = *d.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(&ent.MPPlanningHeader)
 	} else {
 		mpPlanningHeader = response.MPPlanningHeaderResponse{}

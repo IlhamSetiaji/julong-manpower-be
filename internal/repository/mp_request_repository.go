@@ -258,7 +258,7 @@ func (r *MPRequestRepository) FindAllPaginated(page int, pageSize int, search st
 	var isAdmin bool = false
 	// var includedIDs []string = []string{}
 
-	query := r.DB.Preload("MPPPeriod").Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Model(&entity.MPRequestHeader{})
+	query := r.DB.Preload("MPPPeriod").Preload("RequestCategory").Preload("RequestMajors.Major").Model(&entity.MPRequestHeader{})
 
 	if search != "" {
 		query = query.Where("document_number LIKE ?", "%"+search+"%")
