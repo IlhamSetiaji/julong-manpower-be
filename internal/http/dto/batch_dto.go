@@ -169,7 +169,7 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 				sort.Slice(executive, func(i, j int) bool {
 					levelI, _ := strconv.Atoi(executive[i].JobLevelName)
 					levelJ, _ := strconv.Atoi(executive[j].JobLevelName)
-					return levelI < levelJ
+					return levelI > levelJ
 				})
 
 				return executive
@@ -223,7 +223,7 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 				sort.Slice(nonExecutive, func(i, j int) bool {
 					levelI, _ := strconv.Atoi(nonExecutive[i].JobLevelName)
 					levelJ, _ := strconv.Atoi(nonExecutive[j].JobLevelName)
-					return levelI < levelJ
+					return levelI > levelJ
 				})
 
 				return nonExecutive
