@@ -13,9 +13,11 @@ type SendFindJobLevelByIDMessageRequest struct {
 }
 
 type FindAllPaginatedJobPlafonRequest struct {
-	Page     int    `json:"page"`
-	PageSize int    `json:"page_size"`
-	Search   string `json:"search"`
+	Page           int    `json:"page"`
+	PageSize       int    `json:"page_size"`
+	Search         string `json:"search"`
+	RequestorID    string `json:"requestor_id"`
+	OrganizationID string `json:"organization_id"`
 }
 
 type FindByIdJobPlafonRequest struct {

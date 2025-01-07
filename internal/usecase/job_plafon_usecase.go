@@ -73,7 +73,26 @@ func (uc *JobPlafonUseCase) SyncJobPlafon() error {
 }
 
 func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPlafonRequest) (*response.FindAllPaginatedJobPlafonResponse, error) {
-	jobPlafons, total, err := uc.JobPlafonRepository.FindAllPaginated(req.Page, req.PageSize, req.Search)
+	// get jobs ids using rabbitmq
+	jobPlafonMessageResponse, err := uc.JobMessage.SendFindAllJobsByOrganizationIDMessage(req.OrganizationID)
+	if err != nil {
+		uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated] " + err.Error())
+		return nil, err
+	}
+
+	var jobIDs []string
+	for _, job := range *jobPlafonMessageResponse {
+		jobIDs = append(jobIDs, job.ID.String())
+	}
+
+	var filter map[string]interface{}
+	if len(jobIDs) > 0 {
+		filter = map[string]interface{}{
+			"job_ids": jobIDs,
+		}
+	}
+
+	jobPlafons, total, err := uc.JobPlafonRepository.FindAllPaginated(req.Page, req.PageSize, req.Search, filter)
 	if err != nil {
 		uc.Log.Errorf("[JobPlafonUseCase.FindAllPaginated] " + err.Error())
 		return nil, err

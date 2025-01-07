@@ -1801,7 +1801,7 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 		ApprovedBy:             req.ApprovedBy,
 		RequestorID:            &req.RequestorID,
 		NotesAttach:            req.NotesAttach,
-		CreatedAt:              time.Now(),
+		// CreatedAt:              time.Now(),
 	})
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())

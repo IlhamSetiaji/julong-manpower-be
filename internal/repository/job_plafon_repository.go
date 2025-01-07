@@ -11,7 +11,7 @@ import (
 )
 
 type IJobPlafonRepository interface {
-	FindAllPaginated(page int, pageSize int, search string) (*[]entity.JobPlafon, int64, error)
+	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*[]entity.JobPlafon, int64, error)
 	FindById(id uuid.UUID) (*entity.JobPlafon, error)
 	FindByJobId(jobId uuid.UUID) (*entity.JobPlafon, error)
 	Create(jobPlafon *entity.JobPlafon) (*entity.JobPlafon, error)
@@ -31,11 +31,19 @@ func NewJobPlafonRepository(log *logrus.Logger, db *gorm.DB) IJobPlafonRepositor
 	}
 }
 
-func (r *JobPlafonRepository) FindAllPaginated(page int, pageSize int, search string) (*[]entity.JobPlafon, int64, error) {
+func (r *JobPlafonRepository) FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*[]entity.JobPlafon, int64, error) {
 	var jobPlafons []entity.JobPlafon
 	var total int64
+	var jobIDs []string
 
 	query := r.DB.Model(&entity.JobPlafon{})
+
+	if filter != nil {
+		if _, ok := filter["job_ids"]; ok {
+			jobIDs = filter["job_ids"].([]string)
+			query = query.Where("job_id IN ?", jobIDs)
+		}
+	}
 
 	// if search != "" {
 	// 	query = query.Where("name LIKE ?", "%"+search+"%")

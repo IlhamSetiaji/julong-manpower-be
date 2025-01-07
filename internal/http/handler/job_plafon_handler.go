@@ -5,6 +5,8 @@ import (
 	"strconv"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
@@ -25,25 +27,28 @@ type IJobPlafonHandler interface {
 }
 
 type JobPlafonHandler struct {
-	Log      *logrus.Logger
-	Viper    *viper.Viper
-	UseCase  usecase.IJobPlafonUseCase
-	Validate *validator.Validate
+	Log        *logrus.Logger
+	Viper      *viper.Viper
+	UseCase    usecase.IJobPlafonUseCase
+	Validate   *validator.Validate
+	UserHelper helper.IUserHelper
 }
 
-func NewJobPlafonHandler(log *logrus.Logger, viper *viper.Viper, useCase usecase.IJobPlafonUseCase, validate *validator.Validate) IJobPlafonHandler {
+func NewJobPlafonHandler(log *logrus.Logger, viper *viper.Viper, useCase usecase.IJobPlafonUseCase, validate *validator.Validate, userHelper helper.IUserHelper) IJobPlafonHandler {
 	return &JobPlafonHandler{
-		Log:      log,
-		Viper:    viper,
-		UseCase:  useCase,
-		Validate: validate,
+		Log:        log,
+		Viper:      viper,
+		UseCase:    useCase,
+		Validate:   validate,
+		UserHelper: userHelper,
 	}
 }
 
 func JobPlafonHandlerFactory(log *logrus.Logger, viper *viper.Viper) IJobPlafonHandler {
 	usecase := usecase.JobPlafonUseCaseFactory(log)
 	validate := config.NewValidator(viper)
-	return NewJobPlafonHandler(log, viper, usecase, validate)
+	userHelper := helper.UserHelperFactory(log)
+	return NewJobPlafonHandler(log, viper, usecase, validate, userHelper)
 }
 
 func (h *JobPlafonHandler) SyncJobPlafon(ctx *gin.Context) {
@@ -73,10 +78,36 @@ func (h *JobPlafonHandler) FindAllPaginated(ctx *gin.Context) {
 		search = ""
 	}
 
+	user, err := middleware.GetUser(ctx, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		return
+	}
+	requestorUUID, err := h.UserHelper.GetEmployeeId(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting employee id: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	orgUUID, err := h.UserHelper.GetOrganizationID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization id: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+
 	resp, err := h.UseCase.FindAllPaginated(&request.FindAllPaginatedJobPlafonRequest{
-		Page:     page,
-		PageSize: pageSize,
-		Search:   search,
+		Page:           page,
+		PageSize:       pageSize,
+		Search:         search,
+		RequestorID:    requestorUUID.String(),
+		OrganizationID: orgUUID.String(),
 	})
 	if err != nil {
 		h.Log.Errorf("[JobPlafonHandler.FindAllPaginated] " + err.Error())
