@@ -20,6 +20,7 @@ func NewValidator(viper *viper.Viper) *validator.Validate {
 	validate.RegisterValidation("BatchHeaderApprovalStatusValidation", request.BatchHeaderApprovalStatusValidation)
 	validate.RegisterValidation("MPRequestApprovalHistoryStatusValidation", request.MPRequestApprovalHistoryStatusValidation)
 	validate.RegisterValidation("MPRequestApprovalHistoryLevelValidation", request.MPRequestApprovalHistoryLevelValidation)
+	validate.RegisterValidation("BatchHeaderApproverTypeValidation", request.BatchHeaderApproverTypeValidation)
 	validate.RegisterValidation("date_today_or_later", request.ValidateDateMoreThanEqualToday)
 	return validate
 }

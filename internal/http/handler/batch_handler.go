@@ -6,6 +6,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
@@ -71,6 +72,27 @@ func (h *BatchHandler) CreateBatchHeaderAndLines(c *gin.Context) {
 		return
 	}
 
+	user, err := middleware.GetUser(c, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(c, 404, "error", "User not found")
+		return
+	}
+
+	orgUUID, err := h.UserHelper.GetOrganizationID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization id: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
+	req.OrganizationID = orgUUID.String()
+
 	batchHeader, err := h.UseCase.CreateBatchHeaderAndLines(&req)
 	if err != nil {
 		h.Log.Error(err)
@@ -102,8 +124,32 @@ func (h *BatchHandler) GetOrganizationsForBatchApproval(c *gin.Context) {
 
 func (h *BatchHandler) FindByStatus(c *gin.Context) {
 	status := c.Param("status")
+	approverType := c.Query("approver_type")
+	if approverType == "" {
+		approverType = string(entity.BatchHeaderApproverTypeCEO)
+	}
+
+	user, err := middleware.GetUser(c, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(c, 404, "error", "User not found")
+		return
+	}
+
+	orgUUID, err := h.UserHelper.GetOrganizationID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization id: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
 	approvalStatus := entity.BatchHeaderApprovalStatus(status)
-	batch, err := h.UseCase.FindByStatus(approvalStatus)
+	batch, err := h.UseCase.FindByStatus(approvalStatus, approverType, orgUUID.String())
 	if err != nil {
 		h.Log.Error(err)
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find batch by status", err.Error())
@@ -138,7 +184,30 @@ func (h *BatchHandler) FindDocumentByID(c *gin.Context) {
 }
 
 func (h *BatchHandler) FindByNeedApproval(c *gin.Context) {
-	batch, err := h.UseCase.FindByNeedApproval()
+	approverType := c.Query("approver_type")
+	if approverType == "" {
+		approverType = string(entity.BatchHeaderApproverTypeCEO)
+	}
+
+	user, err := middleware.GetUser(c, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(c, 404, "error", "User not found")
+		return
+	}
+
+	orgUUID, err := h.UserHelper.GetOrganizationID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization id: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+	batch, err := h.UseCase.FindByNeedApproval(approverType, orgUUID.String())
 	if err != nil {
 		h.Log.Error(err)
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to find batch by need approval", err.Error())

@@ -3,6 +3,7 @@ package response
 import (
 	"time"
 
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/google/uuid"
 )
 
@@ -32,8 +33,9 @@ type BatchLineResponse struct {
 }
 
 type RealDocumentBatchResponse struct {
-	Overall             DocumentBatchResponse         `json:"overall"`
-	OrganizationOverall []OrganizationOverallResponse `json:"organization_overall"`
+	ApproverType        entity.BatchHeaderApproverType `json:"approver_type"`
+	Overall             DocumentBatchResponse          `json:"overall"`
+	OrganizationOverall []OrganizationOverallResponse  `json:"organization_overall"`
 }
 
 type OrganizationOverallResponse struct {

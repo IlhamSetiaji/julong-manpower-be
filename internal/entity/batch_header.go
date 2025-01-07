@@ -16,6 +16,13 @@ const (
 	BatchHeaderApprovalStatusCompleted    BatchHeaderApprovalStatus = "COMPLETED"
 )
 
+type BatchHeaderApproverType string
+
+const (
+	BatchHeaderApproverTypeDirector BatchHeaderApproverType = "DIRECTOR"
+	BatchHeaderApproverTypeCEO      BatchHeaderApproverType = "CEO"
+)
+
 type BatchHeader struct {
 	gorm.Model     `json:"-"`
 	ID             uuid.UUID                 `json:"id" gorm:"type:char(36);primaryKey;"`
@@ -24,6 +31,8 @@ type BatchHeader struct {
 	ApproverID     *uuid.UUID                `json:"approver_id" gorm:"type:char(36);default:null;"`
 	ApproverName   string                    `json:"approver_name" gorm:"type:varchar(255);default:null;"`
 	Status         BatchHeaderApprovalStatus `json:"status" gorm:"default:null"`
+	ApproverType   BatchHeaderApproverType   `json:"approver_type" gorm:"type:varchar(255);default:CEO"`
+	OrganizationID *uuid.UUID                `json:"organization_id" gorm:"type:char(36);default:null;"`
 
 	BatchLines []BatchLine `json:"batch_lines" gorm:"foreignKey:BatchHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 }

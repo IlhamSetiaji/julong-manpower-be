@@ -15,9 +15,9 @@ type IBatchRepository interface {
 	CreateBatchHeaderAndLines(batchHeader *entity.BatchHeader, batchLines []entity.BatchLine) (*entity.BatchHeader, error)
 	InsertLinesByBatchHeaderID(batchHeaderID string, batchLines []entity.BatchLine) error
 	DeleteLinesNotInBatchLines(batchHeaderID string, batchLines []entity.BatchLine) error
-	FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
+	FindByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*entity.BatchHeader, error)
 	FindById(id string) (*entity.BatchHeader, error)
-	FindByNeedApproval() (*entity.BatchHeader, error)
+	FindByNeedApproval(approverType string, orgID string) (*entity.BatchHeader, error)
 	GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error)
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 	UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
@@ -115,9 +115,22 @@ func (r *BatchRepository) DeleteLinesNotInBatchLines(batchHeaderID string, batch
 	return nil
 }
 
-func (r *BatchRepository) FindByStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error) {
+func (r *BatchRepository) FindByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*entity.BatchHeader, error) {
 	var batchHeader entity.BatchHeader
-	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", status).First(&batchHeader).Error; err != nil {
+	var whereApproverType string
+	var whereOrgID string
+	if approverType == "" || approverType == "CEO" {
+		whereApproverType = "approver_type = 'CEO'"
+	} else {
+		whereApproverType = "approver_type = 'DIRECTOR'"
+	}
+
+	if orgID != "" {
+		if approverType != "" && approverType == "DIRECTOR" {
+			whereOrgID = "organization_id = '" + orgID + "'"
+		}
+	}
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", status).Where(whereOrgID).Where(whereApproverType).First(&batchHeader).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			r.Log.Warnf("Batch header with status %s not found", status)
 			return nil, nil
@@ -145,9 +158,21 @@ func (r *BatchRepository) FindById(id string) (*entity.BatchHeader, error) {
 	return &batchHeader, nil
 }
 
-func (r *BatchRepository) FindByNeedApproval() (*entity.BatchHeader, error) {
+func (r *BatchRepository) FindByNeedApproval(approverType string, orgID string) (*entity.BatchHeader, error) {
 	var batchHeader entity.BatchHeader
-	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", entity.BatchHeaderApprovalStatusNeedApproval).First(&batchHeader).Error; err != nil {
+	var whereApproverType string
+	var whereOrgID string
+	if approverType == "" || approverType == "CEO" {
+		whereApproverType = "approver_type = 'CEO'"
+	} else {
+		whereApproverType = "approver_type = 'DIRECTOR'"
+	}
+	if orgID != "" {
+		if approverType != "" && approverType == "DIRECTOR" {
+			whereOrgID = "organization_id = '" + orgID + "'"
+		}
+	}
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", entity.BatchHeaderApprovalStatusNeedApproval).Where(whereApproverType).Where(whereOrgID).First(&batchHeader).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			r.Log.Warnf("Batch header with status %s not found", entity.BatchHeaderApprovalStatusNeedApproval)
 			return nil, nil

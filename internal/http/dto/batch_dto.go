@@ -40,7 +40,8 @@ func NewBatchDTO(log *logrus.Logger, batchLineDTO IBatchLineDTO, jpm messaging.I
 
 func (d *BatchDTO) ConvertRealDocumentBatchResponse(batch *entity.BatchHeader) *response.RealDocumentBatchResponse {
 	return &response.RealDocumentBatchResponse{
-		Overall: *d.ConvertToDocumentBatchResponse(batch, "Julong"),
+		ApproverType: batch.ApproverType,
+		Overall:      *d.ConvertToDocumentBatchResponse(batch, "Julong Group"),
 		OrganizationOverall: func() []response.OrganizationOverallResponse {
 			var organizationOverall []response.OrganizationOverallResponse
 			// group batch lines by organization id
@@ -79,7 +80,7 @@ func (d *BatchDTO) ConvertRealDocumentBatchResponse(batch *entity.BatchHeader) *
 							orgLocationName := messageResponse.Name
 							locationOverall = append(locationOverall, *d.ConvertToDocumentBatchResponse(&entity.BatchHeader{
 								BatchLines: bls,
-							}, orgLocationName))
+							}, orgLocationName+" ("+orgName+")"))
 						}
 						return locationOverall
 					}(),
