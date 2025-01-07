@@ -125,7 +125,7 @@ func (r *JobPlafonRepository) Update(jobPlafon *entity.JobPlafon) (*entity.JobPl
 		return nil, errors.New("[JobPlafonRepository.Update] " + tx.Error.Error())
 	}
 
-	if err := tx.Save(jobPlafon).Error; err != nil {
+	if err := tx.Model(&entity.JobPlafon{}).Where("id = ?", jobPlafon.ID).Updates(jobPlafon).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[JobPlafonRepository.Update] " + err.Error())
 		return nil, err
