@@ -44,6 +44,7 @@ type IMPPlanningRepository interface {
 	FindHeaderByMPPPeriodId(mppPeriodId uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindAllLinesByHeaderIdPaginated(headerId uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningLine, int64, error)
 	FindLineById(id uuid.UUID) (*entity.MPPlanningLine, error)
+	FindLineByIdOnly(id uuid.UUID) (*entity.MPPlanningLine, error)
 	CreateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	UpdateLine(mppLine *entity.MPPlanningLine) (*entity.MPPlanningLine, error)
 	UpdateLineRemainingBalances(id uuid.UUID, remainingBalanceMT int, remainingBalancePH int) error
@@ -658,7 +659,7 @@ func (r *MPPlanningRepository) UpdateHeader(mppHeader *entity.MPPlanningHeader) 
 		return nil, errors.New("[MPPlanningRepository.UpdateHeader] " + tx.Error.Error())
 	}
 
-	if err := tx.Save(mppHeader).Error; err != nil {
+	if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", mppHeader.ID).Updates(mppHeader).Error; err != nil {
 		tx.Rollback()
 		r.Log.Errorf("[MPPlanningRepository.UpdateHeader] " + err.Error())
 		return nil, errors.New("[MPPlanningRepository.UpdateHeader] " + err.Error())
@@ -882,6 +883,22 @@ func (r *MPPlanningRepository) FindLineById(id uuid.UUID) (*entity.MPPlanningLin
 		} else {
 			r.Log.Errorf("[MPPlanningRepository.FindLineById] " + err.Error())
 			return nil, errors.New("[MPPlanningRepository.FindLineById] " + err.Error())
+		}
+	}
+
+	return &mppLine, nil
+}
+
+func (r *MPPlanningRepository) FindLineByIdOnly(id uuid.UUID) (*entity.MPPlanningLine, error) {
+	var mppLine entity.MPPlanningLine
+
+	if err := r.DB.Where("id = ?", id).First(&mppLine).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindLineByIdOnly] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindLineByIdOnly] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindLineByIdOnly] " + err.Error())
 		}
 	}
 

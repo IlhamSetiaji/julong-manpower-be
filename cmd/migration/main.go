@@ -122,16 +122,48 @@ func main() {
 
 	majors := []entity.Major{
 		{
-			Major:          "Teknik Informatika",
+			Major:          "S1 Teknik Informatika",
 			EducationLevel: entity.EducationLevelEnumBachelor,
 		},
 		{
-			Major:          "Teknik Elektro",
+			Major:          "S2 Teknik Elektro",
 			EducationLevel: entity.EducationLevelEnumBachelor,
 		},
 		{
-			Major:          "Teknik Mesin",
+			Major:          "S3 Teknik Mesin",
 			EducationLevel: entity.EducationLevelEnumBachelor,
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumD1,
+			Major:          "D1 Teknik Informatika",
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumD2,
+			Major:          "D2 Teknik Informatika",
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumSD,
+			Major:          "SD",
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumSMP,
+			Major:          "SMP",
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumSMA,
+			Major:          "SMA",
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumMaster,
+			Major:          "S2 Teknik Informatika",
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumDoctoral,
+			Major:          "S3 Teknik Informatika",
+		},
+		{
+			EducationLevel: entity.EducationLevelEnumTK,
+			Major:          "Belum Sekolah",
 		},
 	}
 

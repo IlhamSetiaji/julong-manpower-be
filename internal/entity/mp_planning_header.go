@@ -62,9 +62,9 @@ type MPPlanningHeader struct {
 
 func (m *MPPlanningHeader) BeforeCreate(tx *gorm.DB) (err error) {
 	m.ID = uuid.New()
-	// m.CreatedAt = time.Now().Add(time.Hour * 7)
-	// m.UpdatedAt = time.Now().Add(time.Hour * 7)
-	m.UpdatedAt = time.Now()
+	m.CreatedAt = time.Now().Add(time.Hour * 7)
+	m.UpdatedAt = time.Now().Add(time.Hour * 7)
+	// m.UpdatedAt = time.Now()
 	// m.CreatedAt = m.UpdatedAt
 	return nil
 }

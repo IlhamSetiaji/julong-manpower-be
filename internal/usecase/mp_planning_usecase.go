@@ -2419,7 +2419,7 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 			return errors.New("Job not found")
 		}
 
-		exist, err := uc.MPPlanningRepository.FindLineById(line.ID)
+		exist, err := uc.MPPlanningRepository.FindLineByIdOnly(line.ID)
 
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
@@ -2506,22 +2506,6 @@ func (uc *MPPlanningUseCase) CreateOrUpdateBatchLineMPPlanningLines(req *request
 			return err
 		}
 	}
-
-	// if len(mpPlanningLineIds) == 0 {
-	// 	// delete all line
-	// 	err := uc.MPPlanningRepository.DeleteAllLinesByHeaderID(req.MPPlanningHeaderID)
-	// 	if err != nil {
-	// 		uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
-	// 		return err
-	// 	}
-	// } else {
-	// 	// delete all line that not in mpPlanningLineIds
-	// 	err := uc.MPPlanningRepository.DeleteLineIfNotInIDs(mpPlanningLineIds)
-	// 	if err != nil {
-	// 		uc.Log.Errorf("[MPPlanningUseCase.CreateOrUpdateBatchLineMPPlanningLines] " + err.Error())
-	// 		return err
-	// 	}
-	// }
 
 	return nil
 }
