@@ -19,6 +19,7 @@ import (
 type IBatchHandler interface {
 	CreateBatchHeaderAndLines(c *gin.Context)
 	FindByStatus(c *gin.Context)
+	TriggerCreate(c *gin.Context)
 	FindById(c *gin.Context)
 	FindDocumentByID(c *gin.Context)
 	FindByNeedApproval(c *gin.Context)
@@ -120,6 +121,42 @@ func (h *BatchHandler) GetOrganizationsForBatchApproval(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Organizations for batch approval found", organizations)
+}
+
+func (h *BatchHandler) TriggerCreate(c *gin.Context) {
+	approverType := c.Query("approver_type")
+	if approverType == "" {
+		approverType = string(entity.BatchHeaderApproverTypeCEO)
+	}
+
+	user, err := middleware.GetUser(c, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(c, 404, "error", "User not found")
+		return
+	}
+
+	orgUUID, err := h.UserHelper.GetOrganizationID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization id: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
+	batch, err := h.UseCase.TriggerCreate(approverType, orgUUID.String())
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to trigger create batch", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Batch created", batch)
 }
 
 func (h *BatchHandler) FindByStatus(c *gin.Context) {

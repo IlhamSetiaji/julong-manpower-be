@@ -26,6 +26,7 @@ type IBatchUsecase interface {
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
 	UpdateStatusBatchHeader(req *request.UpdateStatusBatchHeaderRequest) (*response.BatchResponse, error)
 	GetCompletedBatchHeader() (*[]response.CompletedBatchResponse, error)
+	TriggerCreate(approverType string, orgID string) (bool, error)
 }
 
 type BatchUsecase struct {
@@ -92,6 +93,30 @@ func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchRes
 	}
 
 	return &completedBatchResponses, nil
+}
+
+func (uc *BatchUsecase) TriggerCreate(approverType string, orgID string) (bool, error) {
+	mpPlanningExists := &entity.MPPlanningHeader{}
+	var err error
+	if approverType == "" || approverType == string(entity.BatchHeaderApproverTypeCEO) {
+		mpPlanningExists, err = uc.mpPlanningRepo.FindAllHeadersGroupedApproverByOrg("", entity.MPPlaningStatusApproved, "direktur", "")
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.TriggerCreate] " + err.Error())
+			return false, err
+		}
+	} else {
+		mpPlanningExists, err = uc.mpPlanningRepo.FindAllHeadersGroupedApproverByOrg(orgID, entity.MPPlanningStatusInProgress, "", "")
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.TriggerCreate] " + err.Error())
+			return false, err
+		}
+	}
+
+	if mpPlanningExists == nil {
+		return false, nil
+	}
+
+	return true, nil
 }
 
 func (uc *BatchUsecase) GetOrganizationsForBatchApproval(id string) (*[]response.OrganizationResponse, error) {
@@ -272,12 +297,12 @@ func (uc *BatchUsecase) CreateBatchHeaderAndLines(req *request.CreateBatchHeader
 
 		if approverType == entity.BatchHeaderApproverTypeCEO {
 			if mpHeaderByStatus.Status != entity.MPPlaningStatusApproved {
-				uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] MP Planning Header not in Approved status")
+				uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] MP Planning Header not in APPROVED status")
 				continue
 			}
 		} else {
-			if mpHeaderByStatus.Status != entity.MPPlaningStatusNeedApproval {
-				uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] MP Planning Header not in Need Approval status")
+			if mpHeaderByStatus.Status != entity.MPPlanningStatusInProgress {
+				uc.Log.Errorf("[BatchUsecase.CreateBatchHeaderAndLines] MP Planning Header not in IN PROGRESS status")
 				continue
 			}
 		}
@@ -458,7 +483,7 @@ func (uc *BatchUsecase) UpdateStatusBatchHeader(req *request.UpdateStatusBatchHe
 			return nil, err
 		}
 	} else {
-		err = uc.Repo.UpdateStatusBatchHeaderDirector(batchHeader, req.Status, req.ApprovedBy, req.ApproverName)
+		err = uc.Repo.UpdateStatusBatchHeaderForDirector(batchHeader, req.Status, req.ApprovedBy, req.ApproverName)
 		if err != nil {
 			uc.Log.Errorf("[BatchUsecase.UpdateStatusBatchHeader] " + err.Error())
 			return nil, err

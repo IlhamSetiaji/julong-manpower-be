@@ -14,6 +14,7 @@ import (
 type IBatchRepository interface {
 	CreateBatchHeaderAndLines(batchHeader *entity.BatchHeader, batchLines []entity.BatchLine) (*entity.BatchHeader, error)
 	InsertLinesByBatchHeaderID(batchHeaderID string, batchLines []entity.BatchLine) error
+	FindByStatusApproverTypeOrgID(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*entity.BatchHeader, error)
 	DeleteLinesNotInBatchLines(batchHeaderID string, batchLines []entity.BatchLine) error
 	FindByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*entity.BatchHeader, error)
 	FindById(id string) (*entity.BatchHeader, error)
@@ -45,6 +46,35 @@ func (r *BatchRepository) GetBatchHeadersByStatus(status entity.BatchHeaderAppro
 	}
 
 	return batchHeaders, nil
+}
+
+func (r *BatchRepository) FindByStatusApproverTypeOrgID(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*entity.BatchHeader, error) {
+	var batchHeader entity.BatchHeader
+	var whereApproverType string
+	var whereOrgID string
+	if approverType == "" || approverType == "CEO" {
+		whereApproverType = "approver_type = 'CEO'"
+	} else {
+		whereApproverType = "approver_type = 'DIRECTOR'"
+	}
+
+	if orgID != "" {
+		if approverType != "" && approverType == "DIRECTOR" {
+			whereOrgID = "organization_id = '" + orgID + "'"
+		}
+	}
+
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", status).Where(whereOrgID).Where(whereApproverType).First(&batchHeader).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			r.Log.Warnf("Batch header with status %s not found", status)
+			return nil, nil
+		} else {
+			r.Log.Error(err)
+			return nil, err
+		}
+	}
+
+	return &batchHeader, nil
 }
 
 func (r *BatchRepository) CreateBatchHeaderAndLines(batchHeader *entity.BatchHeader, batchLines []entity.BatchLine) (*entity.BatchHeader, error) {

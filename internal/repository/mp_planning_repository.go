@@ -28,6 +28,7 @@ type IMPPlanningRepository interface {
 	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
 	FindAllHeadersGroupedApprover(organizationLocationID uuid.UUID, status entity.MPPlaningStatus, approver string, requestorId string) (*entity.MPPlanningHeader, error)
+	FindAllHeadersGroupedApproverByOrg(organizationID string, status entity.MPPlaningStatus, approver string, requestorId string) (*entity.MPPlanningHeader, error)
 	GetHeadersByStatus(status entity.MPPlaningStatus) (*[]entity.MPPlanningHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPPlanningApprovalHistory) error
 	GetHeadersByDocumentDate(documentDate string) (*[]entity.MPPlanningHeader, error)
@@ -428,6 +429,107 @@ func (r *MPPlanningRepository) FindAllHeadersGroupedApprover(organizationLocatio
 			} else {
 				r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
 				return nil, errors.New("[MPPlanningRepository.FindAllHeadersGroupedApprover] " + err.Error())
+			}
+		}
+	}
+
+	r.Log.Infof("Header: ", mppHeader.DocumentNumber)
+
+	return &mppHeader, nil
+}
+
+func (r *MPPlanningRepository) FindAllHeadersGroupedApproverByOrg(organizationID string, status entity.MPPlaningStatus, approver string, requestorId string) (*entity.MPPlanningHeader, error) {
+	var mppHeader entity.MPPlanningHeader
+	var whereStatus string
+	var whereRequestor string
+	var whereOrgID string
+
+	if organizationID != "" {
+		whereOrgID = "organization_id = '" + organizationID + "'"
+	}
+
+	if approver != "" || status != "" {
+		var whereApprover string
+		if approver != "admin" {
+			switch approver {
+			case "requestor":
+				whereApprover = "requestor_id = '" + requestorId + "'"
+			case "ceo":
+				whereApprover = "approved_by IS NULL AND approver_manager_id IS NOT NULL AND approver_recruitment_id IS NOT NULL AND recommended_by IS NOT NULL"
+			case "manager":
+				whereApprover = "approver_manager_id IS NULL OR approver_manager_id IS NOT NULL"
+			case "recruitment":
+				whereApprover = "approver_recruitment_id IS NULL OR approver_recruitment_id IS NOT NULL"
+			case "direktur":
+				whereApprover = "approver_manager_id IS NOT NULL AND recommended_by = '' OR recommended_by != '' "
+			default:
+				whereApprover = ""
+				if requestorId != "" {
+					whereRequestor = "requestor_id = '" + requestorId + "'"
+				} else {
+					whereRequestor = ""
+				}
+
+			}
+			if status != "" {
+				whereStatus = "status = '" + string(status) + "'"
+			} else {
+				whereStatus = "status != 'COMPLETED'"
+			}
+
+			r.Log.Infof("Approver: %s", whereApprover)
+			if err := r.DB.Preload("MPPlanningLines").Preload("MPPlanningLines.").Preload("MPPPeriod").Preload("ManpowerAttachments").Where(whereOrgID).Where(whereStatus).Where(whereApprover).Where(whereRequestor).First(&mppHeader).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+					return nil, nil
+				} else {
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+					return nil, errors.New("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+				}
+			} else {
+				r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
+			}
+		} else {
+			if status != "" {
+				whereStatus = "status = '" + string(status) + "'"
+			} else {
+				whereStatus = "status != 'COMPLETED'"
+			}
+
+			r.Log.Infof("Approver: %s", whereApprover)
+			if err := r.DB.Preload("MPPlanningLines").Preload("MPPlanningLines.").Preload("MPPPeriod").Preload("ManpowerAttachments").Where(whereOrgID).Where(whereStatus).First(&mppHeader).Error; err != nil {
+				if errors.Is(err, gorm.ErrRecordNotFound) {
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+					return nil, nil
+				} else {
+					r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+					return nil, errors.New("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+				}
+			} else {
+				r.Log.Infof("ketemu ini headernya: %s", mppHeader.DocumentNumber)
+			}
+		}
+	} else {
+		whereStatus = ""
+		if requestorId != "" {
+			whereRequestor = "requestor_id = '" + requestorId + "'"
+		} else {
+			whereRequestor = ""
+		}
+
+		if whereRequestor != "" {
+			whereStatus = "status != 'COMPLETED'"
+		}
+
+		r.Log.Infof("Where Requestor: %s", whereRequestor)
+
+		if err := r.DB.Preload("MPPlanningLines").Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where(whereOrgID).Where(whereStatus).Where(whereRequestor).First(&mppHeader).Error; err != nil {
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+				return nil, nil
+			} else {
+				r.Log.Errorf("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
+				return nil, errors.New("[MPPlanningRepository.FindAllHeadersGroupedApproverByOrg] " + err.Error())
 			}
 		}
 	}
