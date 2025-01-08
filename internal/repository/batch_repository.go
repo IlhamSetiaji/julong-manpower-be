@@ -23,7 +23,7 @@ type IBatchRepository interface {
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*entity.BatchHeader, error)
 	UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
 	UpdateStatusBatchHeaderForDirector(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
-	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus) ([]entity.BatchHeader, error)
+	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string) ([]entity.BatchHeader, error)
 }
 
 type BatchRepository struct {
@@ -38,9 +38,23 @@ func NewBatchRepository(log *logrus.Logger, db *gorm.DB) IBatchRepository {
 	}
 }
 
-func (r *BatchRepository) GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus) ([]entity.BatchHeader, error) {
+func (r *BatchRepository) GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string) ([]entity.BatchHeader, error) {
 	var batchHeaders []entity.BatchHeader
-	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", status).Find(&batchHeaders).Error; err != nil {
+	var whereApproverType string
+	var whereOrgID string
+
+	if approverType == entity.BatchHeaderApproverTypeCEO {
+		whereApproverType = "approver_type = 'CEO'"
+	} else {
+		whereApproverType = "approver_type = 'DIRECTOR'"
+	}
+
+	if orgID != "" {
+		if approverType == entity.BatchHeaderApproverTypeDirector {
+			whereOrgID = "organization_id = '" + orgID + "'"
+		}
+	}
+	if err := r.DB.Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").Where("status = ?", status).Where(whereApproverType).Where(whereOrgID).Find(&batchHeaders).Error; err != nil {
 		r.Log.Error(err)
 		return nil, err
 	}

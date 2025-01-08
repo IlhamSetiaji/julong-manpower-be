@@ -27,6 +27,7 @@ type IBatchUsecase interface {
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
 	UpdateStatusBatchHeader(req *request.UpdateStatusBatchHeaderRequest) (*response.BatchResponse, error)
 	GetCompletedBatchHeader() (*[]response.CompletedBatchResponse, error)
+	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*[]response.CompletedBatchResponse, error)
 	TriggerCreate(approverType string, orgID string) (bool, error)
 }
 
@@ -53,7 +54,7 @@ func NewBatchUsecase(viper *viper.Viper, log *logrus.Logger, repo repository.IBa
 }
 
 func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchResponse, error) {
-	batchHeaders, err := uc.Repo.GetBatchHeadersByStatus(entity.BatchHeaderApprovalStatusCompleted)
+	batchHeaders, err := uc.Repo.GetBatchHeadersByStatus(entity.BatchHeaderApprovalStatusCompleted, entity.BatchHeaderApproverTypeCEO, "")
 	if err != nil {
 		uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
 		return nil, err
@@ -77,6 +78,52 @@ func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchRes
 			ID:             bh.ID,
 			DocumentNumber: bh.DocumentNumber,
 			DocumentDate:   bh.DocumentDate,
+			Status:         bh.Status,
+			CreatedAt:      bh.CreatedAt,
+			UpdatedAt:      bh.UpdatedAt,
+			MPPPeriod: response.MPPeriodResponse{
+				ID:              mpPlanningHeader.MPPPeriod.ID,
+				Title:           mpPlanningHeader.MPPPeriod.Title,
+				StartDate:       mpPlanningHeader.MPPPeriod.StartDate.Format("2006-01-02"),
+				EndDate:         mpPlanningHeader.MPPPeriod.EndDate.Format("2006-01-02"),
+				BudgetStartDate: mpPlanningHeader.MPPPeriod.BudgetStartDate.Format("2006-01-02"),
+				BudgetEndDate:   mpPlanningHeader.MPPPeriod.BudgetEndDate.Format("2006-01-02"),
+				Status:          mpPlanningHeader.MPPPeriod.Status,
+				CreatedAt:       mpPlanningHeader.MPPPeriod.CreatedAt,
+				UpdatedAt:       mpPlanningHeader.MPPPeriod.UpdatedAt,
+			},
+		}
+	}
+
+	return &completedBatchResponses, nil
+}
+
+func (uc *BatchUsecase) GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*[]response.CompletedBatchResponse, error) {
+	batchHeaders, err := uc.Repo.GetBatchHeadersByStatus(status, entity.BatchHeaderApproverType(approverType), orgID)
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.GetBatchHeadersByStatus] " + err.Error())
+		return nil, err
+	}
+
+	if len(batchHeaders) == 0 {
+		return nil, nil
+	}
+
+	completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
+	// get one mp planning header
+	mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(batchHeaders[0].BatchLines[0].MPPlanningHeaderID)
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
+		return nil, err
+	}
+
+	// embed batch headers to completed batch responses
+	for i, bh := range batchHeaders {
+		completedBatchResponses[i] = response.CompletedBatchResponse{
+			ID:             bh.ID,
+			DocumentNumber: bh.DocumentNumber,
+			DocumentDate:   bh.DocumentDate,
+			Status:         bh.Status,
 			CreatedAt:      bh.CreatedAt,
 			UpdatedAt:      bh.UpdatedAt,
 			MPPPeriod: response.MPPeriodResponse{

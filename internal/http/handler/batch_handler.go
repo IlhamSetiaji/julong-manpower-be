@@ -18,6 +18,7 @@ import (
 
 type IBatchHandler interface {
 	CreateBatchHeaderAndLines(c *gin.Context)
+	GetBatchHeadersByStatus(c *gin.Context)
 	FindByStatus(c *gin.Context)
 	TriggerCreate(c *gin.Context)
 	GetBatchedMPPlanningHeaders(c *gin.Context)
@@ -58,6 +59,49 @@ func (h *BatchHandler) GetCompletedBatchHeader(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Completed batch header found", batch)
+}
+
+func (h *BatchHandler) GetBatchHeadersByStatus(c *gin.Context) {
+	status := c.Query("status")
+
+	if status == "" {
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", "Invalid request")
+		return
+	}
+
+	approverType := c.Query("approver_type")
+	if approverType == "" {
+		approverType = string(entity.BatchHeaderApproverTypeCEO)
+	}
+
+	user, err := middleware.GetUser(c, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(c, 404, "error", "User not found")
+		return
+	}
+
+	orgUUID, err := h.UserHelper.GetOrganizationID(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting organization id: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
+	batch, err := h.UseCase.GetBatchHeadersByStatus(entity.BatchHeaderApprovalStatus(status), approverType, orgUUID.String())
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to get batch headers by status", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "Batch headers found", batch)
 }
 
 func (h *BatchHandler) CreateBatchHeaderAndLines(c *gin.Context) {
