@@ -119,6 +119,7 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			// batch
 			apiRoute.POST("/batch/create", c.BatchHandler.CreateBatchHeaderAndLines)
 			apiRoute.GET("/batch/trigger-create", c.BatchHandler.TriggerCreate)
+			apiRoute.GET("/batch/batched-list", c.BatchHandler.GetBatchedMPPlanningHeaders)
 			apiRoute.GET("/batch/completed", c.BatchHandler.GetCompletedBatchHeader)
 			apiRoute.GET("/batch/need-approval", c.BatchHandler.FindByNeedApproval)
 			apiRoute.GET("/batch/organizations/:id", c.BatchHandler.GetOrganizationsForBatchApproval)

@@ -18,6 +18,7 @@ import (
 
 type IBatchUsecase interface {
 	CreateBatchHeaderAndLines(req *request.CreateBatchHeaderAndLinesRequest) (*response.BatchResponse, error)
+	GetBatchedMPPlanningHeaders(approverType string, orgID string) (*[]response.MPPlanningHeaderResponse, error)
 	FindByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*response.BatchResponse, error)
 	FindById(id string) (*response.BatchResponse, error)
 	GetOrganizationsForBatchApproval(id string) (*[]response.OrganizationResponse, error)
@@ -93,6 +94,53 @@ func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchRes
 	}
 
 	return &completedBatchResponses, nil
+}
+
+func (uc *BatchUsecase) GetBatchedMPPlanningHeaders(approverType string, orgID string) (*[]response.MPPlanningHeaderResponse, error) {
+	mpPlanningHeaders := make([]response.MPPlanningHeaderResponse, 0)
+	entMpPlanningHeaders := make([]entity.MPPlanningHeader, 0)
+	if approverType == "" || approverType == string(entity.BatchHeaderApproverTypeCEO) {
+		headers, err := uc.mpPlanningRepo.GetAllHeadersGroupedApproverByOrg("", entity.MPPlaningStatusApproved, "direktur", "")
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.GetBatchedMPPlanningHeaders] " + err.Error())
+			return nil, err
+		}
+
+		for _, header := range *headers {
+			entMpPlanningHeaders = append(entMpPlanningHeaders, entity.MPPlanningHeader{
+				ID:             header.ID,
+				DocumentNumber: header.DocumentNumber,
+				DocumentDate:   header.DocumentDate,
+				Status:         header.Status,
+			})
+		}
+	} else {
+		headers, err := uc.mpPlanningRepo.GetAllHeadersGroupedApproverByOrg(orgID, entity.MPPlanningStatusInProgress, "", "")
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.GetBatchedMPPlanningHeaders] " + err.Error())
+			return nil, err
+		}
+
+		for _, header := range *headers {
+			entMpPlanningHeaders = append(entMpPlanningHeaders, entity.MPPlanningHeader{
+				ID:             header.ID,
+				DocumentNumber: header.DocumentNumber,
+				DocumentDate:   header.DocumentDate,
+				Status:         header.Status,
+			})
+		}
+	}
+
+	for _, header := range entMpPlanningHeaders {
+		mpPlanningHeaders = append(mpPlanningHeaders, response.MPPlanningHeaderResponse{
+			ID:             header.ID,
+			DocumentNumber: header.DocumentNumber,
+			DocumentDate:   header.DocumentDate,
+			Status:         header.Status,
+		})
+	}
+
+	return &mpPlanningHeaders, nil
 }
 
 func (uc *BatchUsecase) TriggerCreate(approverType string, orgID string) (bool, error) {
