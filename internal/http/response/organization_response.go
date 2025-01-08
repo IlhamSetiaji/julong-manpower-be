@@ -39,4 +39,5 @@ type OrganizationLocationResponse struct {
 type OrganizationLocationPaginatedResponse struct {
 	OrganizationLocations []OrganizationLocationResponse `json:"organization_locations"`
 	Total                 int64                          `json:"total"`
+	TotalNull             int64                          `json:"total_null"`
 }

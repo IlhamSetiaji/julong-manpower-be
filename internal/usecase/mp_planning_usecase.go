@@ -759,6 +759,7 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 		}
 
 		if header == nil {
+			orgLocs.TotalNull++
 			continue
 		}
 

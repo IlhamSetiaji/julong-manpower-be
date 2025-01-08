@@ -248,6 +248,15 @@ func convertInterfaceToJobResponse(job map[string]interface{}) *response.JobResp
 		}
 	}
 
+	// Handle Job Level
+	var jobLevel response.JobLevelResponse
+	if jobLevelMap, ok := job["job_level"].(map[string]interface{}); ok {
+		jobLevelID, _ := jobLevelMap["id"].(string)
+		jobLevelName, _ := jobLevelMap["name"].(string)
+		JobLevelLevel, _ := jobLevelMap["level"].(string)
+		jobLevel = response.JobLevelResponse{ID: uuid.MustParse(jobLevelID), Name: jobLevelName, Level: JobLevelLevel}
+	}
+
 	return &response.JobResponse{
 		ID:                        uuid.MustParse(id),
 		Name:                      name,
@@ -255,6 +264,7 @@ func convertInterfaceToJobResponse(job map[string]interface{}) *response.JobResp
 		OrganizationStructureName: organizationStructureName,
 		OrganizationID:            uuid.MustParse(organizationID),
 		OrganizationName:          organizationName,
+		JobLevel:                  jobLevel,
 		Level:                     level,
 		ParentID: func(id string) *uuid.UUID {
 			parsedID, err := uuid.Parse(id)
