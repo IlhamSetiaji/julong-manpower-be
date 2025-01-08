@@ -21,4 +21,5 @@ type UpdateStatusBatchHeaderRequest struct {
 	Status       entity.BatchHeaderApprovalStatus `json:"status" validate:"required,BatchHeaderApprovalStatusValidation"`
 	ApprovedBy   string                           `json:"approved_by" validate:"required"`
 	ApproverName string                           `json:"approver_name" validate:"required"`
+	ApproverType entity.BatchHeaderApproverType   `json:"approver_type" validate:"omitempty,BatchHeaderApproverTypeValidation"`
 }

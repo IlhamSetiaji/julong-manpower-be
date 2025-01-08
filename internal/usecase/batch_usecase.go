@@ -451,10 +451,18 @@ func (uc *BatchUsecase) UpdateStatusBatchHeader(req *request.UpdateStatusBatchHe
 		return nil, errors.New("Batch not found")
 	}
 
-	err = uc.Repo.UpdateStatusBatchHeader(batchHeader, req.Status, req.ApprovedBy, req.ApproverName)
-	if err != nil {
-		uc.Log.Errorf("[BatchUsecase.UpdateStatusBatchHeader] " + err.Error())
-		return nil, err
+	if req.ApproverType == "" || req.ApproverType == entity.BatchHeaderApproverTypeCEO {
+		err = uc.Repo.UpdateStatusBatchHeader(batchHeader, req.Status, req.ApprovedBy, req.ApproverName)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.UpdateStatusBatchHeader] " + err.Error())
+			return nil, err
+		}
+	} else {
+		err = uc.Repo.UpdateStatusBatchHeaderDirector(batchHeader, req.Status, req.ApprovedBy, req.ApproverName)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.UpdateStatusBatchHeader] " + err.Error())
+			return nil, err
+		}
 	}
 
 	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(batchHeader), nil
