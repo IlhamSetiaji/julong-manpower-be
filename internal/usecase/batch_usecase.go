@@ -495,7 +495,7 @@ func (uc *BatchUsecase) updateMpPlanningHeaderStatusDirector(batchLines []entity
 			Notes:              "",
 			ApproverID:         approverID,
 			ApproverName:       approverName,
-			Level:              string(entity.MPPlanningApprovalHistoryLevelDirekturUnit),
+			Level:              string(entity.MPPlanningApprovalHistoryLevelHRDUnit),
 			Status:             entity.MPPlanningApprovalHistoryStatusNeedApproval,
 		}
 

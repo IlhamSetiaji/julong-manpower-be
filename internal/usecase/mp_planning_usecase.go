@@ -759,9 +759,8 @@ func (uc *MPPlanningUseCase) FindAllHeadersForBatchPaginated(req *request.FindAl
 		}
 
 		if header == nil {
-			continue
-		} else {
 			orgLocs.TotalNull = orgLocs.Total - 1
+			continue
 		}
 
 		uc.Log.Info("Kontol")
