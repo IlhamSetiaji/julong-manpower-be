@@ -302,12 +302,22 @@ func (r *BatchRepository) UpdateStatusBatchHeader(batchHeader *entity.BatchHeade
 							r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
 							return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
 						}
-					} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelDirekturUnit) {
+					} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelRecruitment) {
 						if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
 							Status: entity.MPPlaningStatus(status),
 							// ApprovedBy:            approvedBy,
 							ApproverRecruitmentID: &approvalHistory.ApproverID,
 							NotesRecruitment:      approvalHistory.Notes,
+						}).Error; err != nil {
+							tx.Rollback()
+							r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+							return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+						}
+					} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelDirekturUnit) {
+						if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+							Status: entity.MPPlaningStatus(status),
+							// ApprovedBy:            approvedBy,
+							RecommendedBy: approvalHistory.ApproverID.String(),
 						}).Error; err != nil {
 							tx.Rollback()
 							r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
@@ -459,7 +469,7 @@ func (r *BatchRepository) UpdateStatusBatchHeaderForDirector(batchHeader *entity
 							r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeaderForDirector] " + err.Error())
 							return errors.New("[BatchRepository.UpdateStatusBatchHeaderForDirector] " + err.Error())
 						}
-					} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelDirekturUnit) {
+					} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelRecruitment) {
 						if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
 							Status: entity.MPPlaningStatus(status),
 							// ApprovedBy:            approvedBy,
@@ -469,6 +479,16 @@ func (r *BatchRepository) UpdateStatusBatchHeaderForDirector(batchHeader *entity
 							tx.Rollback()
 							r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeaderForDirector] " + err.Error())
 							return errors.New("[BatchRepository.UpdateStatusBatchHeaderForDirector] " + err.Error())
+						}
+					} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelDirekturUnit) {
+						if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
+							Status: entity.MPPlaningStatus(status),
+							// ApprovedBy:            approvedBy,
+							RecommendedBy: approvalHistory.ApproverID.String(),
+						}).Error; err != nil {
+							tx.Rollback()
+							r.Log.Errorf("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
+							return errors.New("[BatchRepository.UpdateStatusBatchHeader] " + err.Error())
 						}
 					} else if approvalHistory.Level == string(entity.MPPlanningApprovalHistoryLevelCEO) {
 						if err := tx.Model(&entity.MPPlanningHeader{}).Where("id = ?", bl.MPPlanningHeaderID).Updates(&entity.MPPlanningHeader{
