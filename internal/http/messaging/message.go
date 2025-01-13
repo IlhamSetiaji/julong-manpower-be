@@ -18,7 +18,7 @@ func waitReply(id string, rchan chan response.RabbitMQResponse) (response.Rabbit
 
 			delete(utils.Rchans, id)
 			return docReply, nil
-		case <-time.After(10 * time.Second):
+		case <-time.After(100 * time.Second):
 			// timeout
 			log.Printf("ERROR: request timeout uid: %s", id)
 

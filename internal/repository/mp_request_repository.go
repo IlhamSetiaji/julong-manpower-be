@@ -20,6 +20,7 @@ type IMPRequestRepository interface {
 	GetHeadersByCreatedAt(createdAt string) ([]entity.MPRequestHeader, error)
 	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) ([]entity.MPRequestApprovalHistory, error)
 	FindById(id uuid.UUID) (*entity.MPRequestHeader, error)
+	FindByIDOnly(id uuid.UUID) (*entity.MPRequestHeader, error)
 	Update(mpRequestHeader *entity.MPRequestHeader) (*entity.MPRequestHeader, error)
 	UpdateStatusHeader(id uuid.UUID, status string, approvedBy string, approvalHistory *entity.MPRequestApprovalHistory) error
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPRequestApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPRequestApprovalHistory, error)
@@ -59,6 +60,23 @@ func (r *MPRequestRepository) GetHighestDocumentNumberByDate(date string) (int, 
 		return 0, err
 	}
 	return maxNumber, nil
+}
+
+func (r *MPRequestRepository) FindByIDOnly(id uuid.UUID) (*entity.MPRequestHeader, error) {
+	var mpRequestHeader entity.MPRequestHeader
+
+	if err := r.DB.Preload("MPPPeriod").Preload("RequestCategory").Preload("RequestMajors.Major").First(&mpRequestHeader, id).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPRequestRepository.FindByIDOnly] mp request header with id %s not found", id)
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPRequestRepository.FindByIDOnly] error when query mp request header: %v", err)
+		}
+
+		return nil, errors.New("[MPRequestRepository.FindByIDOnly] error when query mp request header " + err.Error())
+	}
+
+	return &mpRequestHeader, nil
 }
 
 func (r *MPRequestRepository) GetHeadersByDocumentDate(documentDate string) ([]entity.MPRequestHeader, error) {

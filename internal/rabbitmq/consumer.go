@@ -8,6 +8,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
 	"github.com/google/uuid"
 	"github.com/rabbitmq/amqp091-go"
@@ -93,12 +94,12 @@ func InitConsumer(viper *viper.Viper, log *logrus.Logger) {
 				rchan <- *docRply
 			}
 
-			handleMsg(docMsg, log)
+			handleMsg(docMsg, log, viper)
 		}
 	}
 }
 
-func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger) {
+func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger, viper *viper.Viper) {
 	// switch case
 	var msgData map[string]interface{}
 
@@ -130,6 +131,29 @@ func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger) {
 		msgData = map[string]interface{}{
 			"id":     message.ID,
 			"plafon": message.Plafon,
+		}
+	case "find_mp_request_header_by_id":
+		mpRequestHeaderID, ok := docMsg.MessageData["mp_request_header_id"].(string)
+		if !ok {
+			log.Printf("Invalid request format: missing 'mp_request_header_id'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'mp_request_header_id'").Error(),
+			}
+			break
+		}
+
+		uc := usecase.MPRequestUseCaseFactory(viper, log)
+		mpRequestHeader, err := uc.FindByIDOnly(uuid.MustParse(mpRequestHeaderID))
+		if err != nil {
+			log.Printf("Failed to execute usecase: %v", err)
+			msgData = map[string]interface{}{
+				"error": err.Error(),
+			}
+			break
+		}
+
+		msgData = map[string]interface{}{
+			"mp_request_header": mpRequestHeader,
 		}
 	default:
 		log.Printf("Unknown message type, please recheck your type: %s", docMsg.MessageType)

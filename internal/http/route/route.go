@@ -110,6 +110,8 @@ func (c *RouteConfig) SetupAPIRoutes() {
 			apiRoute.GET("/mp-requests/total-histories", c.MPRequestHandler.CountTotalApprovalHistoryByStatus)
 			apiRoute.GET("/mp-requests/document-number", c.MPRequestHandler.GenerateDocumentNumber)
 			apiRoute.GET("/mp-requests/approval-histories", c.MPRequestHandler.GetRequestApprovalHistoryByHeaderId)
+			apiRoute.GET("/mp-requests/testing/:id", c.MPRequestHandler.FindByIDForTesting)
+			apiRoute.GET("/mp-requests/only/:id", c.MPRequestHandler.FindByIDOnly)
 			apiRoute.GET("/mp-requests/:id", c.MPRequestHandler.FindByID)
 			apiRoute.POST("/mp-requests", c.MPRequestHandler.Create)
 			apiRoute.PUT("/mp-requests/status", c.MPRequestHandler.UpdateStatusMPRequestHeader)

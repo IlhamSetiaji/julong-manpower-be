@@ -28,6 +28,8 @@ type IMPRequestHandler interface {
 	Delete(ctx *gin.Context)
 	FindAllPaginated(ctx *gin.Context)
 	FindByID(ctx *gin.Context)
+	FindByIDOnly(ctx *gin.Context)
+	FindByIDForTesting(ctx *gin.Context)
 	GetRequestApprovalHistoryByHeaderId(ctx *gin.Context)
 	GenerateDocumentNumber(ctx *gin.Context)
 	UpdateStatusMPRequestHeader(ctx *gin.Context)
@@ -99,6 +101,37 @@ func (h *MPRequestHandler) GetRequestApprovalHistoryByHeaderId(ctx *gin.Context)
 	}
 
 	utils.SuccessResponse(ctx, http.StatusOK, "Request approval history found", res)
+}
+
+func (h *MPRequestHandler) FindByIDForTesting(ctx *gin.Context) {
+	id := ctx.Param("id")
+
+	res, err := h.UseCase.FindByIDForTesting(uuid.MustParse(id))
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.FindByIDForTesting] error when find by ID for testing: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to find by ID for testing", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Header found", res)
+}
+
+func (h *MPRequestHandler) FindByIDOnly(ctx *gin.Context) {
+	id := ctx.Param("id")
+	if id == "" {
+		h.Log.Errorf("[MPRequestHandler.FindByIDOnly] error when get ID from request")
+		utils.ErrorResponse(ctx, http.StatusBadRequest, "Invalid request", "ID is required")
+		return
+	}
+
+	res, err := h.UseCase.FindByIDOnly(uuid.MustParse(id))
+	if err != nil {
+		h.Log.Errorf("[MPRequestHandler.FindByIDOnly] error when find by ID: %v", err)
+		utils.ErrorResponse(ctx, http.StatusInternalServerError, "Failed to find by ID", err.Error())
+		return
+	}
+
+	utils.SuccessResponse(ctx, http.StatusOK, "MP Request Header found", res)
 }
 
 func (h *MPRequestHandler) CountTotalApprovalHistoryByStatus(ctx *gin.Context) {

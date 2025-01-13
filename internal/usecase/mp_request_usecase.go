@@ -23,6 +23,8 @@ type IMPRequestUseCase interface {
 	Delete(id uuid.UUID) error
 	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status string) ([]*response.MPRequestApprovalHistoryResponse, error)
 	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
+	FindByIDOnly(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
+	FindByIDForTesting(id uuid.UUID) (string, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
@@ -139,6 +141,47 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
 	mpRequestHeader.MPPPeriod = *mppPeriod
+
+	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) FindByIDForTesting(id uuid.UUID) (string, error) {
+	mpRequestHeader, err := uc.MPRequestRepository.FindById(id)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByIDForTesting] error when find mp request header by id: %v", err)
+		return "", err
+	}
+
+	if mpRequestHeader == nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByIDForTesting] mp request header with id %s is not exist", id.String())
+		return "", errors.New("mp request header is not exist")
+	}
+
+	// send message to find organization by id
+	orgExist, err := uc.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+		ID: mpRequestHeader.OrganizationID.String(),
+	})
+
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByIDForTesting] error when send find organization by id message: %v", err)
+		return "", err
+	}
+
+	// return mpRequestHeader.DocumentNumber, nil
+	return orgExist.Name, nil
+}
+
+func (uc *MPRequestUseCase) FindByIDOnly(id uuid.UUID) (*response.MPRequestHeaderResponse, error) {
+	mpRequestHeader, err := uc.MPRequestRepository.FindByIDOnly(id)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByIDOnly] error when find mp request header by id: %v", err)
+		return nil, err
+	}
+
+	if mpRequestHeader == nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByIDOnly] mp request header with id %s is not exist", id.String())
+		return nil, errors.New("mp request header is not exist")
+	}
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }
@@ -526,23 +569,20 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 				return err
 			}
 
-			if len(*mpPlanningLines) == 0 {
-				uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] mp planning lines with header id %s and job id %s is not exist", mpRequestHeader.MPPlanningHeaderID.String(), mpRequestHeader.JobID.String())
-				return errors.New("mp planning lines is not exist")
-			}
+			if len(*mpPlanningLines) != 0 {
+				for _, mpPlanningLine := range *mpPlanningLines {
+					if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumMT {
+						uc.Log.Info("Mantappp")
+						mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.MaleNeeds - mpRequestHeader.FemaleNeeds
+					} else if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumPH {
+						mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.MaleNeeds - mpRequestHeader.FemaleNeeds
+					}
 
-			for _, mpPlanningLine := range *mpPlanningLines {
-				if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumMT {
-					uc.Log.Info("Mantappp")
-					mpPlanningLine.RemainingBalanceMT = mpPlanningLine.RemainingBalanceMT - mpRequestHeader.MaleNeeds - mpRequestHeader.FemaleNeeds
-				} else if mpRequestHeader.RecruitmentType == entity.RecruitmentTypeEnumPH {
-					mpPlanningLine.RemainingBalancePH = mpPlanningLine.RemainingBalancePH - mpRequestHeader.MaleNeeds - mpRequestHeader.FemaleNeeds
-				}
-
-				err = uc.MPPlanningRepository.UpdateLineRemainingBalances(mpPlanningLine.ID, mpPlanningLine.RemainingBalanceMT, mpPlanningLine.RemainingBalancePH)
-				if err != nil {
-					uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line: %v", err)
-					return err
+					err = uc.MPPlanningRepository.UpdateLineRemainingBalances(mpPlanningLine.ID, mpPlanningLine.RemainingBalanceMT, mpPlanningLine.RemainingBalancePH)
+					if err != nil {
+						uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when update mp planning line: %v", err)
+						return err
+					}
 				}
 			}
 		}
