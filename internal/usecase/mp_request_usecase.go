@@ -42,6 +42,7 @@ type MPRequestUseCase struct {
 	MPRequestHelper        helper.IMPRequestHelper
 	MPRequestDTO           dto.IMPRequestDTO
 	MPPlanningRepository   repository.IMPPlanningRepository
+	MPRequestMessage       messaging.IMPRequestMessage
 }
 
 func NewMPRequestUseCase(
@@ -57,6 +58,7 @@ func NewMPRequestUseCase(
 	mprHelper helper.IMPRequestHelper,
 	mprDTO dto.IMPRequestDTO,
 	mpPlanningRepository repository.IMPPlanningRepository,
+	mpRequestMessage messaging.IMPRequestMessage,
 ) IMPRequestUseCase {
 	return &MPRequestUseCase{
 		Viper:                  viper,
@@ -71,6 +73,7 @@ func NewMPRequestUseCase(
 		MPRequestHelper:        mprHelper,
 		MPRequestDTO:           mprDTO,
 		MPPlanningRepository:   mpPlanningRepository,
+		MPRequestMessage:       mpRequestMessage,
 	}
 }
 
@@ -543,6 +546,13 @@ func (uc *MPRequestUseCase) UpdateStatusHeader(req *request.UpdateMPRequestHeade
 				}
 			}
 		}
+
+		// send message to clone mpr
+		_, err := uc.MPRequestMessage.SendCloneMPR(mpRequestHeader.ID)
+		if err != nil {
+			uc.Log.Errorf("[MPRequestUseCase.UpdateStatusHeader] error when send clone mpr message: %v", err)
+			return err
+		}
 	}
 
 	err = uc.MPRequestRepository.UpdateStatusHeader(uuid.MustParse(req.ID), string(req.Status), req.ApproverID.String(), approvalHistory)
@@ -583,6 +593,7 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 	mprHelper := helper.MPRequestHelperFactory(log)
 	mprDTO := dto.MPRequestDTOFactory(log, viper)
 	mpPlanningRepo := repository.MPPlanningRepositoryFactory(log)
+	mpRequestMessage := messaging.MPRequestMessageFactory(log)
 	return NewMPRequestUseCase(
 		viper,
 		log,
@@ -596,5 +607,6 @@ func MPRequestUseCaseFactory(viper *viper.Viper, log *logrus.Logger) IMPRequestU
 		mprHelper,
 		mprDTO,
 		mpPlanningRepo,
+		mpRequestMessage,
 	)
 }
