@@ -13,8 +13,20 @@ func main() {
 	db := config.NewDatabase()
 
 	// migrate the schema
-	err := db.AutoMigrate(&entity.JobPlafon{}, &entity.MPPPeriod{}, &entity.MPPlanningHeader{}, &entity.MPPlanningLine{}, &entity.Major{}, &entity.ManpowerAttachment{},
-		&entity.RequestCategory{}, &entity.MPRequestHeader{}, &entity.RequestMajor{}, &entity.MPRequestApprovalHistory{}, &entity.MPPlanningApprovalHistory{})
+	err := db.AutoMigrate(
+		&entity.JobPlafon{},
+		&entity.MPPPeriod{},
+		&entity.MPPlanningHeader{},
+		&entity.MPPlanningLine{},
+		&entity.Major{},
+		&entity.ManpowerAttachment{},
+		&entity.RequestCategory{},
+		&entity.MPRequestHeader{},
+		&entity.RequestMajor{},
+		&entity.MPRequestApprovalHistory{},
+		&entity.MPPlanningApprovalHistory{},
+		&entity.BatchHeader{},
+		&entity.BatchLine{})
 	if err != nil {
 		log.Fatal(err)
 	} else {
