@@ -33,4 +33,3 @@ To migrate the database
 ```bash
 go run ./cmd/migration/main.go
 ```
-
