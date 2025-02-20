@@ -24,6 +24,7 @@ type IMPPlanningRepository interface {
 	GetHeadersBySomething(something map[string]interface{}) (*[]entity.MPPlanningHeader, error)
 	GetHeadersByOrganizationID(organizationID uuid.UUID) (*[]entity.MPPlanningHeader, error)
 	FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) (*[]entity.MPPlanningHeader, error)
+	FindAllHeadersByStatusAndMPPPeriodIDPaginated(status entity.MPPlaningStatus, mppPeriodID uuid.UUID, page int, pageSize int) (*[]entity.MPPlanningHeader, int64, error)
 	CountTotalApprovalHistoryByStatus(mpPlanningHeaderId uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	FindHeaderByOrganizationLocationID(organizationLocationID uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderByOrganizationLocationIDAndStatus(organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
@@ -192,6 +193,25 @@ func (r *MPPlanningRepository) FindAllHeadersByStatusAndMPPeriodID(status entity
 	}
 
 	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) FindAllHeadersByStatusAndMPPPeriodIDPaginated(status entity.MPPlaningStatus, mppPeriodID uuid.UUID, page int, pageSize int) (*[]entity.MPPlanningHeader, int64, error) {
+	var mppHeaders []entity.MPPlanningHeader
+	var total int64
+
+	query := r.DB.Model(&entity.MPPlanningHeader{}).Preload("MPPlanningLines").Preload("MPPPeriod").Where("status = ? AND mpp_period_id = ?", status, mppPeriodID)
+
+	if err := query.Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByStatusAndMPPPeriodIDPaginated - count side] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersByStatusAndMPPPeriodIDPaginated - count side] " + err.Error())
+	}
+
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppHeaders).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByStatusAndMPPPeriodIDPaginated - pagination side] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersByStatusAndMPPPeriodIDPaginated - pagination side] " + err.Error())
+	}
+
+	return &mppHeaders, total, nil
 }
 
 func (r *MPPlanningRepository) FindHeaderBySomething(something map[string]interface{}) (*entity.MPPlanningHeader, error) {

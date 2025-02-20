@@ -328,14 +328,27 @@ func (h *MPPlanningHandler) GetHeadersBySomething(ctx *gin.Context) {
 }
 
 func (h *MPPlanningHandler) GetHeadersByMPPeriodCompleted(ctx *gin.Context) {
-	resp, err := h.UseCase.GetHeadersByMPPeriodComplete()
+	page, err := strconv.Atoi(ctx.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(ctx.Query("page_size"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	resp, total, err := h.UseCase.GetHeadersByMPPeriodCompletePaginated(page, pageSize)
 	if err != nil {
 		h.Log.Errorf("[MPPlanningHandler.GetHeadersByMPPeriodCompleted] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
 		return
 	}
 
-	utils.SuccessResponse(ctx, http.StatusOK, "get headers by mpp period completed success", resp)
+	utils.SuccessResponse(ctx, http.StatusOK, "get headers by mpp period completed success", gin.H{
+		"mp_planning_headers": resp,
+		"total": total,
+	})
 }
 
 func (h *MPPlanningHandler) RejectStatusPartialMPPlanningHeaderUsingPT(ctx *gin.Context) {

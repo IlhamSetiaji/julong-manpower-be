@@ -105,6 +105,7 @@ type MPPlanningLineResponse struct {
 
 	OrganizationLocationName string `json:"organization_location_name"`
 	JobLevelName             string `json:"job_level_name"`
+	JobLevel                 int    `json:"job_level"`
 	JobName                  string `json:"job_name"`
 }
 

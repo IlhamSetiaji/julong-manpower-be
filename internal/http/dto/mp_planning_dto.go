@@ -180,6 +180,7 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 						d.log.Errorf("[MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse] " + err.Error())
 					}
 					line.JobLevelName = jobLevel.Name
+					line.JobLevel = int(jobLevel.Level)
 				}
 
 				if line.OrganizationLocationName == "" {
@@ -213,6 +214,7 @@ func (d *MPPlanningDTO) ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader
 					OrganizationLocationName: line.OrganizationLocationName,
 					JobLevelName:             line.JobLevelName,
 					JobName:                  line.JobName,
+					JobLevel:                 line.JobLevel,
 				})
 			}
 			return lines

@@ -29,7 +29,7 @@ type IMPPlanningUseCase interface {
 	FindAllHeadersGroupedApproverPaginated(request *request.FindAllHeadersPaginatedMPPlanningRequest) (*response.OrganizationLocationPaginatedResponse, error)
 	FindById(request *request.FindHeaderByIdMPPlanningRequest) (*response.FindByIdMPPlanningResponse, error)
 	FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) ([]*response.MPPlanningHeaderResponse, error)
-	GetHeadersByMPPeriodComplete() ([]*response.MPPlanningHeaderResponse, error)
+	GetHeadersByMPPeriodCompletePaginated(page, pageSize int) ([]*response.MPPlanningHeaderResponse, int64, error)
 	GenerateDocumentNumber(dateNow time.Time) (string, error)
 	CountTotalApprovalHistoryByStatus(headerID uuid.UUID, status entity.MPPlanningApprovalHistoryStatus) (int64, error)
 	UpdateStatusMPPlanningHeader(request *request.UpdateStatusMPPlanningHeaderRequest) error
@@ -431,21 +431,21 @@ func (uc *MPPlanningUseCase) GetHeadersBySomething(req *request.MPPlanningHeader
 	return uc.MPPlanningDTO.ConvertMPPlanningHeaderEntititesToResponse(headers), nil
 }
 
-func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlanningHeaderResponse, error) {
+func (uc *MPPlanningUseCase) GetHeadersByMPPeriodCompletePaginated(page, pageSize int) ([]*response.MPPlanningHeaderResponse, int64, error) {
 	mppPeriod, err := uc.MPPPeriodRepo.FindByStatus(entity.MPPeriodStatusComplete)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete] " + err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	if mppPeriod == nil {
-		return nil, errors.New("MP Period not found")
+		return nil, 0, errors.New("MP Period not found")
 	}
 
-	mpPlanningHeaders, err := uc.MPPlanningRepository.FindAllHeadersByStatusAndMPPeriodID(entity.MPPlaningStatusComplete, mppPeriod.ID)
+	mpPlanningHeaders, total, err := uc.MPPlanningRepository.FindAllHeadersByStatusAndMPPPeriodIDPaginated(entity.MPPlaningStatusComplete, mppPeriod.ID, page, pageSize)
 	if err != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete] " + err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	for i, header := range *mpPlanningHeaders {
@@ -455,7 +455,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-			return nil, err
+			return nil, 0, err
 		}
 		header.OrganizationName = messageResponse.Name
 
@@ -465,7 +465,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-			return nil, err
+			return nil, 0, err
 		}
 		header.EmpOrganizationName = message2Response.Name
 
@@ -475,7 +475,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-			return nil, err
+			return nil, 0, err
 		}
 		header.JobName = messageJobResposne.Name
 
@@ -485,7 +485,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-			return nil, err
+			return nil, 0, err
 		}
 		header.RequestorName = messageUserResponse.Name
 
@@ -495,7 +495,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 		})
 		if err != nil {
 			uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-			return nil, err
+			return nil, 0, err
 		}
 		header.OrganizationLocationName = messageOrgLocResponse.Name
 
@@ -506,7 +506,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-				return nil, err
+				return nil, 0, err
 			}
 			header.ApproverManagerName = messageApprManagerResponse.Name
 		}
@@ -518,7 +518,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-				return nil, err
+				return nil, 0, err
 			}
 			header.ApproverRecruitmentName = messageApprRecruitmentResponse.Name
 		}
@@ -530,7 +530,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-				return nil, err
+				return nil, 0, err
 			}
 			line.OrganizationLocationName = messageResponse.Name
 
@@ -540,7 +540,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-				return nil, err
+				return nil, 0, err
 			}
 			line.JobLevelName = message2Response.Name
 
@@ -550,7 +550,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 			})
 			if err != nil {
 				uc.Log.Errorf("[MPPlanningUseCase.GetHeadersByMPPeriodComplete Message] " + err.Error())
-				return nil, err
+				return nil, 0, err
 			}
 			line.JobName = messageJobResposne.Name
 
@@ -564,7 +564,7 @@ func (uc *MPPlanningUseCase) GetHeadersByMPPeriodComplete() ([]*response.MPPlann
 	for _, header := range *mpPlanningHeaders {
 		responseHeaders = append(responseHeaders, uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(&header))
 	}
-	return responseHeaders, nil
+	return responseHeaders, total, nil
 }
 
 func (uc *MPPlanningUseCase) FindAllHeadersByStatusAndMPPeriodID(status entity.MPPlaningStatus, mppPeriodID uuid.UUID) ([]*response.MPPlanningHeaderResponse, error) {
