@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -62,6 +63,30 @@ func (h *BatchHandler) GetCompletedBatchHeader(c *gin.Context) {
 }
 
 func (h *BatchHandler) GetBatchHeadersByStatus(c *gin.Context) {
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("page_size"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	search := c.Query("search")
+	if search == "" {
+		search = ""
+	}
+
+	createdAt := c.Query("created_at")
+	if createdAt == "" {
+		createdAt = "DESC"
+	}
+
+	sort := map[string]interface{}{
+		"created_at": createdAt,
+	}
+
 	status := c.Query("status")
 
 	if status == "" {
@@ -94,14 +119,17 @@ func (h *BatchHandler) GetBatchHeadersByStatus(c *gin.Context) {
 		return
 	}
 
-	batch, err := h.UseCase.GetBatchHeadersByStatus(entity.BatchHeaderApprovalStatus(status), approverType, orgUUID.String())
+	batch, total, err := h.UseCase.GetBatchHeadersByStatusPaginated(entity.BatchHeaderApprovalStatus(status), approverType, orgUUID.String(), page, pageSize, search, sort)
 	if err != nil {
 		h.Log.Error(err)
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to get batch headers by status", err.Error())
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Batch headers found", batch)
+	utils.SuccessResponse(c, http.StatusOK, "Batch headers found", gin.H{
+		"batches": batch,
+		"total":   total,
+	})
 }
 
 func (h *BatchHandler) CreateBatchHeaderAndLines(c *gin.Context) {

@@ -24,6 +24,7 @@ type IBatchRepository interface {
 	UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
 	UpdateStatusBatchHeaderForDirector(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
 	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string) ([]entity.BatchHeader, error)
+	GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string, page, pageSize int, search string, sort map[string]interface{}) ([]entity.BatchHeader, int64, error)
 }
 
 type BatchRepository struct {
@@ -60,6 +61,51 @@ func (r *BatchRepository) GetBatchHeadersByStatus(status entity.BatchHeaderAppro
 	}
 
 	return batchHeaders, nil
+}
+
+func (r *BatchRepository) GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string, page, pageSize int, search string, sort map[string]interface{}) ([]entity.BatchHeader, int64, error) {
+	var batchHeaders []entity.BatchHeader
+	var total int64
+	var whereApproverType string
+	var whereOrgID string
+
+	if approverType == entity.BatchHeaderApproverTypeCEO {
+		whereApproverType = "approver_type = 'CEO'"
+	} else {
+		whereApproverType = "approver_type = 'DIRECTOR'"
+	}
+
+	if orgID != "" {
+		if approverType == entity.BatchHeaderApproverTypeDirector {
+			whereOrgID = "organization_id = '" + orgID + "'"
+		}
+	}
+
+	query := r.DB.Model(&entity.BatchHeader{}).Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").
+		Where("status = ?", status).Where(whereApproverType).Where(whereOrgID)
+
+	if search != "" {
+		query = query.Where("document_number LIKE ?", "%"+search+"%")
+	}
+
+	// Apply sorting
+	for key, value := range sort {
+		query = query.Order(key + " " + value.(string))
+	}
+
+	// Count total records
+	if err := query.Count(&total).Error; err != nil {
+		r.Log.Error("[BatchRepository.GetBatchHeadersByStatusPaginated count total records] " + err.Error())
+		return nil, 0, err
+	}
+
+	// Apply pagination
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&batchHeaders).Error; err != nil {
+		r.Log.Error("[BatchRepository.GetBatchHeadersByStatusPaginated apply pagination] " + err.Error())
+		return nil, 0, err
+	}
+
+	return batchHeaders, total, nil
 }
 
 func (r *BatchRepository) FindByStatusApproverTypeOrgID(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*entity.BatchHeader, error) {
