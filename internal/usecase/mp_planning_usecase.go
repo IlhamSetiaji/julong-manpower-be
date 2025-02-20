@@ -1492,8 +1492,10 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 		return nil, err
 	}
 
-	jobPlafon.JobName = messageJobResposne.Name
-	jobPlafon.OrganizationName = message2Response.Name
+	if jobPlafon != nil {
+		jobPlafon.JobName = messageJobResposne.Name
+		jobPlafon.OrganizationName = message2Response.Name
+	}
 
 	// check current approval
 	var currentApproval string
