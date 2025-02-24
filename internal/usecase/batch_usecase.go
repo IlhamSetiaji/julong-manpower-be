@@ -65,9 +65,21 @@ func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchRes
 		return nil, nil
 	}
 
+	var mpPlanningHeaderID uuid.UUID
+	for _, bh := range batchHeaders {
+		for _, bl := range bh.BatchLines {
+			if &bl.MPPlanningHeaderID != nil && bl.MPPlanningHeaderID != uuid.Nil {
+				mpPlanningHeaderID = bl.MPPlanningHeaderID
+				break
+			}
+		}
+	}
+
+	uc.Log.Infof("mpPlanningHeaderID: %s", mpPlanningHeaderID.String())
+
 	completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
 	// get one mp planning header
-	mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(batchHeaders[0].BatchLines[0].MPPlanningHeaderID)
+	mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(mpPlanningHeaderID)
 	if err != nil {
 		uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
 		return nil, err

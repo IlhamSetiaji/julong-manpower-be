@@ -133,6 +133,11 @@ func (h *BatchHandler) GetBatchHeadersByStatus(c *gin.Context) {
 		return
 	}
 
+	if batch == nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Batch headers not found", "Batch headers not found")
+		return
+	}
+
 	utils.SuccessResponse(c, http.StatusOK, "Batch headers found", gin.H{
 		"batches": batch,
 		"total":   total,
