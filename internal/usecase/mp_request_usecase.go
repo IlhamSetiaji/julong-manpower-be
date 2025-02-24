@@ -320,7 +320,7 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 		return nil, errors.New("mpp period is not exist")
 	}
 
-	if req.DocumentDate < mppPeriod.StartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.EndDate.Format("2006-01-02") {
+	if req.DocumentDate < mppPeriod.BudgetStartDate.Format("2006-01-02") || req.DocumentDate > mppPeriod.BudgetEndDate.Format("2006-01-02") {
 		uc.Log.Errorf("[MPRequestUseCase.Update] document date %s is not in mpp period", req.DocumentDate)
 		return nil, errors.New("document date is not in mpp period")
 	}
