@@ -119,7 +119,14 @@ func (h *BatchHandler) GetBatchHeadersByStatus(c *gin.Context) {
 		return
 	}
 
-	batch, total, err := h.UseCase.GetBatchHeadersByStatusPaginated(entity.BatchHeaderApprovalStatus(status), approverType, orgUUID.String(), page, pageSize, search, sort)
+	employeeUUID, err := h.UserHelper.GetEmployeeId(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting employee id: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
+	batch, total, err := h.UseCase.GetBatchHeadersByStatusPaginated(entity.BatchHeaderApprovalStatus(status), approverType, orgUUID.String(), page, pageSize, search, sort, employeeUUID)
 	if err != nil {
 		h.Log.Error(err)
 		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to get batch headers by status", err.Error())

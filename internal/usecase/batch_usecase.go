@@ -28,7 +28,7 @@ type IBatchUsecase interface {
 	UpdateStatusBatchHeader(req *request.UpdateStatusBatchHeaderRequest) (*response.BatchResponse, error)
 	GetCompletedBatchHeader() (*[]response.CompletedBatchResponse, error)
 	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*[]response.CompletedBatchResponse, error)
-	GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType string, orgID string, page, pageSize int, search string, sort map[string]interface{}) (*[]response.CompletedBatchResponse, int64, error)
+	GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType string, orgID string, page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) (*[]response.CompletedBatchResponse, int64, error)
 	TriggerCreate(approverType string, orgID string) (bool, error)
 }
 
@@ -144,8 +144,8 @@ func (uc *BatchUsecase) GetBatchHeadersByStatus(status entity.BatchHeaderApprova
 	return &completedBatchResponses, nil
 }
 
-func (uc *BatchUsecase) GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType string, orgID string, page, pageSize int, search string, sort map[string]interface{}) (*[]response.CompletedBatchResponse, int64, error) {
-	batchHeaders, total, err := uc.Repo.GetBatchHeadersByStatusPaginated(status, entity.BatchHeaderApproverType(approverType), orgID, page, pageSize, search, sort)
+func (uc *BatchUsecase) GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType string, orgID string, page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) (*[]response.CompletedBatchResponse, int64, error) {
+	batchHeaders, total, err := uc.Repo.GetBatchHeadersByStatusPaginated(status, entity.BatchHeaderApproverType(approverType), orgID, page, pageSize, search, sort, employeeID)
 	if err != nil {
 		uc.Log.Errorf("[BatchUsecase.GetBatchHeadersByStatus] " + err.Error())
 		return nil, 0, err

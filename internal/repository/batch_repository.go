@@ -24,7 +24,7 @@ type IBatchRepository interface {
 	UpdateStatusBatchHeader(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
 	UpdateStatusBatchHeaderForDirector(batchHeader *entity.BatchHeader, status entity.BatchHeaderApprovalStatus, approvedBy string, approverName string) error
 	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string) ([]entity.BatchHeader, error)
-	GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string, page, pageSize int, search string, sort map[string]interface{}) ([]entity.BatchHeader, int64, error)
+	GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string, page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) ([]entity.BatchHeader, int64, error)
 }
 
 type BatchRepository struct {
@@ -63,7 +63,7 @@ func (r *BatchRepository) GetBatchHeadersByStatus(status entity.BatchHeaderAppro
 	return batchHeaders, nil
 }
 
-func (r *BatchRepository) GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string, page, pageSize int, search string, sort map[string]interface{}) ([]entity.BatchHeader, int64, error) {
+func (r *BatchRepository) GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType entity.BatchHeaderApproverType, orgID string, page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) ([]entity.BatchHeader, int64, error) {
 	var batchHeaders []entity.BatchHeader
 	var total int64
 	var whereApproverType string
@@ -82,7 +82,7 @@ func (r *BatchRepository) GetBatchHeadersByStatusPaginated(status entity.BatchHe
 	}
 
 	query := r.DB.Model(&entity.BatchHeader{}).Preload("BatchLines.MPPlanningHeader.MPPPeriod").Preload("BatchLines.MPPlanningHeader.MPPlanningLines").
-		Where("status = ?", status).Where(whereApproverType).Where(whereOrgID)
+		Where("status = ?", status).Where(whereApproverType).Where(whereOrgID).Or("approver_id = ?", employeeID)
 
 	if search != "" {
 		query = query.Where("document_number LIKE ?", "%"+search+"%")
