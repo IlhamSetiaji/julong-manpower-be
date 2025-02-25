@@ -26,7 +26,7 @@ type IBatchUsecase interface {
 	FindByNeedApproval(approverType string, orgID string) (*response.RealDocumentBatchResponse, error)
 	FindByCurrentDocumentDateAndStatus(status entity.BatchHeaderApprovalStatus) (*response.BatchResponse, error)
 	UpdateStatusBatchHeader(req *request.UpdateStatusBatchHeaderRequest) (*response.BatchResponse, error)
-	GetCompletedBatchHeader() (*[]response.CompletedBatchResponse, error)
+	GetCompletedBatchHeader(page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) (*[]response.CompletedBatchResponse, int64, error)
 	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*[]response.CompletedBatchResponse, error)
 	GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType string, orgID string, page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) (*[]response.CompletedBatchResponse, int64, error)
 	TriggerCreate(approverType string, orgID string) (bool, error)
@@ -54,15 +54,15 @@ func NewBatchUsecase(viper *viper.Viper, log *logrus.Logger, repo repository.IBa
 	}
 }
 
-func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchResponse, error) {
-	batchHeaders, err := uc.Repo.GetBatchHeadersByStatus(entity.BatchHeaderApprovalStatusCompleted, entity.BatchHeaderApproverTypeCEO, "")
+func (uc *BatchUsecase) GetCompletedBatchHeader(page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) (*[]response.CompletedBatchResponse, int64, error) {
+	batchHeaders, total, err := uc.Repo.GetBatchHeadersByStatusPaginated(entity.BatchHeaderApprovalStatusCompleted, entity.BatchHeaderApproverTypeCEO, "", page, pageSize, search, sort, employeeID)
 	if err != nil {
 		uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	if len(batchHeaders) == 0 {
-		return nil, nil
+		return nil, 0, nil
 	}
 
 	var mpPlanningHeaderID uuid.UUID
@@ -82,7 +82,7 @@ func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchRes
 	mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(mpPlanningHeaderID)
 	if err != nil {
 		uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
-		return nil, err
+		return nil, 0, err
 	}
 
 	// embed batch headers to completed batch responses
@@ -108,7 +108,7 @@ func (uc *BatchUsecase) GetCompletedBatchHeader() (*[]response.CompletedBatchRes
 		}
 	}
 
-	return &completedBatchResponses, nil
+	return &completedBatchResponses, total, nil
 }
 
 func (uc *BatchUsecase) GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*[]response.CompletedBatchResponse, error) {

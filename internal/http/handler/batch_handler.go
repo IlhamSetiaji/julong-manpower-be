@@ -51,7 +51,61 @@ func NewBatchHandler(log *logrus.Logger, viper *viper.Viper, useCase usecase.IBa
 }
 
 func (h *BatchHandler) GetCompletedBatchHeader(c *gin.Context) {
-	batch, err := h.UseCase.GetCompletedBatchHeader()
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("page_size"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	search := c.Query("search")
+	if search == "" {
+		search = ""
+	}
+
+	createdAt := c.Query("created_at")
+	if createdAt == "" {
+		createdAt = "DESC"
+	}
+
+	sort := map[string]interface{}{
+		"created_at": createdAt,
+	}
+
+	status := c.Query("status")
+
+	if status == "" {
+		status = string(entity.BatchHeaderApprovalStatusCompleted)
+	}
+
+	approverType := c.Query("approver_type")
+	if approverType == "" {
+		approverType = string(entity.BatchHeaderApproverTypeCEO)
+	}
+
+	user, err := middleware.GetUser(c, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(c, 404, "error", "User not found")
+		return
+	}
+
+	employeeUUID, err := h.UserHelper.GetEmployeeId(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting employee id: %v", err)
+		utils.ErrorResponse(c, 500, "error", err.Error())
+		return
+	}
+	batch, total, err := h.UseCase.GetCompletedBatchHeader(page, pageSize, search, sort, employeeUUID)
 
 	if err != nil {
 		h.Log.Error(err)
@@ -59,7 +113,10 @@ func (h *BatchHandler) GetCompletedBatchHeader(c *gin.Context) {
 		return
 	}
 
-	utils.SuccessResponse(c, http.StatusOK, "Completed batch header found", batch)
+	utils.SuccessResponse(c, http.StatusOK, "Completed batch header found", gin.H{
+		"batches": batch,
+		"total":   total,
+	})
 }
 
 func (h *BatchHandler) GetBatchHeadersByStatus(c *gin.Context) {
