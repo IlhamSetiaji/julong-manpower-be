@@ -125,7 +125,6 @@ func (uc *JobPlafonUseCase) FindAllPaginated(req *request.FindAllPaginatedJobPla
 
 	// Update the original slice with the filtered results
 	*jobPlafons = filteredJobPlafons
-	total = int64(len(filteredJobPlafons))
 
 	return &response.FindAllPaginatedJobPlafonResponse{
 		JobPlafons: jobPlafons,

@@ -41,7 +41,7 @@ func (r *JobPlafonRepository) FindAllPaginated(page int, pageSize int, search st
 	if filter != nil {
 		if _, ok := filter["job_ids"]; ok {
 			jobIDs = filter["job_ids"].([]string)
-			query = query.Where("job_id IN ?", jobIDs)
+			query = query.Where("job_id IN (?)", jobIDs)
 		}
 	}
 
@@ -49,12 +49,12 @@ func (r *JobPlafonRepository) FindAllPaginated(page int, pageSize int, search st
 	// 	query = query.Where("name LIKE ?", "%"+search+"%")
 	// }
 
-	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&jobPlafons).Error; err != nil {
+	if err := query.Count(&total).Error; err != nil {
 		r.Log.Errorf("[JobPlafonRepository.FindAllPaginated] " + err.Error())
 		return nil, 0, err
 	}
 
-	if err := query.Count(&total).Error; err != nil {
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&jobPlafons).Error; err != nil {
 		r.Log.Errorf("[JobPlafonRepository.FindAllPaginated] " + err.Error())
 		return nil, 0, err
 	}
