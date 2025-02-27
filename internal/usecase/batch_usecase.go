@@ -33,24 +33,35 @@ type IBatchUsecase interface {
 }
 
 type BatchUsecase struct {
-	Viper          *viper.Viper
-	Log            *logrus.Logger
-	Repo           repository.IBatchRepository
-	OrgMessage     messaging.IOrganizationMessage
-	EmpMessage     messaging.IEmployeeMessage
-	batchDTO       dto.IBatchDTO
-	mpPlanningRepo repository.IMPPlanningRepository
+	Viper            *viper.Viper
+	Log              *logrus.Logger
+	Repo             repository.IBatchRepository
+	OrgMessage       messaging.IOrganizationMessage
+	EmpMessage       messaging.IEmployeeMessage
+	batchDTO         dto.IBatchDTO
+	mpPlanningRepo   repository.IMPPlanningRepository
+	JobPlafonMessage messaging.IJobPlafonMessage
 }
 
-func NewBatchUsecase(viper *viper.Viper, log *logrus.Logger, repo repository.IBatchRepository, orgMessage messaging.IOrganizationMessage, empMessage messaging.IEmployeeMessage, batchDTO dto.IBatchDTO, mpPlanningRepo repository.IMPPlanningRepository) IBatchUsecase {
+func NewBatchUsecase(
+	viper *viper.Viper,
+	log *logrus.Logger,
+	repo repository.IBatchRepository,
+	orgMessage messaging.IOrganizationMessage,
+	empMessage messaging.IEmployeeMessage,
+	batchDTO dto.IBatchDTO,
+	mpPlanningRepo repository.IMPPlanningRepository,
+	jpMessage messaging.IJobPlafonMessage,
+) IBatchUsecase {
 	return &BatchUsecase{
-		Viper:          viper,
-		Log:            log,
-		Repo:           repo,
-		OrgMessage:     orgMessage,
-		EmpMessage:     empMessage,
-		batchDTO:       batchDTO,
-		mpPlanningRepo: mpPlanningRepo,
+		Viper:            viper,
+		Log:              log,
+		Repo:             repo,
+		OrgMessage:       orgMessage,
+		EmpMessage:       empMessage,
+		batchDTO:         batchDTO,
+		mpPlanningRepo:   mpPlanningRepo,
+		JobPlafonMessage: jpMessage,
 	}
 }
 
@@ -672,6 +683,24 @@ func (uc *BatchUsecase) FindDocumentByID(id string) (*response.RealDocumentBatch
 		return nil, errors.New("Batch not found")
 	}
 
+	// get job level for mp planning lines
+	for i, bl := range resp.BatchLines {
+		for j, mpl := range bl.MPPlanningHeader.MPPlanningLines {
+			if mpl.JobLevelName == "" {
+				jobLevel, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+					ID: mpl.JobLevelID.String(),
+				})
+				if err != nil {
+					uc.Log.Errorf("[BatchUsecase.FindDocumentByID] " + err.Error())
+				}
+				mpl.JobLevelName = jobLevel.Name
+				mpl.JobLevel = int(jobLevel.Level)
+
+				resp.BatchLines[i].MPPlanningHeader.MPPlanningLines[j] = mpl
+			}
+		}
+	}
+
 	return uc.batchDTO.ConvertRealDocumentBatchResponse(resp), nil
 }
 
@@ -703,5 +732,6 @@ func BatchUsecaseFactory(viper *viper.Viper, log *logrus.Logger) IBatchUsecase {
 	empMessage := messaging.EmployeeMessageFactory(log)
 	batchDTO := dto.BatchDTOFactory(log)
 	mpPlanningRepo := repository.MPPlanningRepositoryFactory(log)
-	return NewBatchUsecase(viper, log, repo, orgMessage, empMessage, batchDTO, mpPlanningRepo)
+	jpMessage := messaging.JobPlafonMessageFactory(log)
+	return NewBatchUsecase(viper, log, repo, orgMessage, empMessage, batchDTO, mpPlanningRepo, jpMessage)
 }

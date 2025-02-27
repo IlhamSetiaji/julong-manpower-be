@@ -125,6 +125,7 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 			Executive: func() []response.DocumentCalculationBatchResponse {
 				var executive []response.DocumentCalculationBatchResponse
 				groupedByJobLevel := make(map[int]*response.DocumentCalculationBatchResponse)
+
 				for _, bl := range batch.BatchLines {
 					// Sort MPPlanningLines by JobLevel in descending order
 					sort.Slice(bl.MPPlanningHeader.MPPlanningLines, func(i, j int) bool {
@@ -141,6 +142,7 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 						}
 						mpl.JobLevelName = message2Response.Name
 						mpl.JobLevel = int(message2Response.Level)
+
 						// group mpl by job level
 						if mpl.JobLevel > 3 {
 							if _, exists := groupedByJobLevel[mpl.JobLevel]; !exists {
