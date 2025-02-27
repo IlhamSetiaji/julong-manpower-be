@@ -126,6 +126,11 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 				var executive []response.DocumentCalculationBatchResponse
 				groupedByJobLevel := make(map[int]*response.DocumentCalculationBatchResponse)
 				for _, bl := range batch.BatchLines {
+					// Sort MPPlanningLines by JobLevel in descending order
+					sort.Slice(bl.MPPlanningHeader.MPPlanningLines, func(i, j int) bool {
+						return bl.MPPlanningHeader.MPPlanningLines[i].JobLevel > bl.MPPlanningHeader.MPPlanningLines[j].JobLevel
+					})
+
 					for i, mpl := range bl.MPPlanningHeader.MPPlanningLines {
 						// check job level name
 						message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
