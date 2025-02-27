@@ -87,8 +87,8 @@ func (uc *BatchUsecase) GetCompletedBatchHeader(page, pageSize int, search strin
 	// embed batch headers to completed batch responses
 	completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
 
+	var mpPlanningHeaderID uuid.UUID
 	for i, bh := range batchHeaders {
-		var mpPlanningHeaderID uuid.UUID
 		for _, bl := range bh.BatchLines {
 			if &bl.MPPlanningHeaderID != nil && bl.MPPlanningHeaderID != uuid.Nil {
 				mpPlanningHeaderID = bl.MPPlanningHeaderID
