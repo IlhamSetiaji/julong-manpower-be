@@ -123,6 +123,8 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 		ExistingDate:  existingDate,
 		Grade: func() response.GradeBatchResponse {
 			var executivePromote int
+			var totalExecutive int
+			var totalNonExecutive int
 			return response.GradeBatchResponse{
 				Executive: func() []response.DocumentCalculationBatchResponse {
 					var executive []response.DocumentCalculationBatchResponse
@@ -186,6 +188,8 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 								groupedByJobLevel[jobLevel].Promote +
 								groupedByJobLevel[jobLevel].Recruit
 						}
+
+						totalExecutive += groupedByJobLevel[jobLevel].Total
 					}
 
 					// Convert the map to a slice
@@ -266,6 +270,8 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 									groupedByJobLevel[jobLevel].Recruit
 							}
 						}
+
+						totalNonExecutive += groupedByJobLevel[jobLevel].Total
 					}
 
 					// Convert the map to a slice
@@ -293,17 +299,8 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 							mpl.JobLevelName = message2Response.Name
 							mpl.JobLevel = int(message2Response.Level)
 
-							previousMpPlanningLine, err := d.findPreviousMPPlanningLineByJobLevel(mpl.JobLevel+1, bl.MPPlanningHeader.MPPlanningLines)
-							if err != nil {
-								d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
-							}
-
-							if previousMpPlanningLine != nil {
-								totalOverall += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT - previousMpPlanningLine.Promotion
-							} else {
-								totalOverall += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT
-							}
 						}
+						totalOverall += totalExecutive + totalNonExecutive
 						total = append(total, response.DocumentCalculationBatchResponse{
 							JobLevelName: "Total",
 							Existing:     totalExisting,

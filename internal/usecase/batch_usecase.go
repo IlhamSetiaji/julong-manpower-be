@@ -683,6 +683,24 @@ func (uc *BatchUsecase) FindDocumentByID(id string) (*response.RealDocumentBatch
 		return nil, errors.New("Batch not found")
 	}
 
+	// // get job level for mp planning lines
+	// for i, bl := range resp.BatchLines {
+	// 	for j, mpl := range bl.MPPlanningHeader.MPPlanningLines {
+	// 		if mpl.JobLevelName == "" {
+	// 			jobLevel, err := uc.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
+	// 				ID: mpl.JobLevelID.String(),
+	// 			})
+	// 			if err != nil {
+	// 				uc.Log.Errorf("[BatchUsecase.FindDocumentByID] " + err.Error())
+	// 			}
+	// 			mpl.JobLevelName = jobLevel.Name
+	// 			mpl.JobLevel = int(jobLevel.Level)
+
+	// 			resp.BatchLines[i].MPPlanningHeader.MPPlanningLines[j] = mpl
+	// 		}
+	// 	}
+	// }
+
 	return uc.batchDTO.ConvertRealDocumentBatchResponse(resp), nil
 }
 
