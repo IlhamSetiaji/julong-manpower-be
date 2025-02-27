@@ -65,28 +65,45 @@ func (uc *BatchUsecase) GetCompletedBatchHeader(page, pageSize int, search strin
 		return nil, 0, nil
 	}
 
-	var mpPlanningHeaderID uuid.UUID
-	for _, bh := range batchHeaders {
+	// var mpPlanningHeaderID uuid.UUID
+	// for _, bh := range batchHeaders {
+	// 	for _, bl := range bh.BatchLines {
+	// 		if &bl.MPPlanningHeaderID != nil && bl.MPPlanningHeaderID != uuid.Nil {
+	// 			mpPlanningHeaderID = bl.MPPlanningHeaderID
+	// 			break
+	// 		}
+	// 	}
+	// }
+
+	// uc.Log.Infof("mpPlanningHeaderID: %s", mpPlanningHeaderID.String())
+
+	// // get one mp planning header
+	// mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(mpPlanningHeaderID)
+	// if err != nil {
+	// 	uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
+	// 	return nil, 0, err
+	// }
+
+	// embed batch headers to completed batch responses
+	completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
+
+	for i, bh := range batchHeaders {
+		var mpPlanningHeaderID uuid.UUID
 		for _, bl := range bh.BatchLines {
 			if &bl.MPPlanningHeaderID != nil && bl.MPPlanningHeaderID != uuid.Nil {
 				mpPlanningHeaderID = bl.MPPlanningHeaderID
 				break
 			}
 		}
-	}
+		uc.Log.Infof("mpPlanningHeaderID: %s", mpPlanningHeaderID.String())
 
-	uc.Log.Infof("mpPlanningHeaderID: %s", mpPlanningHeaderID.String())
-
-	completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
-	// get one mp planning header
-	mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(mpPlanningHeaderID)
-	if err != nil {
-		uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
-		return nil, 0, err
-	}
-
-	// embed batch headers to completed batch responses
-	for i, bh := range batchHeaders {
+		completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
+		// get one mp planning header
+		mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(mpPlanningHeaderID)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
+			return nil, 0, err
+		}
 		completedBatchResponses[i] = response.CompletedBatchResponse{
 			ID:             bh.ID,
 			DocumentNumber: bh.DocumentNumber,
