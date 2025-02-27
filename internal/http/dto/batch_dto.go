@@ -126,14 +126,10 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 				var executive []response.DocumentCalculationBatchResponse
 				groupedByJobLevel := make(map[int]*response.DocumentCalculationBatchResponse)
 
+				// First pass: Group data by job level and calculate existing, promote, and recruit
 				for _, bl := range batch.BatchLines {
-					// Sort MPPlanningLines by JobLevel in descending order
-					sort.Slice(bl.MPPlanningHeader.MPPlanningLines, func(i, j int) bool {
-						return bl.MPPlanningHeader.MPPlanningLines[i].JobLevel > bl.MPPlanningHeader.MPPlanningLines[j].JobLevel
-					})
-
 					for _, mpl := range bl.MPPlanningHeader.MPPlanningLines {
-						// check job level name
+						// Check job level name
 						message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
 							ID: mpl.JobLevelID.String(),
 						})
@@ -143,38 +139,53 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 						mpl.JobLevelName = message2Response.Name
 						mpl.JobLevel = int(message2Response.Level)
 
-						// group mpl by job level
+						// Group mpl by job level (only for job levels > 3)
 						if mpl.JobLevel > 3 {
 							if _, exists := groupedByJobLevel[mpl.JobLevel]; !exists {
 								groupedByJobLevel[mpl.JobLevel] = &response.DocumentCalculationBatchResponse{
 									JobLevelName: strconv.Itoa(mpl.JobLevel),
+									Existing:     0,
+									Promote:      0,
+									Recruit:      0,
+									Total:        0,
 								}
 							}
 
 							groupedByJobLevel[mpl.JobLevel].Existing += mpl.Existing
 							groupedByJobLevel[mpl.JobLevel].Promote += mpl.Promotion
 							groupedByJobLevel[mpl.JobLevel].Recruit += mpl.RecruitPH + mpl.RecruitMT
-
-							previousTotal := 0
-							if prevGroup, exists := groupedByJobLevel[mpl.JobLevel-1]; exists {
-								previousTotal = prevGroup.Promote
-							}
-
-							groupedByJobLevel[mpl.JobLevel].Total += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT - previousTotal
 						}
 					}
 				}
 
-				for _, v := range groupedByJobLevel {
-					executive = append(executive, *v)
+				// Second pass: Calculate total by subtracting previous job level's promote
+				// Sort job levels in descending order
+				sortedJobLevels := make([]int, 0, len(groupedByJobLevel))
+				for jobLevel := range groupedByJobLevel {
+					sortedJobLevels = append(sortedJobLevels, jobLevel)
+				}
+				sort.Sort(sort.Reverse(sort.IntSlice(sortedJobLevels)))
+
+				for i, jobLevel := range sortedJobLevels {
+					if i > 0 {
+						// Subtract the promote value of the previous job level
+						previousJobLevel := sortedJobLevels[i-1]
+						groupedByJobLevel[jobLevel].Total = groupedByJobLevel[jobLevel].Existing +
+							groupedByJobLevel[jobLevel].Promote +
+							groupedByJobLevel[jobLevel].Recruit -
+							groupedByJobLevel[previousJobLevel].Promote
+					} else {
+						// For the highest job level, no subtraction is needed
+						groupedByJobLevel[jobLevel].Total = groupedByJobLevel[jobLevel].Existing +
+							groupedByJobLevel[jobLevel].Promote +
+							groupedByJobLevel[jobLevel].Recruit
+					}
 				}
 
-				// Sort executive by JobLevel
-				sort.Slice(executive, func(i, j int) bool {
-					levelI, _ := strconv.Atoi(executive[i].JobLevelName)
-					levelJ, _ := strconv.Atoi(executive[j].JobLevelName)
-					return levelI > levelJ
-				})
+				// Convert the map to a slice
+				for _, jobLevel := range sortedJobLevels {
+					executive = append(executive, *groupedByJobLevel[jobLevel])
+				}
 
 				return executive
 			}(),
@@ -182,6 +193,7 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 				var nonExecutive []response.DocumentCalculationBatchResponse
 				groupedByJobLevel := make(map[int]*response.DocumentCalculationBatchResponse)
 
+				// First pass: Group data by job level and calculate existing, promote, and recruit
 				for _, bl := range batch.BatchLines {
 					for _, mpl := range bl.MPPlanningHeader.MPPlanningLines {
 						message2Response, err := d.JobPlafonMessage.SendFindJobLevelByIDMessage(request.SendFindJobLevelByIDMessageRequest{
@@ -194,41 +206,53 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 						mpl.JobLevelName = message2Response.Name
 						mpl.JobLevel = int(message2Response.Level)
 
+						// Group mpl by job level (only for job levels <= 3)
 						if mpl.JobLevel <= 3 {
 							if _, exists := groupedByJobLevel[mpl.JobLevel]; !exists {
 								groupedByJobLevel[mpl.JobLevel] = &response.DocumentCalculationBatchResponse{
 									JobLevelName: strconv.Itoa(mpl.JobLevel),
+									Existing:     0,
+									Promote:      0,
+									Recruit:      0,
+									Total:        0,
 								}
 							}
 
 							groupedByJobLevel[mpl.JobLevel].Existing += mpl.Existing
 							groupedByJobLevel[mpl.JobLevel].Promote += mpl.Promotion
 							groupedByJobLevel[mpl.JobLevel].Recruit += mpl.RecruitPH + mpl.RecruitMT
-
-							previousMpPlanningLine, err := d.findPreviousMPPlanningLineByJobLevel(mpl.JobLevel+1, bl.MPPlanningHeader.MPPlanningLines)
-							if err != nil {
-								d.Log.Errorf("[BatchDTO.ConvertToDocumentBatchResponse] " + err.Error())
-							}
-
-							if previousMpPlanningLine != nil {
-								groupedByJobLevel[mpl.JobLevel].Total += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT - previousMpPlanningLine.Promotion
-							} else {
-								groupedByJobLevel[mpl.JobLevel].Total += mpl.Existing + mpl.Promotion + mpl.RecruitPH + mpl.RecruitMT
-							}
 						}
 					}
 				}
 
-				for _, v := range groupedByJobLevel {
-					nonExecutive = append(nonExecutive, *v)
+				// Second pass: Calculate total by subtracting previous job level's promote
+				// Sort job levels in descending order
+				sortedJobLevels := make([]int, 0, len(groupedByJobLevel))
+				for jobLevel := range groupedByJobLevel {
+					sortedJobLevels = append(sortedJobLevels, jobLevel)
+				}
+				sort.Sort(sort.Reverse(sort.IntSlice(sortedJobLevels)))
+
+				for i, jobLevel := range sortedJobLevels {
+					if i > 0 {
+						// Subtract the promote value of the previous job level
+						previousJobLevel := sortedJobLevels[i-1]
+						groupedByJobLevel[jobLevel].Total = groupedByJobLevel[jobLevel].Existing +
+							groupedByJobLevel[jobLevel].Promote +
+							groupedByJobLevel[jobLevel].Recruit -
+							groupedByJobLevel[previousJobLevel].Promote
+					} else {
+						// For the highest job level, no subtraction is needed
+						groupedByJobLevel[jobLevel].Total = groupedByJobLevel[jobLevel].Existing +
+							groupedByJobLevel[jobLevel].Promote +
+							groupedByJobLevel[jobLevel].Recruit
+					}
 				}
 
-				// Sort nonExecutive by JobLevel
-				sort.Slice(nonExecutive, func(i, j int) bool {
-					levelI, _ := strconv.Atoi(nonExecutive[i].JobLevelName)
-					levelJ, _ := strconv.Atoi(nonExecutive[j].JobLevelName)
-					return levelI > levelJ
-				})
+				// Convert the map to a slice
+				for _, jobLevel := range sortedJobLevels {
+					nonExecutive = append(nonExecutive, *groupedByJobLevel[jobLevel])
+				}
 
 				return nonExecutive
 			}(),
