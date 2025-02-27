@@ -168,15 +168,14 @@ func (uc *BatchUsecase) GetBatchHeadersByStatusPaginated(status entity.BatchHead
 	}
 
 	completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
-	// get one mp planning header
-	mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(batchHeaders[0].BatchLines[0].MPPlanningHeaderID)
-	if err != nil {
-		uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
-		return nil, 0, err
-	}
 
 	// embed batch headers to completed batch responses
 	for i, bh := range batchHeaders {
+		mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(batchHeaders[i].BatchLines[0].MPPlanningHeaderID)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
+			return nil, 0, err
+		}
 		completedBatchResponses[i] = response.CompletedBatchResponse{
 			ID:             bh.ID,
 			DocumentNumber: bh.DocumentNumber,
