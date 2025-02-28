@@ -1471,6 +1471,7 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 			return nil, err
 		}
 		line.JobLevelName = message2Response.Name
+		line.JobLevel = int(message2Response.Level)
 
 		// Fetch job names using RabbitMQ
 		messageJobResposne, err := uc.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
@@ -1569,6 +1570,7 @@ func (uc *MPPlanningUseCase) FindById(req *request.FindHeaderByIdMPPlanningReque
 					RecruitMT:                line.RecruitMT,
 					OrganizationLocationName: line.OrganizationLocationName,
 					JobLevelName:             line.JobLevelName,
+					JobLevel:                 line.JobLevel,
 					JobName:                  line.JobName,
 				})
 			}
