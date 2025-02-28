@@ -108,7 +108,6 @@ func (uc *BatchUsecase) GetCompletedBatchHeader(page, pageSize int, search strin
 		}
 		uc.Log.Infof("mpPlanningHeaderID: %s", mpPlanningHeaderID.String())
 
-		completedBatchResponses := make([]response.CompletedBatchResponse, len(batchHeaders))
 		// get one mp planning header
 		mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(mpPlanningHeaderID)
 		if err != nil {

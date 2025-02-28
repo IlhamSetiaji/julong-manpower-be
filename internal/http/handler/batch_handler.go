@@ -113,6 +113,11 @@ func (h *BatchHandler) GetCompletedBatchHeader(c *gin.Context) {
 		return
 	}
 
+	if batch == nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "Completed batch header not found", "Completed batch header not found")
+		return
+	}
+
 	utils.SuccessResponse(c, http.StatusOK, "Completed batch header found", gin.H{
 		"batches": batch,
 		"total":   total,
