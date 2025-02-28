@@ -100,6 +100,7 @@ func (uc *BatchUsecase) GetCompletedBatchHeader(page, pageSize int, search strin
 
 	var mpPlanningHeaderID uuid.UUID
 	for i, bh := range batchHeaders {
+		mpPlanningHeaderID = uuid.Nil
 		for _, bl := range bh.BatchLines {
 			if &bl.MPPlanningHeaderID != nil && bl.MPPlanningHeaderID != uuid.Nil {
 				mpPlanningHeaderID = bl.MPPlanningHeaderID
@@ -114,14 +115,9 @@ func (uc *BatchUsecase) GetCompletedBatchHeader(page, pageSize int, search strin
 			uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
 			return nil, 0, err
 		}
-		completedBatchResponses[i] = response.CompletedBatchResponse{
-			ID:             bh.ID,
-			DocumentNumber: bh.DocumentNumber,
-			DocumentDate:   bh.DocumentDate,
-			Status:         bh.Status,
-			CreatedAt:      bh.CreatedAt,
-			UpdatedAt:      bh.UpdatedAt,
-			MPPPeriod: response.MPPeriodResponse{
+		var mpPeriodResponse *response.MPPeriodResponse
+		if mpPlanningHeader != nil {
+			mpPeriodResponse = &response.MPPeriodResponse{
 				ID:              mpPlanningHeader.MPPPeriod.ID,
 				Title:           mpPlanningHeader.MPPPeriod.Title,
 				StartDate:       mpPlanningHeader.MPPPeriod.StartDate.Format("2006-01-02"),
@@ -131,7 +127,21 @@ func (uc *BatchUsecase) GetCompletedBatchHeader(page, pageSize int, search strin
 				Status:          mpPlanningHeader.MPPPeriod.Status,
 				CreatedAt:       mpPlanningHeader.MPPPeriod.CreatedAt,
 				UpdatedAt:       mpPlanningHeader.MPPPeriod.UpdatedAt,
-			},
+			}
+		}
+		completedBatchResponses[i] = response.CompletedBatchResponse{
+			ID:             bh.ID,
+			DocumentNumber: bh.DocumentNumber,
+			DocumentDate:   bh.DocumentDate,
+			Status:         bh.Status,
+			CreatedAt:      bh.CreatedAt,
+			UpdatedAt:      bh.UpdatedAt,
+			MPPPeriod: func() response.MPPeriodResponse {
+				if mpPeriodResponse != nil {
+					return *mpPeriodResponse
+				}
+				return response.MPPeriodResponse{}
+			}(),
 		}
 	}
 
