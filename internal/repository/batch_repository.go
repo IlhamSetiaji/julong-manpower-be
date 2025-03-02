@@ -278,7 +278,7 @@ func (r *BatchRepository) FindByNeedApproval(approverType string, orgID string) 
 
 func (r *BatchRepository) GetHeadersByDocumentDate(documentDate string) ([]entity.BatchHeader, error) {
 	var batchHeaders []entity.BatchHeader
-	if err := r.DB.Where("document_date = ?", documentDate).Find(&batchHeaders).Error; err != nil {
+	if err := r.DB.Where("DATE(document_date) = ?", documentDate).Find(&batchHeaders).Error; err != nil {
 		r.Log.Error(err)
 		return nil, err
 	}

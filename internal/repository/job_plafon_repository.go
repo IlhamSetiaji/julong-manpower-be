@@ -54,7 +54,7 @@ func (r *JobPlafonRepository) FindAllPaginated(page int, pageSize int, search st
 		return nil, 0, err
 	}
 
-	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&jobPlafons).Error; err != nil {
+	if err := query.Order("plafon DESC").Offset((page - 1) * pageSize).Limit(pageSize).Find(&jobPlafons).Error; err != nil {
 		r.Log.Errorf("[JobPlafonRepository.FindAllPaginated] " + err.Error())
 		return nil, 0, err
 	}
