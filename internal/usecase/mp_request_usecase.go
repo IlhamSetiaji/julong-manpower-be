@@ -24,6 +24,7 @@ type IMPRequestUseCase interface {
 	GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status string) ([]*response.MPRequestApprovalHistoryResponse, error)
 	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindByIDOnly(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
+	FindByIDOnlyForMessage(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindByIDForTesting(id uuid.UUID) (string, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
@@ -184,6 +185,21 @@ func (uc *MPRequestUseCase) FindByIDOnly(id uuid.UUID) (*response.MPRequestHeade
 	}
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) FindByIDOnlyForMessage(id uuid.UUID) (*response.MPRequestHeaderResponse, error) {
+	mpRequestHeader, err := uc.MPRequestRepository.FindByIDOnly(id)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByIDOnly] error when find mp request header by id: %v", err)
+		return nil, err
+	}
+
+	if mpRequestHeader == nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindByIDOnly] mp request header with id %s is not exist", id.String())
+		return nil, errors.New("mp request header is not exist")
+	}
+
+	return uc.MPRequestDTO.ConvertToResponseMinimal(mpRequestHeader), nil
 }
 
 func (uc *MPRequestUseCase) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status string) ([]*response.MPRequestApprovalHistoryResponse, error) {

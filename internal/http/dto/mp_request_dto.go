@@ -14,6 +14,7 @@ import (
 type IMPRequestDTO interface {
 	ConvertToEntity(req *request.CreateMPRequestHeaderRequest) *entity.MPRequestHeader
 	ConvertToResponse(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse
+	ConvertToResponseMinimal(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse
 	ConvertEntityToRequest(ent *entity.MPRequestHeader) *request.CreateMPRequestHeaderRequest
 	ConvertMPRequestApprovalHistoryToResponse(approvalHistories *entity.MPRequestApprovalHistory) *response.MPRequestApprovalHistoryResponse
 	ConvertMPRequestApprovalHistoriesToResponse(approvalHistories *[]entity.MPRequestApprovalHistory) []*response.MPRequestApprovalHistoryResponse
@@ -262,6 +263,53 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 		DepartmentHeadEmployeeJob: ent.DepartmentHeadEmployeeJob,
 		VpGmDirectorEmployeeJob:   ent.VpGmDirectorEmployeeJob,
 		CeoEmployeeJob:            ent.CeoEmployeeJob,
+	}
+}
+
+func (d *MPRequestDTO) ConvertToResponseMinimal(ent *entity.MPRequestHeader) *response.MPRequestHeaderResponse {
+	return &response.MPRequestHeaderResponse{
+		ID:                         ent.ID,
+		OrganizationID:             *ent.OrganizationID,
+		OrganizationLocationID:     *ent.OrganizationLocationID,
+		ForOrganizationID:          *ent.ForOrganizationID,
+		ForOrganizationLocationID:  *ent.ForOrganizationLocationID,
+		ForOrganizationStructureID: *ent.ForOrganizationStructureID,
+		JobID:                      *ent.JobID,
+		RequestCategoryID:          ent.RequestCategoryID,
+		ExpectedDate:               *ent.ExpectedDate,
+		Experiences:                ent.Experiences,
+		DocumentNumber:             ent.DocumentNumber,
+		DocumentDate:               ent.DocumentDate,
+		MaleNeeds:                  ent.MaleNeeds,
+		FemaleNeeds:                ent.FemaleNeeds,
+		MinimumAge:                 ent.MinimumAge,
+		MaximumAge:                 ent.MaximumAge,
+		MinimumExperience:          ent.MinimumExperience,
+		MaritalStatus:              ent.MaritalStatus,
+		MinimumEducation:           ent.MinimumEducation,
+		RequiredQualification:      ent.RequiredQualification,
+		Certificate:                ent.Certificate,
+		ComputerSkill:              ent.ComputerSkill,
+		LanguageSkill:              ent.LanguageSkill,
+		OtherSkill:                 ent.OtherSkill,
+		Jobdesc:                    ent.Jobdesc,
+		SalaryMin:                  ent.SalaryMin,
+		SalaryMax:                  ent.SalaryMax,
+		RequestorID:                ent.RequestorID,
+		DepartmentHead:             ent.DepartmentHead,
+		VpGmDirector:               ent.VpGmDirector,
+		CEO:                        ent.CEO,
+		HrdHoUnit:                  ent.HrdHoUnit,
+		MPPlanningHeaderID:         ent.MPPlanningHeaderID,
+		Status:                     ent.Status,
+		MPRequestType:              ent.MPRequestType,
+		RecruitmentType:            ent.RecruitmentType,
+		MPPPeriodID:                &ent.MPPPeriodID,
+		IsReplacement:              ent.IsReplacement,
+		EmpOrganizationID:          ent.EmpOrganizationID,
+		JobLevelID:                 ent.JobLevelID,
+		CreatedAt:                  ent.CreatedAt,
+		UpdatedAt:                  ent.UpdatedAt,
 	}
 }
 

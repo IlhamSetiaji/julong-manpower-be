@@ -155,6 +155,29 @@ func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger, viper *viper
 		msgData = map[string]interface{}{
 			"mp_request_header": mpRequestHeader,
 		}
+	case "find_mp_request_header_by_id_tidak_lengkap":
+		mpRequestHeaderID, ok := docMsg.MessageData["mp_request_header_id"].(string)
+		if !ok {
+			log.Printf("Invalid request format: missing 'mp_request_header_id'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'mp_request_header_id'").Error(),
+			}
+			break
+		}
+
+		uc := usecase.MPRequestUseCaseFactory(viper, log)
+		mpRequestHeader, err := uc.FindByIDOnlyForMessage(uuid.MustParse(mpRequestHeaderID))
+		if err != nil {
+			log.Printf("Failed to execute usecase: %v", err)
+			msgData = map[string]interface{}{
+				"error": err.Error(),
+			}
+			break
+		}
+
+		msgData = map[string]interface{}{
+			"mp_request_header": mpRequestHeader,
+		}
 	default:
 		log.Printf("Unknown message type, please recheck your type: %s", docMsg.MessageType)
 
