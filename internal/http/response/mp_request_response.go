@@ -53,6 +53,7 @@ type MPRequestHeaderResponse struct {
 	EmpOrganizationID          *uuid.UUID                 `json:"emp_organization_id"`
 	JobLevelID                 *uuid.UUID                 `json:"job_level_id"`
 	IsReplacement              bool                       `json:"is_replacement"`
+	Revised                    int                        `json:"revised"`
 	CreatedAt                  time.Time                  `json:"created_at"`
 	UpdatedAt                  time.Time                  `json:"updated_at"`
 

@@ -142,6 +142,17 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 		approvedByHrdHoUnit = uuid.NullUUID{UUID: *ent.HrdHoUnit, Valid: true}
 	}
 
+	var revised int
+	if len(ent.MPRequestApprovalHistories) > 0 {
+		for _, history := range ent.MPRequestApprovalHistories {
+			if history.Status == entity.MPRequestApprovalHistoryStatusRejected {
+				revised++
+			}
+		}
+	} else {
+		revised = 0
+	}
+
 	return &response.MPRequestHeaderResponse{
 		ID:                         ent.ID,
 		OrganizationID:             *ent.OrganizationID,
@@ -183,6 +194,7 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 		IsReplacement:              ent.IsReplacement,
 		EmpOrganizationID:          ent.EmpOrganizationID,
 		JobLevelID:                 ent.JobLevelID,
+		Revised:                    revised,
 		CreatedAt:                  ent.CreatedAt,
 		UpdatedAt:                  ent.UpdatedAt,
 
