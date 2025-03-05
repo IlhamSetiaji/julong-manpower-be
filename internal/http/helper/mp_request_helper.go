@@ -7,11 +7,13 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/messaging"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/response"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 )
 
 type IMPRequestHelper interface {
 	CheckPortalData(req *request.CreateMPRequestHeaderRequest) (*response.CheckPortalDataMPRequestResponse, error)
+	CheckPortalDataMinimal(req *response.MPRequestHeaderResponse) (*response.MPRequestHeaderResponse, error)
 }
 
 type MPRequestHelper struct {
@@ -256,6 +258,145 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		DepartmentHeadEmployeeJob:    deptHeadExist.EmployeeJob,
 		VpGmDirectorEmployeeJob:      vpGmDirectorExist.EmployeeJob,
 		CeoEmployeeJob:               ceoExist.EmployeeJob,
+	}, nil
+}
+
+func (h *MPRequestHelper) CheckPortalDataMinimal(req *response.MPRequestHeaderResponse) (*response.MPRequestHeaderResponse, error) {
+	// check if organization is exist
+	var orgExist *response.SendFindOrganizationByIDMessageResponse
+	if req.OrganizationID != uuid.Nil {
+		orgExistData, err := h.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+			ID: req.OrganizationID.String(),
+		})
+		if err != nil {
+			h.Log.Errorf("[MPRequestService] error when send find organization by id message: %v", err)
+			orgExist = nil
+		} else {
+			orgExist = orgExistData
+		}
+	}
+
+	if orgExist == nil {
+		h.Log.Errorf("[MPRequestService] organization with id %s is not exist", req.OrganizationID.String())
+		return nil, errors.New("organization is not exist")
+	}
+
+	// check if organization location is exist
+	orgLocExist, err := h.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+		ID: req.OrganizationLocationID.String(),
+	})
+	if err != nil {
+		h.Log.Errorf("[MPRequestService] error when send find organization location by id message: %v", err)
+		return nil, err
+	}
+
+	if orgLocExist == nil {
+		h.Log.Errorf("[MPRequestService] organization location with id %s is not exist", req.OrganizationLocationID.String())
+		return nil, errors.New("organization location is not exist")
+	}
+
+	// check if for organization is exist
+	forOrgExist, err := h.OrganizationMessage.SendFindOrganizationByIDMessage(request.SendFindOrganizationByIDMessageRequest{
+		ID: req.ForOrganizationID.String(),
+	})
+	if err != nil {
+		h.Log.Errorf("[MPRequestService] error when send find for organization by id message: %v", err)
+		return nil, err
+	}
+
+	if forOrgExist == nil {
+		h.Log.Errorf("[MPRequestService] for organization with id %s is not exist", req.ForOrganizationID.String())
+		return nil, errors.New("for organization is not exist")
+	}
+
+	// check if for organization location is exist
+	forOrgLocExist, err := h.OrganizationMessage.SendFindOrganizationLocationByIDMessage(request.SendFindOrganizationLocationByIDMessageRequest{
+		ID: req.ForOrganizationLocationID.String(),
+	})
+	if err != nil {
+		h.Log.Errorf("[MPRequestService] error when send find for organization location by id message: %v", err)
+		return nil, err
+	}
+
+	if forOrgLocExist == nil {
+		h.Log.Errorf("[MPRequestService] for organization location with id %s is not exist", req.ForOrganizationLocationID.String())
+		return nil, errors.New("for organization location is not exist")
+	}
+
+	// check if for organization structure is exist
+	forOrgStructExist, err := h.OrganizationMessage.SendFindOrganizationStructureByIDMessage(request.SendFindOrganizationStructureByIDMessageRequest{
+		ID: req.ForOrganizationStructureID.String(),
+	})
+	if err != nil {
+		h.Log.Errorf("[MPRequestService] error when send find for organization structure by id message: %v", err)
+		return nil, err
+	}
+
+	if forOrgStructExist == nil {
+		h.Log.Errorf("[MPRequestService] for organization structure with id %s is not exist", req.ForOrganizationStructureID.String())
+		return nil, errors.New("for organization structure is not exist")
+	}
+
+	// check if job ID is exist
+	jobExist, err := h.JobPlafonMessage.SendFindJobByIDMessage(request.SendFindJobByIDMessageRequest{
+		ID: req.JobID.String(),
+	})
+	if err != nil {
+		h.Log.Errorf("[MPRequestService] error when send find job by id message: %v", err)
+		return nil, err
+	}
+
+	if jobExist == nil {
+		h.Log.Errorf("[MPRequestService] job with id %s is not exist", req.JobID.String())
+		return nil, errors.New("job is not exist")
+	}
+
+	return &response.MPRequestHeaderResponse{
+		ID:                       req.ID,
+		RequestCategoryID:        req.RequestCategoryID,
+		ExpectedDate:             req.ExpectedDate,
+		Experiences:              req.Experiences,
+		DocumentNumber:           req.DocumentNumber,
+		DocumentDate:             req.DocumentDate,
+		MaleNeeds:                req.MaleNeeds,
+		FemaleNeeds:              req.FemaleNeeds,
+		MinimumAge:               req.MinimumAge,
+		MaximumAge:               req.MaximumAge,
+		MinimumExperience:        req.MinimumExperience,
+		MaritalStatus:            req.MaritalStatus,
+		MinimumEducation:         req.MinimumEducation,
+		RequiredQualification:    req.RequiredQualification,
+		Certificate:              req.Certificate,
+		ComputerSkill:            req.ComputerSkill,
+		LanguageSkill:            req.LanguageSkill,
+		OtherSkill:               req.OtherSkill,
+		Jobdesc:                  req.Jobdesc,
+		SalaryMin:                req.SalaryMin,
+		SalaryMax:                req.SalaryMax,
+		RequestorID:              req.RequestorID,
+		DepartmentHead:           req.DepartmentHead,
+		VpGmDirector:             req.VpGmDirector,
+		CEO:                      req.CEO,
+		HrdHoUnit:                req.HrdHoUnit,
+		MPPlanningHeaderID:       req.MPPlanningHeaderID,
+		Status:                   req.Status,
+		MPRequestType:            req.MPRequestType,
+		RecruitmentType:          req.RecruitmentType,
+		MPPPeriodID:              req.MPPPeriodID,
+		EmpOrganizationID:        req.EmpOrganizationID,
+		JobLevelID:               req.JobLevelID,
+		IsReplacement:            req.IsReplacement,
+		CreatedAt:                req.CreatedAt,
+		UpdatedAt:                req.UpdatedAt,
+		RequestCategory:          req.RequestCategory,
+		RequestMajors:            req.RequestMajors,
+		OrganizationName:         orgExist.Name,
+		OrganizationCategory:     orgExist.OrganizationCategory,
+		OrganizationLocationName: orgLocExist.Name,
+		ForOrganizationName:      forOrgExist.Name,
+		ForOrganizationLocation:  forOrgLocExist.Name,
+		ForOrganizationStructure: forOrgStructExist.Name,
+		JobName:                  jobExist.Name,
 	}, nil
 }
 

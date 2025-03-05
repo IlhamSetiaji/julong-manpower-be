@@ -466,57 +466,61 @@ func (uc *MPRequestUseCase) FindAllPaginated(page int, pageSize int, search stri
 			}
 
 			if orgCheck.OrganizationCategory == "Non Field" {
-				portalResponse, err := uc.MPRequestHelper.CheckPortalData(uc.MPRequestDTO.ConvertEntityToRequest(&mpRequestHeader))
+				resp := uc.MPRequestDTO.ConvertToResponse(&mpRequestHeader)
+				portalResponse, err := uc.MPRequestHelper.CheckPortalDataMinimal(resp)
 				if err != nil {
 					uc.Log.Errorf("[MPRequestUseCase.FindAllPaginated] error when check portal data: %v", err)
 					return nil, err
 				}
 
-				mpRequestHeader.OrganizationName = portalResponse.OrganizationName
-				mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
-				mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
-				mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
-				mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
-				mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
-				mpRequestHeader.JobName = portalResponse.JobName
-				mpRequestHeader.RequestorName = portalResponse.RequestorName
-				mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
-				mpRequestHeader.VpGmDirectorName = portalResponse.VpGmDirectorName
-				mpRequestHeader.CeoName = portalResponse.CeoName
-				mpRequestHeader.HrdHoUnitName = portalResponse.HrdHoUnitName
-				mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
-				mpRequestHeader.JobLevelName = portalResponse.JobLevelName
-				mpRequestHeader.JobLevel = portalResponse.JobLevel
+				// mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+				// mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
+				// mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
+				// mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
+				// mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
+				// mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
+				// mpRequestHeader.JobName = portalResponse.JobName
+				// mpRequestHeader.RequestorName = portalResponse.RequestorName
+				// mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
+				// mpRequestHeader.VpGmDirectorName = portalResponse.VpGmDirectorName
+				// mpRequestHeader.CeoName = portalResponse.CeoName
+				// mpRequestHeader.HrdHoUnitName = portalResponse.HrdHoUnitName
+				// mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
+				// mpRequestHeader.JobLevelName = portalResponse.JobLevelName
+				// mpRequestHeader.JobLevel = portalResponse.JobLevel
 
-				mpRequestHeaderResponses = append(mpRequestHeaderResponses, *uc.MPRequestDTO.ConvertToResponse(&mpRequestHeader))
+				// mpRequestHeaderResponses = append(mpRequestHeaderResponses, *uc.MPRequestDTO.ConvertToResponse(&mpRequestHeader))
+				mpRequestHeaderResponses = append(mpRequestHeaderResponses, *portalResponse)
 			}
 		}
 	} else {
 		for _, mpRequestHeader := range mpRequestHeaders {
 			// check portal data
-			portalResponse, err := uc.MPRequestHelper.CheckPortalData(uc.MPRequestDTO.ConvertEntityToRequest(&mpRequestHeader))
+			resp := uc.MPRequestDTO.ConvertToResponse(&mpRequestHeader)
+			portalResponse, err := uc.MPRequestHelper.CheckPortalDataMinimal(resp)
 			if err != nil {
 				uc.Log.Errorf("[MPRequestUseCase.FindAllPaginated] error when check portal data: %v", err)
 				return nil, err
 			}
 
-			mpRequestHeader.OrganizationName = portalResponse.OrganizationName
-			mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
-			mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
-			mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
-			mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
-			mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
-			mpRequestHeader.JobName = portalResponse.JobName
-			mpRequestHeader.RequestorName = portalResponse.RequestorName
-			mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
-			mpRequestHeader.VpGmDirectorName = portalResponse.VpGmDirectorName
-			mpRequestHeader.CeoName = portalResponse.CeoName
-			mpRequestHeader.HrdHoUnitName = portalResponse.HrdHoUnitName
-			mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
-			mpRequestHeader.JobLevelName = portalResponse.JobLevelName
-			mpRequestHeader.JobLevel = portalResponse.JobLevel
+			// mpRequestHeader.OrganizationName = portalResponse.OrganizationName
+			// mpRequestHeader.OrganizationCategory = portalResponse.OrganizationCategory
+			// mpRequestHeader.OrganizationLocationName = portalResponse.OrganizationLocationName
+			// mpRequestHeader.ForOrganizationName = portalResponse.ForOrganizationName
+			// mpRequestHeader.ForOrganizationLocation = portalResponse.ForOrganizationLocationName
+			// mpRequestHeader.ForOrganizationStructure = portalResponse.ForOrganizationStructureName
+			// mpRequestHeader.JobName = portalResponse.JobName
+			// mpRequestHeader.RequestorName = portalResponse.RequestorName
+			// mpRequestHeader.DepartmentHeadName = portalResponse.DepartmentHeadName
+			// mpRequestHeader.VpGmDirectorName = portalResponse.VpGmDirectorName
+			// mpRequestHeader.CeoName = portalResponse.CeoName
+			// mpRequestHeader.HrdHoUnitName = portalResponse.HrdHoUnitName
+			// mpRequestHeader.EmpOrganizationName = portalResponse.EmpOrganizationName
+			// mpRequestHeader.JobLevelName = portalResponse.JobLevelName
+			// mpRequestHeader.JobLevel = portalResponse.JobLevel
 
-			mpRequestHeaderResponses = append(mpRequestHeaderResponses, *uc.MPRequestDTO.ConvertToResponse(&mpRequestHeader))
+			// mpRequestHeaderResponses = append(mpRequestHeaderResponses, *uc.MPRequestDTO.ConvertToResponse(&mpRequestHeader))
+			mpRequestHeaderResponses = append(mpRequestHeaderResponses, *portalResponse)
 		}
 	}
 
