@@ -347,7 +347,7 @@ func (h *MPPlanningHandler) GetHeadersByMPPeriodCompleted(ctx *gin.Context) {
 
 	utils.SuccessResponse(ctx, http.StatusOK, "get headers by mpp period completed success", gin.H{
 		"mp_planning_headers": resp,
-		"total": total,
+		"total":               total,
 	})
 }
 
@@ -624,7 +624,7 @@ func (h *MPPlanningHandler) FindAllHeadersGroupedApproverPaginated(ctx *gin.Cont
 }
 
 func (h *MPPlanningHandler) GenerateDocumentNumber(ctx *gin.Context) {
-	dateNow := time.Now()
+	dateNow := time.Now().Add(7 * time.Hour)
 
 	resp, err := h.UseCase.GenerateDocumentNumber(dateNow)
 	if err != nil {
