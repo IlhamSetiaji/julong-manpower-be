@@ -13,6 +13,7 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 )
@@ -30,6 +31,7 @@ type IBatchHandler interface {
 	UpdateStatusBatchHeader(c *gin.Context)
 	GetCompletedBatchHeader(c *gin.Context)
 	GetOrganizationsForBatchApproval(c *gin.Context)
+	MPPlanningDetailByBatchHeaderPaginated(c *gin.Context)
 }
 
 type BatchHandler struct {
@@ -489,6 +491,56 @@ func (h *BatchHandler) UpdateStatusBatchHeader(c *gin.Context) {
 	}
 
 	utils.SuccessResponse(c, http.StatusOK, "Batch header status updated", batchHeader)
+}
+
+func (h *BatchHandler) MPPlanningDetailByBatchHeaderPaginated(c *gin.Context) {
+	page, err := strconv.Atoi(c.Query("page"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	pageSize, err := strconv.Atoi(c.Query("page_size"))
+	if err != nil || pageSize < 1 {
+		pageSize = 10
+	}
+
+	search := c.Query("search")
+	if search == "" {
+		search = ""
+	}
+
+	createdAt := c.Query("created_at")
+	if createdAt == "" {
+		createdAt = "DESC"
+	}
+
+	sort := map[string]interface{}{
+		"created_at": createdAt,
+	}
+
+	id := c.Param("id")
+	parsedId, err := uuid.Parse(id)
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusBadRequest, "Invalid request", err.Error())
+		return
+	}
+	mpPlanningHeaders, total, err := h.UseCase.MPPlanningDetailsByBatchHeader(parsedId, page, pageSize, search, sort)
+	if err != nil {
+		h.Log.Error(err)
+		utils.ErrorResponse(c, http.StatusInternalServerError, "Failed to get MP Planning detail by batch header", err.Error())
+		return
+	}
+
+	if mpPlanningHeaders == nil {
+		utils.ErrorResponse(c, http.StatusNotFound, "MP Planning detail not found", "MP Planning detail not found")
+		return
+	}
+
+	utils.SuccessResponse(c, http.StatusOK, "MP Planning detail found", gin.H{
+		"mp_planning_headers": mpPlanningHeaders,
+		"total":               total,
+	})
 }
 
 func BatchHandlerFactory(log *logrus.Logger, viper *viper.Viper) IBatchHandler {

@@ -30,6 +30,7 @@ type IBatchUsecase interface {
 	GetBatchHeadersByStatus(status entity.BatchHeaderApprovalStatus, approverType string, orgID string) (*[]response.CompletedBatchResponse, error)
 	GetBatchHeadersByStatusPaginated(status entity.BatchHeaderApprovalStatus, approverType string, orgID string, page, pageSize int, search string, sort map[string]interface{}, employeeID uuid.UUID) (*[]response.CompletedBatchResponse, int64, error)
 	TriggerCreate(approverType string, orgID string) (bool, error)
+	MPPlanningDetailsByBatchHeader(batchHeaderID uuid.UUID, page, pageSize int, search string, sort map[string]interface{}) (*[]response.MPPlanningHeaderResponse, int64, error)
 }
 
 type BatchUsecase struct {
@@ -41,6 +42,7 @@ type BatchUsecase struct {
 	batchDTO         dto.IBatchDTO
 	mpPlanningRepo   repository.IMPPlanningRepository
 	JobPlafonMessage messaging.IJobPlafonMessage
+	MPPlanningDTO    dto.IMPPlanningDTO
 }
 
 func NewBatchUsecase(
@@ -52,6 +54,7 @@ func NewBatchUsecase(
 	batchDTO dto.IBatchDTO,
 	mpPlanningRepo repository.IMPPlanningRepository,
 	jpMessage messaging.IJobPlafonMessage,
+	mpPlanningDTO dto.IMPPlanningDTO,
 ) IBatchUsecase {
 	return &BatchUsecase{
 		Viper:            viper,
@@ -62,6 +65,7 @@ func NewBatchUsecase(
 		batchDTO:         batchDTO,
 		mpPlanningRepo:   mpPlanningRepo,
 		JobPlafonMessage: jpMessage,
+		MPPlanningDTO:    mpPlanningDTO,
 	}
 }
 
@@ -735,6 +739,57 @@ func (uc *BatchUsecase) FindByCurrentDocumentDateAndStatus(status entity.BatchHe
 	return uc.batchDTO.ConvertBatchHeaderEntityToResponse(resp), nil
 }
 
+func (uc *BatchUsecase) MPPlanningDetailsByBatchHeader(batchHeaderID uuid.UUID, page, pageSize int, search string, sort map[string]interface{}) (*[]response.MPPlanningHeaderResponse, int64, error) {
+	batch, err := uc.Repo.FindById(batchHeaderID.String())
+	if err != nil {
+		uc.Log.Errorf("[BatchUsecase.MPPlanningDetailsByBatchHeader] " + err.Error())
+		return nil, 0, err
+	}
+
+	if batch == nil {
+		return nil, 0, errors.New("Batch not found")
+	}
+
+	var filteredBatchLines []entity.BatchLine
+	for _, bl := range batch.BatchLines {
+		mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(bl.MPPlanningHeaderID)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.MPPlanningDetailsByBatchHeader] " + err.Error())
+			return nil, 0, err
+		}
+
+		if search == "" || (search != "" && mpPlanningHeader.DocumentNumber == search) {
+			filteredBatchLines = append(filteredBatchLines, bl)
+		}
+	}
+
+	total := int64(len(filteredBatchLines))
+
+	// Apply pagination
+	start := (page - 1) * pageSize
+	end := start + pageSize
+	if start > len(filteredBatchLines) {
+		start = len(filteredBatchLines)
+	}
+	if end > len(filteredBatchLines) {
+		end = len(filteredBatchLines)
+	}
+	paginatedBatchLines := filteredBatchLines[start:end]
+
+	mpPlanningHeaders := make([]response.MPPlanningHeaderResponse, len(paginatedBatchLines))
+	for i, bl := range paginatedBatchLines {
+		mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(bl.MPPlanningHeaderID)
+		if err != nil {
+			uc.Log.Errorf("[BatchUsecase.MPPlanningDetailsByBatchHeader] " + err.Error())
+			return nil, 0, err
+		}
+
+		mpPlanningHeaders[i] = *uc.MPPlanningDTO.ConvertMPPlanningHeaderEntityToResponse(mpPlanningHeader)
+	}
+
+	return &mpPlanningHeaders, total, nil
+}
+
 func BatchUsecaseFactory(viper *viper.Viper, log *logrus.Logger) IBatchUsecase {
 	repo := repository.BatchRepositoryFactory(log)
 	orgMessage := messaging.OrganizationMessageFactory(log)
@@ -742,5 +797,6 @@ func BatchUsecaseFactory(viper *viper.Viper, log *logrus.Logger) IBatchUsecase {
 	batchDTO := dto.BatchDTOFactory(log)
 	mpPlanningRepo := repository.MPPlanningRepositoryFactory(log)
 	jpMessage := messaging.JobPlafonMessageFactory(log)
-	return NewBatchUsecase(viper, log, repo, orgMessage, empMessage, batchDTO, mpPlanningRepo, jpMessage)
+	mpPlanningDTO := dto.MPPlanningDTOFactory(log)
+	return NewBatchUsecase(viper, log, repo, orgMessage, empMessage, batchDTO, mpPlanningRepo, jpMessage, mpPlanningDTO)
 }
