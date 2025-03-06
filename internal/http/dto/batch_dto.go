@@ -125,6 +125,9 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 			var executivePromote int
 			var totalExecutive int
 			var totalNonExecutive int
+			var totalExistingCount int
+			var totalPromoteCount int
+			var totalRecruitCount int
 			return response.GradeBatchResponse{
 				Executive: func() []response.DocumentCalculationBatchResponse {
 					var executive []response.DocumentCalculationBatchResponse
@@ -194,6 +197,9 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 
 					// Convert the map to a slice
 					for _, jobLevel := range sortedJobLevels {
+						totalExistingCount += groupedByJobLevel[jobLevel].Existing
+						totalPromoteCount += groupedByJobLevel[jobLevel].Promote
+						totalRecruitCount += groupedByJobLevel[jobLevel].Recruit
 						executive = append(executive, *groupedByJobLevel[jobLevel])
 					}
 
@@ -276,6 +282,9 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 
 					// Convert the map to a slice
 					for _, jobLevel := range sortedJobLevels {
+						totalExistingCount += groupedByJobLevel[jobLevel].Existing
+						totalPromoteCount += groupedByJobLevel[jobLevel].Promote
+						totalRecruitCount += groupedByJobLevel[jobLevel].Recruit
 						nonExecutive = append(nonExecutive, *groupedByJobLevel[jobLevel])
 					}
 
@@ -300,16 +309,16 @@ func (d *BatchDTO) ConvertToDocumentBatchResponse(batch *entity.BatchHeader, ope
 							mpl.JobLevel = int(message2Response.Level)
 
 						}
-						totalOverall += totalExecutive + totalNonExecutive
-						total = append(total, response.DocumentCalculationBatchResponse{
-							JobLevelName: "Total",
-							Existing:     totalExisting,
-							Promote:      totalPromote,
-							Recruit:      totalRecruit,
-							Total:        totalOverall,
-							IsTotal:      true,
-						})
 					}
+					totalOverall += totalExecutive + totalNonExecutive
+					total = append(total, response.DocumentCalculationBatchResponse{
+						JobLevelName: "Total",
+						Existing:     totalExistingCount,
+						Promote:      totalPromoteCount,
+						Recruit:      totalRecruitCount,
+						Total:        totalOverall,
+						IsTotal:      true,
+					})
 					return total
 				}(),
 			}
