@@ -60,6 +60,7 @@ type IMPPlanningRepository interface {
 	DeleteLinesByIDs(ids []uuid.UUID) error
 	FindAllLinesByHeaderID(headerID uuid.UUID) (*[]entity.MPPlanningLine, error)
 	FindLineByHeaderID(headerID uuid.UUID) (*entity.MPPlanningLine, error)
+	FindByKeys(keys map[string]interface{}) (*entity.MPPlanningHeader, error)
 }
 
 type MPPlanningRepository struct {
@@ -1389,6 +1390,22 @@ func (r *MPPlanningRepository) DeleteLinesByIDs(ids []uuid.UUID) error {
 	r.Log.Infof("[MPPlanningRepository.DeleteLinesByIDs] Successfully deleted lines by IDs")
 
 	return nil
+}
+
+func (r *MPPlanningRepository) FindByKeys(keys map[string]interface{}) (*entity.MPPlanningHeader, error) {
+	var mppHeader entity.MPPlanningHeader
+
+	if err := r.DB.Where(keys).First(&mppHeader).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPPlanningRepository.FindByKeys] " + err.Error())
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPPlanningRepository.FindByKeys] " + err.Error())
+			return nil, errors.New("[MPPlanningRepository.FindByKeys] " + err.Error())
+		}
+	}
+
+	return &mppHeader, nil
 }
 
 func MPPlanningRepositoryFactory(log *logrus.Logger) IMPPlanningRepository {

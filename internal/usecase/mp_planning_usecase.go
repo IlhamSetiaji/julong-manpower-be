@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
@@ -1782,6 +1783,36 @@ func (uc *MPPlanningUseCase) Create(req *request.CreateHeaderMPPlanningRequest) 
 	if exist != nil {
 		uc.Log.Errorf("[MPPlanningUseCase.Create] MP Planning Header already exist")
 		return nil, errors.New("MP Planning Header already exist")
+	}
+
+	docNumber, err := uc.MPPlanningRepository.FindByKeys(map[string]interface{}{
+		"document_number": req.DocumentNumber,
+	})
+	if err != nil {
+		uc.Log.Errorf("[MPPlanningUseCase.Create] " + err.Error())
+		return nil, err
+	}
+
+	if docNumber != nil {
+		// Extract the last part of the document number
+		lastSlashIndex := strings.LastIndex(req.DocumentNumber, "/")
+		if lastSlashIndex == -1 {
+			// Handle error: invalid document number format
+			return nil, fmt.Errorf("invalid document number format")
+		}
+
+		lastPart := req.DocumentNumber[lastSlashIndex+1:]
+		lastDigit, err := strconv.Atoi(lastPart)
+		if err != nil {
+			// Handle error: last part is not a number
+			return nil, fmt.Errorf("last part of document number is not a number")
+		}
+
+		// Increment the last digit
+		lastDigit++
+
+		// Reconstruct the document number with the incremented digit
+		req.DocumentNumber = req.DocumentNumber[:lastSlashIndex+1] + fmt.Sprintf("%03d", lastDigit)
 	}
 
 	documentDate, err := time.Parse("2006-01-02", req.DocumentDate)
