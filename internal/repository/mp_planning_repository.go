@@ -690,7 +690,11 @@ func (r *MPPlanningRepository) FindHeaderByOrganizationLocationIDAndStatus(organ
 	var whereStatus string
 
 	if status != "" {
-		whereStatus = "status = '" + string(status) + "'"
+		if status == entity.MPPlaningStatusApproved {
+			whereStatus = "status = '" + string(entity.MPPlaningStatusApproved) + "' OR status = '" + string(entity.MPPlaningStatusNeedApproval) + "'"
+		} else {
+			whereStatus = "status = '" + string(status) + "'"
+		}
 	}
 	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Preload("ManpowerAttachments").Where("organization_location_id = ?", organizationLocationID).Where(whereStatus).Where("approver_manager_id IS NOT NULL AND recommended_by IS NOT NULL AND requestor_id IS NOT NULL").First(&mppHeader).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
