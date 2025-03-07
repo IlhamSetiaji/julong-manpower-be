@@ -338,7 +338,26 @@ func (h *MPPlanningHandler) GetHeadersByMPPeriodCompleted(ctx *gin.Context) {
 		pageSize = 10
 	}
 
-	resp, total, err := h.UseCase.GetHeadersByMPPeriodCompletePaginated(page, pageSize)
+	user, err := middleware.GetUser(ctx, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		return
+	}
+
+	organizationLocationId, err := h.UserHelper.CheckOrganizationLocation(user)
+	if err != nil {
+		h.Log.Errorf("Error when checking organization location: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+
+	resp, total, err := h.UseCase.GetHeadersByMPPeriodCompletePaginated(organizationLocationId, page, pageSize)
 	if err != nil {
 		h.Log.Errorf("[MPPlanningHandler.GetHeadersByMPPeriodCompleted] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())

@@ -19,6 +19,7 @@ type IMPPlanningRepository interface {
 	FindAllHeaders() (*[]entity.MPPlanningHeader, error)
 	FindHeaderByRequestorOrganizationLocationNotStatus(requestorID uuid.UUID, organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error)
 	FindAllHeadersByOrganizationLocationID(organizationLocationID uuid.UUID) (*[]entity.MPPlanningHeader, error)
+	FindAllHeadersByOrganizationLocationIDAndStatusPaginated(status entity.MPPlaningStatus, organizationLocationID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error)
 	FindHeaderById(id uuid.UUID) (*entity.MPPlanningHeader, error)
 	FindHeaderBySomething(something map[string]interface{}) (*entity.MPPlanningHeader, error)
 	GetHeadersBySomething(something map[string]interface{}) (*[]entity.MPPlanningHeader, error)
@@ -146,6 +147,29 @@ func (r *MPPlanningRepository) FindAllHeadersByOrganizationLocationID(organizati
 	}
 
 	return &mppHeaders, nil
+}
+
+func (r *MPPlanningRepository) FindAllHeadersByOrganizationLocationIDAndStatusPaginated(status entity.MPPlaningStatus, organizationLocationID uuid.UUID, page int, pageSize int, search string) (*[]entity.MPPlanningHeader, int64, error) {
+	var mppHeaders []entity.MPPlanningHeader
+	var total int64
+
+	query := r.DB.Model(&entity.MPPlanningHeader{}).Preload("MPPPeriod").Where("organization_location_id = ? AND status = ?", organizationLocationID, status)
+
+	if search != "" {
+		query = query.Where("document_number LIKE ?", "%"+search+"%")
+	}
+
+	if err := query.Count(&total).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByOrganizationLocationIDPaginated - count side] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersByOrganizationLocationIDPaginated - count side] " + err.Error())
+	}
+
+	if err := query.Offset((page - 1) * pageSize).Limit(pageSize).Find(&mppHeaders).Error; err != nil {
+		r.Log.Errorf("[MPPlanningRepository.FindAllHeadersByOrganizationLocationIDPaginated - pagination side] " + err.Error())
+		return nil, 0, errors.New("[MPPlanningRepository.FindAllHeadersByOrganizationLocationIDPaginated - pagination side] " + err.Error())
+	}
+
+	return &mppHeaders, total, nil
 }
 
 func (r *MPPlanningRepository) FindHeaderByRequestorOrganizationLocationNotStatus(requestorID uuid.UUID, organizationLocationID uuid.UUID, status entity.MPPlaningStatus) (*entity.MPPlanningHeader, error) {
