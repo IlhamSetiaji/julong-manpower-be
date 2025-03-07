@@ -26,6 +26,7 @@ type IMPRequestRepository interface {
 	StoreAttachmentToApprovalHistory(mppApprovalHistory *entity.MPRequestApprovalHistory, attachment entity.ManpowerAttachment) (*entity.MPRequestApprovalHistory, error)
 	DeleteHeader(id uuid.UUID) error
 	CountTotalApprovalHistoryByStatus(mpHeaderID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error)
+	FindByKeys(keys map[string]interface{}) (*entity.MPRequestHeader, error)
 }
 
 type MPRequestRepository struct {
@@ -465,6 +466,21 @@ func (r *MPRequestRepository) UpdateStatusHeader(id uuid.UUID, status string, ap
 	}
 
 	return nil
+}
+
+func (r *MPRequestRepository) FindByKeys(keys map[string]interface{}) (*entity.MPRequestHeader, error) {
+	var mpRequestHeader entity.MPRequestHeader
+
+	if err := r.DB.Where(keys).First(&mpRequestHeader).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			r.Log.Errorf("[MPRequestRepository.FindByKeys] mp request header not found")
+			return nil, nil
+		} else {
+			r.Log.Errorf("[MPRequestRepository.FindByKeys] error when query mp request header: %v", err)
+		}
+	}
+
+	return &mpRequestHeader, nil
 }
 
 func MPRequestRepositoryFactory(log *logrus.Logger) IMPRequestRepository {
