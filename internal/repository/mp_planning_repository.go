@@ -167,7 +167,7 @@ func (r *MPPlanningRepository) FindHeaderByRequestorOrganizationLocationNotStatu
 func (r *MPPlanningRepository) GetHeadersByOrganizationID(organizationID uuid.UUID) (*[]entity.MPPlanningHeader, error) {
 	var mppHeaders []entity.MPPlanningHeader
 
-	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("organization_id = ?", organizationID).Find(&mppHeaders).Error; err != nil {
+	if err := r.DB.Preload("MPPlanningLines").Preload("MPPPeriod").Where("organization_id = ? AND status = ?", organizationID, entity.MPPlaningStatusNeedApproval).Find(&mppHeaders).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			r.Log.Errorf("[MPPlanningRepository.GetHeadersByOrganizationID] " + err.Error())
 			return nil, nil
