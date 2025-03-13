@@ -60,6 +60,7 @@ type MPRequestHeader struct {
 	DocumentDate               time.Time           `json:"document_date" gorm:"type:date;not null;"`
 	MaleNeeds                  int                 `json:"male_needs" gorm:"type:int;default:0"`
 	FemaleNeeds                int                 `json:"female_needs" gorm:"type:int;default:0"`
+	AnyGender                  int                 `json:"any_gender" gorm:"type:int;default:0"`
 	MinimumAge                 int                 `json:"minimum_age" gorm:"type:int;default:0"`
 	MaximumAge                 int                 `json:"maximum_age" gorm:"type:int;default:0"`
 	MinimumExperience          int                 `json:"minimum_experience" gorm:"type:int;default:0"`

@@ -20,6 +20,7 @@ type CreateMPRequestHeaderRequest struct {
 	DocumentDate               string                     `json:"document_date" validate:"required,datetime=2006-01-02"`
 	MaleNeeds                  int                        `json:"male_needs" validate:"omitempty"`
 	FemaleNeeds                int                        `json:"female_needs" validate:"omitempty"`
+	AnyGender                  int                        `json:"any_gender" validate:"omitempty"`
 	MinimumAge                 int                        `json:"minimum_age" validate:"required"`
 	MaximumAge                 int                        `json:"maximum_age" validate:"required"`
 	MinimumExperience          int                        `json:"minimum_experience" validate:"omitempty"`

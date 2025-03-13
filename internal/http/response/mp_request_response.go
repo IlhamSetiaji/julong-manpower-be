@@ -27,6 +27,8 @@ type MPRequestHeaderResponse struct {
 	DocumentDate               time.Time                  `json:"document_date"`
 	MaleNeeds                  int                        `json:"male_needs"`
 	FemaleNeeds                int                        `json:"female_needs"`
+	AnyGender                  int                        `json:"any_gender"`
+	TotalNeeds                 int                        `json:"total_needs"`
 	MinimumAge                 int                        `json:"minimum_age"`
 	MaximumAge                 int                        `json:"maximum_age"`
 	MinimumExperience          int                        `json:"minimum_experience"`
