@@ -12,7 +12,7 @@ services:
       - APP_URL=https://julong-portal.avolut.com/
       - APP_DOMAIN=avolut.com
       - APP_SECRET=jancok
-      - FRONTEND_URL=http://localhost:3000,https://julong-mpp.avolut.com,https://julong-recruitment.avolut.com,https://abdfaisol.pagekite.me
+      - FRONTEND_URL=http://localhost:3000,https://julong-mpp.avolut.com,https://julong-recruitment.avolut.com,https://mobile-dev.junior-dev.my.id
       - COOKIE_SECRET=jancok
       - SESSION_NAME=julong-manpower
       - CSRF_SECRET=jancok
