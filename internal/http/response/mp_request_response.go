@@ -21,6 +21,7 @@ type MPRequestHeaderResponse struct {
 	ForOrganizationStructureID uuid.UUID                  `json:"for_organization_structure_id"`
 	JobID                      uuid.UUID                  `json:"job_id"`
 	RequestCategoryID          uuid.UUID                  `json:"request_category_id"`
+	GradeID                    *uuid.UUID                 `json:"grade_id"`
 	ExpectedDate               time.Time                  `json:"expected_date"`
 	Experiences                string                     `json:"experiences"`
 	DocumentNumber             string                     `json:"document_number"`
