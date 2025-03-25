@@ -88,6 +88,7 @@ func (d *MPRequestDTO) ConvertToEntity(req *request.CreateMPRequestHeaderRequest
 		IsReplacement:              *req.IsReplacement,
 		TotalNeeds:                 req.MaleNeeds + req.FemaleNeeds + req.AnyGender,
 		RecruitmentType:            req.RecruitmentType,
+		GradeID:                    req.GradeID,
 	}
 }
 
@@ -243,6 +244,7 @@ func (d *MPRequestDTO) ConvertToResponse(ent *entity.MPRequestHeader) *response.
 			UpdatedAt:       ent.MPPPeriod.UpdatedAt,
 		},
 
+		GradeName:                 ent.GradeName,
 		OrganizationName:          ent.OrganizationName,
 		OrganizationCategory:      ent.OrganizationCategory,
 		OrganizationLocationName:  ent.OrganizationLocationName,
@@ -360,5 +362,6 @@ func (d *MPRequestDTO) ConvertEntityToRequest(ent *entity.MPRequestHeader) *requ
 		EmpOrganizationID:          ent.EmpOrganizationID,
 		JobLevelID:                 ent.JobLevelID,
 		IsReplacement:              &ent.IsReplacement,
+		GradeID:                    ent.GradeID,
 	}
 }

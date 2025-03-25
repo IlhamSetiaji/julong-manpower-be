@@ -34,6 +34,7 @@ type CreateMPRequestHeaderRequest struct {
 	Jobdesc                    string                     `json:"jobdesc" validate:"required"`
 	SalaryMin                  string                     `json:"salary_min" validate:"required"`
 	SalaryMax                  string                     `json:"salary_max" validate:"required"`
+	GradeID                    *uuid.UUID                 `json:"grade_id" validate:"omitempty,uuid"`
 	RequestorID                *uuid.UUID                 `json:"requestor_id" validate:"required,uuid"`
 	DepartmentHead             *uuid.UUID                 `json:"department_head" validate:"omitempty,uuid"`
 	VpGmDirector               *uuid.UUID                 `json:"vp_gm_director" validate:"omitempty"`

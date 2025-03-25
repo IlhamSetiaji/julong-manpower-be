@@ -92,6 +92,7 @@ type MPRequestHeader struct {
 	EmpOrganizationID          *uuid.UUID          `json:"emp_organization_id" gorm:"type:char(36);null"`
 	JobLevelID                 *uuid.UUID          `json:"job_level_id" gorm:"type:char(36);null"`
 	IsReplacement              bool                `json:"is_replacement" gorm:"default:false"`
+	GradeID                    *uuid.UUID          `json:"grade_id" gorm:"type:char(36);null"`
 
 	RequestCategory            RequestCategory            `json:"request_category" gorm:"foreignKey:RequestCategoryID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	RequestMajors              []RequestMajor             `json:"request_majors" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
@@ -99,6 +100,7 @@ type MPRequestHeader struct {
 	MPRequestApprovalHistories []MPRequestApprovalHistory `json:"mp_request_approval_histories" gorm:"foreignKey:MPRequestHeaderID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 	MPPPeriod                  MPPPeriod                  `json:"mpp_period" gorm:"foreignKey:MPPPeriodID;references:ID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE"`
 
+	GradeName                 string                 `json:"grade_name" gorm:"-"`
 	OrganizationName          string                 `json:"organization_name" gorm:"-"`
 	OrganizationCategory      string                 `json:"organization_category" gorm:"-"`
 	OrganizationLocationName  string                 `json:"organization_location_name" gorm:"-"`

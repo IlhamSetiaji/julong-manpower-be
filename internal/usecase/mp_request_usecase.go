@@ -172,6 +172,7 @@ func (uc *MPRequestUseCase) Create(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
 	mpRequestHeader.MPPPeriod = *mppPeriod
+	mpRequestHeader.GradeName = portalResponse.GradeName
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }
@@ -416,6 +417,7 @@ func (uc *MPRequestUseCase) Update(req *request.CreateMPRequestHeaderRequest) (*
 	mpRequestHeader.JobLevelName = portalResponse.JobLevelName
 	mpRequestHeader.JobLevel = portalResponse.JobLevel
 	mpRequestHeader.MPPPeriod = *mppPeriod
+	mpRequestHeader.GradeName = portalResponse.GradeName
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }
@@ -458,6 +460,7 @@ func (uc *MPRequestUseCase) FindByID(id uuid.UUID) (*response.MPRequestHeaderRes
 	mpRequestHeader.DepartmentHeadEmployeeJob = portalResponse.DepartmentHeadEmployeeJob
 	mpRequestHeader.VpGmDirectorEmployeeJob = portalResponse.VpGmDirectorEmployeeJob
 	mpRequestHeader.CeoEmployeeJob = portalResponse.CeoEmployeeJob
+	mpRequestHeader.GradeName = portalResponse.GradeName
 
 	return uc.MPRequestDTO.ConvertToResponse(mpRequestHeader), nil
 }

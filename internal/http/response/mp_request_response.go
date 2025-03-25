@@ -65,6 +65,7 @@ type MPRequestHeaderResponse struct {
 	MPPlanningHeader *MPPlanningHeaderResponse `json:"mp_planning_header" gorm:"foreignKey:MPPlanningHeaderID"`
 	MPPPeriod        MPPeriodResponse          `json:"mpp_period" gorm:"foreignKey:MPPPeriodID"`
 
+	GradeName                 string                 `json:"grade_name" gorm:"-"`
 	OrganizationName          string                 `json:"organization_name" gorm:"-"`
 	OrganizationCategory      string                 `json:"organization_category" gorm:"-"`
 	OrganizationLocationName  string                 `json:"organization_location_name" gorm:"-"`
@@ -91,6 +92,7 @@ type MPRequestHeaderResponse struct {
 }
 
 type CheckPortalDataMPRequestResponse struct {
+	GradeName                    string                 `json:"grade_name"`
 	OrganizationName             string                 `json:"organization_name"`
 	OrganizationCategory         string                 `json:"organization_category"`
 	OrganizationLocationName     string                 `json:"organization_location_name"`

@@ -22,6 +22,7 @@ type MPRequestHelper struct {
 	JobPlafonMessage    messaging.IJobPlafonMessage
 	UserMessage         messaging.IUserMessage
 	EmpMessage          messaging.IEmployeeMessage
+	GradeMessage        messaging.IGradeMessage
 }
 
 func NewMPRequestHelper(
@@ -30,6 +31,7 @@ func NewMPRequestHelper(
 	jobPlafonMessage messaging.IJobPlafonMessage,
 	userMessage messaging.IUserMessage,
 	em messaging.IEmployeeMessage,
+	gradeMessage messaging.IGradeMessage,
 ) IMPRequestHelper {
 	return &MPRequestHelper{
 		Log:                 log,
@@ -37,6 +39,7 @@ func NewMPRequestHelper(
 		JobPlafonMessage:    jobPlafonMessage,
 		UserMessage:         userMessage,
 		EmpMessage:          em,
+		GradeMessage:        gradeMessage,
 	}
 }
 
@@ -45,7 +48,8 @@ func MPRequestHelperFactory(log *logrus.Logger) IMPRequestHelper {
 	jobPlafonMessage := messaging.JobPlafonMessageFactory(log)
 	userMessage := messaging.UserMessageFactory(log)
 	em := messaging.EmployeeMessageFactory(log)
-	return NewMPRequestHelper(log, organizationMessage, jobPlafonMessage, userMessage, em)
+	gradeMessage := messaging.GradeMessageFactory(log)
+	return NewMPRequestHelper(log, organizationMessage, jobPlafonMessage, userMessage, em, gradeMessage)
 }
 
 func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequest) (*response.CheckPortalDataMPRequestResponse, error) {
@@ -238,6 +242,15 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 
 	h.Log.Infof("[MPRequestHelper] check portal data success %v", requestorExist.EmployeeJob)
 
+	var gradeResponse *response.GradeResponse
+	if req.GradeID != nil {
+		gradeResponse, err = h.GradeMessage.SendFindByIDMessage(req.GradeID.String())
+		if err != nil {
+			h.Log.Errorf("[MPRequestHelper] error when send find grade by id message: %v", err)
+			return nil, err
+		}
+	}
+
 	return &response.CheckPortalDataMPRequestResponse{
 		OrganizationName:             orgExist.Name,
 		OrganizationCategory:         orgExist.OrganizationCategory,
@@ -258,6 +271,7 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		DepartmentHeadEmployeeJob:    deptHeadExist.EmployeeJob,
 		VpGmDirectorEmployeeJob:      vpGmDirectorExist.EmployeeJob,
 		CeoEmployeeJob:               ceoExist.EmployeeJob,
+		GradeName:                    gradeResponse.Name,
 	}, nil
 }
 
