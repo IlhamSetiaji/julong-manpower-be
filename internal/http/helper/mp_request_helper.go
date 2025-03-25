@@ -365,8 +365,18 @@ func (h *MPRequestHelper) CheckPortalDataMinimal(req *response.MPRequestHeaderRe
 		return nil, errors.New("job is not exist")
 	}
 
+	var gradeResponse *response.GradeResponse
+	if req.GradeID != nil {
+		gradeResponse, err = h.GradeMessage.SendFindByIDMessage(req.GradeID.String())
+		if err != nil {
+			h.Log.Errorf("[MPRequestHelper] error when send find grade by id message: %v", err)
+			return nil, err
+		}
+	}
+
 	return &response.MPRequestHeaderResponse{
 		ID:                       req.ID,
+		GradeID:                  req.GradeID,
 		RequestCategoryID:        req.RequestCategoryID,
 		ExpectedDate:             req.ExpectedDate,
 		Experiences:              req.Experiences,
@@ -411,6 +421,7 @@ func (h *MPRequestHelper) CheckPortalDataMinimal(req *response.MPRequestHeaderRe
 		ForOrganizationLocation:  forOrgLocExist.Name,
 		ForOrganizationStructure: forOrgStructExist.Name,
 		JobName:                  jobExist.Name,
+		GradeName:                gradeResponse.Name,
 	}, nil
 }
 
