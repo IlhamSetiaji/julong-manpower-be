@@ -271,7 +271,12 @@ func (h *MPRequestHelper) CheckPortalData(req *request.CreateMPRequestHeaderRequ
 		DepartmentHeadEmployeeJob:    deptHeadExist.EmployeeJob,
 		VpGmDirectorEmployeeJob:      vpGmDirectorExist.EmployeeJob,
 		CeoEmployeeJob:               ceoExist.EmployeeJob,
-		GradeName:                    gradeResponse.Name,
+		GradeName: func() string {
+			if gradeResponse != nil {
+				return gradeResponse.Name
+			}
+			return ""
+		}(),
 	}, nil
 }
 
@@ -421,7 +426,12 @@ func (h *MPRequestHelper) CheckPortalDataMinimal(req *response.MPRequestHeaderRe
 		ForOrganizationLocation:  forOrgLocExist.Name,
 		ForOrganizationStructure: forOrgStructExist.Name,
 		JobName:                  jobExist.Name,
-		GradeName:                gradeResponse.Name,
+		GradeName: func() string {
+			if gradeResponse != nil {
+				return gradeResponse.Name
+			}
+			return ""
+		}(),
 	}, nil
 }
 
