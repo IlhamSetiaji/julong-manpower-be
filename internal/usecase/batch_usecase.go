@@ -212,11 +212,40 @@ func (uc *BatchUsecase) GetBatchHeadersByStatusPaginated(status entity.BatchHead
 
 	// embed batch headers to completed batch responses
 	for i, bh := range batchHeaders {
-		mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(batchHeaders[i].BatchLines[0].MPPlanningHeaderID)
+		if len(bh.BatchLines) == 0 {
+			uc.Log.Warnf("[BatchUsecase.GetCompletedBatchHeader] No batch lines found for batch header ID: %s", bh.ID)
+			continue
+		}
+
+		mpPlanningHeaderID := bh.BatchLines[0].MPPlanningHeaderID
+		if mpPlanningHeaderID == uuid.Nil {
+			uc.Log.Warnf("[BatchUsecase.GetCompletedBatchHeader] MPPlanningHeaderID is nil for batch header ID: %s", bh.ID)
+			continue
+		}
+
+		mpPlanningHeader, err := uc.mpPlanningRepo.FindHeaderById(mpPlanningHeaderID)
 		if err != nil {
 			uc.Log.Errorf("[BatchUsecase.GetCompletedBatchHeader] " + err.Error())
-			return nil, 0, err
+			continue
 		}
+
+		if mpPlanningHeader == nil {
+			uc.Log.Warnf("[BatchUsecase.GetCompletedBatchHeader] MPPlanningHeader not found for ID: %s", mpPlanningHeaderID)
+			continue
+		}
+
+		mpPeriodResponse := &response.MPPeriodResponse{
+			ID:              mpPlanningHeader.MPPPeriod.ID,
+			Title:           mpPlanningHeader.MPPPeriod.Title,
+			StartDate:       mpPlanningHeader.MPPPeriod.StartDate.Format("2006-01-02"),
+			EndDate:         mpPlanningHeader.MPPPeriod.EndDate.Format("2006-01-02"),
+			BudgetStartDate: mpPlanningHeader.MPPPeriod.BudgetStartDate.Format("2006-01-02"),
+			BudgetEndDate:   mpPlanningHeader.MPPPeriod.BudgetEndDate.Format("2006-01-02"),
+			Status:          mpPlanningHeader.MPPPeriod.Status,
+			CreatedAt:       mpPlanningHeader.MPPPeriod.CreatedAt,
+			UpdatedAt:       mpPlanningHeader.MPPPeriod.UpdatedAt,
+		}
+
 		completedBatchResponses[i] = response.CompletedBatchResponse{
 			ID:             bh.ID,
 			DocumentNumber: bh.DocumentNumber,
@@ -224,17 +253,12 @@ func (uc *BatchUsecase) GetBatchHeadersByStatusPaginated(status entity.BatchHead
 			Status:         bh.Status,
 			CreatedAt:      bh.CreatedAt,
 			UpdatedAt:      bh.UpdatedAt,
-			MPPPeriod: response.MPPeriodResponse{
-				ID:              mpPlanningHeader.MPPPeriod.ID,
-				Title:           mpPlanningHeader.MPPPeriod.Title,
-				StartDate:       mpPlanningHeader.MPPPeriod.StartDate.Format("2006-01-02"),
-				EndDate:         mpPlanningHeader.MPPPeriod.EndDate.Format("2006-01-02"),
-				BudgetStartDate: mpPlanningHeader.MPPPeriod.BudgetStartDate.Format("2006-01-02"),
-				BudgetEndDate:   mpPlanningHeader.MPPPeriod.BudgetEndDate.Format("2006-01-02"),
-				Status:          mpPlanningHeader.MPPPeriod.Status,
-				CreatedAt:       mpPlanningHeader.MPPPeriod.CreatedAt,
-				UpdatedAt:       mpPlanningHeader.MPPPeriod.UpdatedAt,
-			},
+			MPPPeriod: func() response.MPPeriodResponse {
+				if mpPeriodResponse != nil {
+					return *mpPeriodResponse
+				}
+				return response.MPPeriodResponse{}
+			}(),
 		}
 	}
 
