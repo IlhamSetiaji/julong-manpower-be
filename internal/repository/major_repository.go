@@ -15,6 +15,7 @@ type IMajorRepository interface {
 	FindById(id uuid.UUID) (*entity.Major, error)
 	GetMajorsByEducationLevel(educationLevel entity.EducationLevelEnum) (*[]entity.Major, error)
 	FindILikeMajor(major string) (*[]entity.Major, error)
+	FindILikeMajorAndEducationLevel(major string, educationLevel string) (*[]entity.Major, error)
 }
 
 type MajorRepository struct {
@@ -62,6 +63,15 @@ func (r *MajorRepository) GetMajorsByEducationLevel(educationLevel entity.Educat
 func (r *MajorRepository) FindILikeMajor(major string) (*[]entity.Major, error) {
 	var majors []entity.Major
 	err := r.DB.Where("major ILIKE ?", "%"+major+"%").Find(&majors).Error
+	if err != nil {
+		return nil, err
+	}
+	return &majors, nil
+}
+
+func (r *MajorRepository) FindILikeMajorAndEducationLevel(major string, educationLevel string) (*[]entity.Major, error) {
+	var majors []entity.Major
+	err := r.DB.Where("major ILIKE ? AND education_level = ?", "%"+major+"%", educationLevel).Find(&majors).Error
 	if err != nil {
 		return nil, err
 	}

@@ -188,6 +188,15 @@ func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger, viper *viper
 			break
 		}
 
+		educationLevelStrings, ok := docMsg.MessageData["education_levels"].([]interface{})
+		if !ok {
+			log.Printf("Invalid request format: missing 'education_level'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'education_level'").Error(),
+			}
+			break
+		}
+
 		majors := make([]string, len(majorStrings))
 		for i, major := range majorStrings {
 			majors[i], ok = major.(string)
@@ -203,7 +212,15 @@ func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger, viper *viper
 		majorUseCase := usecase.MajorUsecaseFactory(log)
 		var majorIds []string
 		for _, major := range majors {
-			majorResponse, err := majorUseCase.FindILikeMajor(major)
+			eduLevel, ok := educationLevelStrings[0].(string)
+			if !ok {
+				log.Printf("Invalid request format: 'education_level' should be a string")
+				msgData = map[string]interface{}{
+					"error": errors.New("'education_level' should be a string").Error(),
+				}
+				break
+			}
+			majorResponse, err := majorUseCase.FindILikeMajorAndEducationLevel(major, eduLevel)
 			if err != nil {
 				log.Printf("Failed to execute usecase: %v", err)
 				msgData = map[string]interface{}{

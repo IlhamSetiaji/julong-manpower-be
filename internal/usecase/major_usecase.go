@@ -15,6 +15,7 @@ type IMajorUsecase interface {
 	FindById(request request.FindByIdMajorRequest) (*response.FindAllMajorResponse, error)
 	GetMajorsByEducationLevel(educationLevel string) (*[]response.FindAllMajorResponse, error)
 	FindILikeMajor(major string) (*[]response.FindAllMajorResponse, error)
+	FindILikeMajorAndEducationLevel(major string, educationLevel string) (*[]response.FindAllMajorResponse, error)
 }
 
 type MajorUsecase struct {
@@ -84,6 +85,24 @@ func (u *MajorUsecase) GetMajorsByEducationLevel(educationLevel string) (*[]resp
 
 func (u *MajorUsecase) FindILikeMajor(major string) (*[]response.FindAllMajorResponse, error) {
 	majors, err := u.Repo.FindILikeMajor(major)
+	if err != nil {
+		return nil, err
+	}
+
+	var majorResponses []response.FindAllMajorResponse
+	for _, major := range *majors {
+		majorResponses = append(majorResponses, response.FindAllMajorResponse{
+			ID:             major.ID.String(),
+			Major:          major.Major,
+			EducationLevel: major.EducationLevel,
+		})
+	}
+
+	return &majorResponses, nil
+}
+
+func (u *MajorUsecase) FindILikeMajorAndEducationLevel(major string, educationLevel string) (*[]response.FindAllMajorResponse, error) {
+	majors, err := u.Repo.FindILikeMajorAndEducationLevel(major, educationLevel)
 	if err != nil {
 		return nil, err
 	}
