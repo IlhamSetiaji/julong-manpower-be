@@ -178,6 +178,91 @@ func handleMsg(docMsg *request.RabbitMQRequest, log *logrus.Logger, viper *viper
 		msgData = map[string]interface{}{
 			"mp_request_header": mpRequestHeader,
 		}
+	case "find_mp_request_headers_by_majors":
+		majorStrings, ok := docMsg.MessageData["majors"].([]interface{})
+		if !ok {
+			log.Printf("Invalid request format: missing 'majors'")
+			msgData = map[string]interface{}{
+				"error": errors.New("missing 'majors'").Error(),
+			}
+			break
+		}
+
+		majors := make([]string, len(majorStrings))
+		for i, major := range majorStrings {
+			majors[i], ok = major.(string)
+			if !ok {
+				log.Printf("Invalid request format: 'majors' should be a list of strings")
+				msgData = map[string]interface{}{
+					"error": errors.New("'majors' should be a list of strings").Error(),
+				}
+				break
+			}
+		}
+
+		majorUseCase := usecase.MajorUsecaseFactory(log)
+		var majorIds []string
+		for _, major := range majors {
+			majorResponse, err := majorUseCase.FindILikeMajor(major)
+			if err != nil {
+				log.Printf("Failed to execute usecase: %v", err)
+				msgData = map[string]interface{}{
+					"error": err.Error(),
+				}
+				break
+			}
+			if majorResponse == nil {
+				log.Printf("Major not found: %s", major)
+				msgData = map[string]interface{}{
+					"error": errors.New("major not found").Error(),
+				}
+				break
+			}
+
+			log.Printf("INFO: found major: %v", majorResponse)
+
+			for _, m := range *majorResponse {
+				majorIds = append(majorIds, m.ID)
+			}
+		}
+
+		var mpRequestHeadersResp []*response.MPRequestHeaderResponse
+		if len(majorIds) >= 0 {
+			mprUseCase := usecase.MPRequestUseCaseFactory(viper, log)
+			mpRequestHeaders, err := mprUseCase.FindAllByMajorIdsMessage(majorIds)
+			if err != nil {
+				log.Printf("Failed to execute usecase: %v", err)
+				msgData = map[string]interface{}{
+					"error": err.Error(),
+				}
+				break
+			}
+			mpRequestHeadersResp = mpRequestHeaders
+		} else {
+			log.Printf("No majors found")
+			msgData = map[string]interface{}{
+				"error": errors.New("no majors found").Error(),
+			}
+			break
+		}
+
+		if len(mpRequestHeadersResp) == 0 {
+			log.Printf("No MPRequestHeaders found for the given majors")
+			msgData = map[string]interface{}{
+				"error": errors.New("no MPRequestHeaders found for the given majors").Error(),
+			}
+			break
+		}
+
+		var mprIds []string
+		for _, mpr := range mpRequestHeadersResp {
+			mprIds = append(mprIds, mpr.ID.String())
+		}
+
+		log.Printf("INFO: found MPRequestHeaders: %v", mprIds)
+		msgData = map[string]interface{}{
+			"mp_request_headers": mpRequestHeadersResp,
+		}
 	default:
 		log.Printf("Unknown message type, please recheck your type: %s", docMsg.MessageType)
 

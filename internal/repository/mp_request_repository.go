@@ -27,6 +27,7 @@ type IMPRequestRepository interface {
 	DeleteHeader(id uuid.UUID) error
 	CountTotalApprovalHistoryByStatus(mpHeaderID uuid.UUID, status entity.MPRequestApprovalHistoryStatus) (int64, error)
 	FindByKeys(keys map[string]interface{}) (*entity.MPRequestHeader, error)
+	FindAllByMajorIds(majorIds []string) ([]entity.MPRequestHeader, error)
 }
 
 type MPRequestRepository struct {
@@ -44,6 +45,23 @@ func (r *MPRequestRepository) FindAll() ([]entity.MPRequestHeader, error) {
 	if err := r.DB.Preload("RequestCategory").Preload("RequestMajors.Major").Preload("MPPlanningHeader").Find(&mpRequestHeaders).Error; err != nil {
 		r.Log.Errorf("[MPRequestRepository.FindAll] error when query mp request headers: %v", err)
 		return nil, errors.New("[MPRequestRepository.FindAll] error when query mp request headers " + err.Error())
+	}
+
+	return mpRequestHeaders, nil
+}
+
+func (r *MPRequestRepository) FindAllByMajorIds(majorIds []string) ([]entity.MPRequestHeader, error) {
+	var mpRequestHeaders []entity.MPRequestHeader
+
+	r.Log.Infof("[MPRequestRepository.FindAllByMajorIds] majorIds: %v", majorIds)
+	if err := r.DB.Preload("RequestCategory").
+		Preload("RequestMajors.Major").
+		Preload("MPPlanningHeader").
+		Joins("JOIN request_majors ON request_majors.mp_request_header_id = mp_request_headers.id").
+		Where("request_majors.major_id IN ?", majorIds).
+		Find(&mpRequestHeaders).Error; err != nil {
+		r.Log.Errorf("[MPRequestRepository.FindAllByMajorIds] error when query mp request headers: %v", err)
+		return nil, errors.New("[MPRequestRepository.FindAllByMajorIds] error when query mp request headers " + err.Error())
 	}
 
 	return mpRequestHeaders, nil

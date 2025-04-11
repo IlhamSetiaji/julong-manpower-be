@@ -27,6 +27,7 @@ type IMPRequestUseCase interface {
 	FindByID(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindByIDOnly(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
 	FindByIDOnlyForMessage(id uuid.UUID) (*response.MPRequestHeaderResponse, error)
+	FindAllByMajorIdsMessage(majorIDs []string) ([]*response.MPRequestHeaderResponse, error)
 	FindByIDForTesting(id uuid.UUID) (string, error)
 	FindAllPaginated(page int, pageSize int, search string, filter map[string]interface{}) (*response.MPRequestPaginatedResponse, error)
 	UpdateStatusHeader(req *request.UpdateMPRequestHeaderRequest) error
@@ -231,6 +232,27 @@ func (uc *MPRequestUseCase) FindByIDOnlyForMessage(id uuid.UUID) (*response.MPRe
 	}
 
 	return uc.MPRequestDTO.ConvertToResponseMinimal(mpRequestHeader), nil
+}
+
+func (uc *MPRequestUseCase) FindAllByMajorIdsMessage(majorIDs []string) ([]*response.MPRequestHeaderResponse, error) {
+	mpRequestHeaders, err := uc.MPRequestRepository.FindAllByMajorIds(majorIDs)
+	if err != nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindAllByMajorIdsMessage] error when find mp request header by major ids: %v", err)
+		return nil, err
+	}
+
+	if mpRequestHeaders == nil {
+		uc.Log.Errorf("[MPRequestUseCase.FindAllByMajorIdsMessage] mp request header with major ids %s is not exist", strings.Join(majorIDs, ","))
+		return nil, errors.New("mp request header is not exist")
+	}
+
+	var mpRequestHeaderResponses []*response.MPRequestHeaderResponse
+	for _, mpRequestHeader := range mpRequestHeaders {
+		mpRequestHeaderResponse := uc.MPRequestDTO.ConvertToResponseMinimal(&mpRequestHeader)
+		mpRequestHeaderResponses = append(mpRequestHeaderResponses, mpRequestHeaderResponse)
+	}
+
+	return mpRequestHeaderResponses, nil
 }
 
 func (uc *MPRequestUseCase) GetRequestApprovalHistoryByHeaderId(headerID uuid.UUID, status string) ([]*response.MPRequestApprovalHistoryResponse, error) {
