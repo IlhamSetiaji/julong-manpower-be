@@ -218,6 +218,10 @@ func (m *JobPlafonMessage) FindJobPlafonByJobIDMessage(jobID uuid.UUID) (*jobRes
 		return nil, err
 	}
 
+	if jobPlafon == nil {
+		return nil, errors.New("job plafon not found")
+	}
+
 	return &jobResponse.JobPlafonResponse{
 		ID:     jobPlafon.ID,
 		Plafon: jobPlafon.Plafon,
