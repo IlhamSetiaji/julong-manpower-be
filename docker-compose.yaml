@@ -14,7 +14,7 @@ services:
       - APP_SECRET=wanhasib
       - FRONTEND_URL=http://localhost:3000,https://julong-mpp.avolut.com,https://julong-recruitment.avolut.com,https://mobile-dev.junior-dev.my.id
       - COOKIE_SECRET=wanhasib
-      - SESSION_NAME=julong-manpower
+      - SESSION_NAME=julong-sync-manpower
       - CSRF_SECRET=wanhasib
       - DB_HOST=prasi.avolut.com
       - DB_PORT=8741
