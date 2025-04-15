@@ -245,11 +245,13 @@ func (uc *MPPPeriodUseCase) UpdateStatusToOpenByDate(date time.Time) error {
 
 	// loop mpp period to update status
 	for _, mppPeriod := range *mppPeriods {
-		mppPeriod.Status = "open"
-		_, err := uc.MPPPeriodRepository.Update(&mppPeriod)
-		if err != nil {
-			uc.Log.Errorf("[MPPPeriodScheduler.UpdateStatusToOpenByDate] " + err.Error())
-			return err
+		if mppPeriod.Status == entity.MPPPeriodStatusDraft {
+			mppPeriod.Status = "open"
+			_, err := uc.MPPPeriodRepository.Update(&mppPeriod)
+			if err != nil {
+				uc.Log.Errorf("[MPPPeriodScheduler.UpdateStatusToOpenByDate] " + err.Error())
+				return err
+			}
 		}
 	}
 
