@@ -75,7 +75,7 @@ type MPRequestHeader struct {
 	SalaryMin                  string              `json:"salary_min" gorm:"type:varchar(255);not null"`
 	SalaryMax                  string              `json:"salary_max" gorm:"type:varchar(255);not null"`
 	RequestorID                *uuid.UUID          `json:"requestor_id" gorm:"type:char(36);not null"`
-	DepartmentHead             *uuid.UUID          `json:"department_head" gorm:"type:char(36);not null"`
+	DepartmentHead             *uuid.UUID          `json:"department_head" gorm:"type:char(36);null"`
 	VpGmDirector               *uuid.UUID          `json:"vp_gm_director" gorm:"type:text;default:null"`
 	CEO                        *uuid.UUID          `json:"ceo" gorm:"type:text;default:null"`
 	HrdHoUnit                  *uuid.UUID          `json:"hrd_ho_unit" gorm:"type:char(36);null"` // verificator tim rekrutmen
