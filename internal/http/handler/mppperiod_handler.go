@@ -171,11 +171,11 @@ func (h *MPPPeriodHandler) FindByCurrentDateAndStatus(ctx *gin.Context) {
 		status = "open"
 	}
 
-	req := request.FindByCurrentDateAndStatusMPPPeriodRequest{
-		Status: entity.MPPPeriodStatus(status),
-	}
+	// req := request.FindByCurrentDateAndStatusMPPPeriodRequest{
+	// 	Status: entity.MPPPeriodStatus(status),
+	// }
 
-	resp, err := h.UseCase.FindByCurrentDateAndStatus(req)
+	resp, err := h.UseCase.FindByStatus(entity.MPPPeriodStatus(status))
 	if err != nil {
 		h.Log.Errorf("[MPPPeriodHandler.FindByCurrentDateAndStatus] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
