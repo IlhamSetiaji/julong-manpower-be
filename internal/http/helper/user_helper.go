@@ -12,6 +12,7 @@ type IUserHelper interface {
 	GetEmployeeId(user map[string]interface{}) (uuid.UUID, error)
 	GetOrganizationStructureID(user map[string]interface{}) (uuid.UUID, error)
 	GetOrganizationID(user map[string]interface{}) (uuid.UUID, error)
+	GetUserId(user map[string]interface{}) (uuid.UUID, error)
 }
 
 type UserHelper struct {
@@ -184,4 +185,30 @@ func (h *UserHelper) GetOrganizationID(user map[string]interface{}) (uuid.UUID, 
 
 	h.Log.Infof("Organization ID: %s", organizationID)
 	return organizationID, nil
+}
+
+func (h *UserHelper) GetUserId(user map[string]interface{}) (uuid.UUID, error) {
+	// Check if the "user" key exists and is a map
+	userData, ok := user["user"].(map[string]interface{})
+	if !ok {
+		h.Log.Errorf("User information is missing or invalid")
+		return uuid.Nil, errors.New("User information is missing or invalid")
+	}
+
+	// Check if the "ID" key exists and is a string
+	userIDStr, ok := userData["id"].(string)
+	if !ok {
+		h.Log.Errorf("User ID is missing or invalid")
+		return uuid.Nil, errors.New("User ID is missing or invalid")
+	}
+
+	// Parse the user ID to uuid.UUID
+	userID, err := uuid.Parse(userIDStr)
+	if err != nil {
+		h.Log.Errorf("Invalid user ID format: %v", err)
+		return uuid.Nil, errors.New("Invalid user ID format")
+	}
+
+	h.Log.Infof("User ID: %s", userID)
+	return userID, nil
 }
