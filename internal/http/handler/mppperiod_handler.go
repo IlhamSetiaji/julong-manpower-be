@@ -8,7 +8,6 @@ import (
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
-	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/service"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
@@ -136,30 +135,30 @@ func (h *MPPPeriodHandler) Create(ctx *gin.Context) {
 		return
 	}
 
-	user, err := middleware.GetUser(ctx, h.Log)
-	if err != nil {
-		h.Log.Errorf("Error when getting user: %v", err)
-		utils.ErrorResponse(ctx, 500, "error", err.Error())
-		return
-	}
-	if user == nil {
-		h.Log.Errorf("User not found")
-		utils.ErrorResponse(ctx, 404, "error", "User not found")
-		return
-	}
-	userUUID, err := h.UserHelper.GetUserId(user)
-	if err != nil {
-		h.Log.Errorf("Error when getting user id: %v", err)
-		utils.ErrorResponse(ctx, 500, "error", err.Error())
-		return
-	}
+	// user, err := middleware.GetUser(ctx, h.Log)
+	// if err != nil {
+	// 	h.Log.Errorf("Error when getting user: %v", err)
+	// 	utils.ErrorResponse(ctx, 500, "error", err.Error())
+	// 	return
+	// }
+	// if user == nil {
+	// 	h.Log.Errorf("User not found")
+	// 	utils.ErrorResponse(ctx, 404, "error", "User not found")
+	// 	return
+	// }
+	// userUUID, err := h.UserHelper.GetUserId(user)
+	// if err != nil {
+	// 	h.Log.Errorf("Error when getting user id: %v", err)
+	// 	utils.ErrorResponse(ctx, 500, "error", err.Error())
+	// 	return
+	// }
 
-	err = h.NotificationService.CreatePeriodNotification(userUUID.String())
-	if err != nil {
-		h.Log.Errorf("Error when creating notification: %v", err)
-		utils.ErrorResponse(ctx, 500, "error", err.Error())
-		return
-	}
+	// err = h.NotificationService.CreatePeriodNotification(userUUID.String())
+	// if err != nil {
+	// 	h.Log.Errorf("Error when creating notification: %v", err)
+	// 	utils.ErrorResponse(ctx, 500, "error", err.Error())
+	// 	return
+	// }
 
 	utils.SuccessResponse(ctx, http.StatusCreated, "mpp period created successfully", resp)
 }
