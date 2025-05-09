@@ -7,7 +7,10 @@ import (
 
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/config"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/entity"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/helper"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/middleware"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/request"
+	"github.com/IlhamSetiaji/julong-manpower-be/internal/http/service"
 	"github.com/IlhamSetiaji/julong-manpower-be/internal/usecase"
 	"github.com/IlhamSetiaji/julong-manpower-be/utils"
 	"github.com/gin-gonic/gin"
@@ -29,25 +32,38 @@ type IMPPPeriodHander interface {
 }
 
 type MPPPeriodHandler struct {
-	Log      *logrus.Logger
-	Viper    *viper.Viper
-	UseCase  usecase.IMPPPeriodUseCase
-	Validate *validator.Validate
+	Log                 *logrus.Logger
+	Viper               *viper.Viper
+	UseCase             usecase.IMPPPeriodUseCase
+	Validate            *validator.Validate
+	NotificationService service.INotificationService
+	UserHelper          helper.IUserHelper
 }
 
-func NewMPPPeriodHandler(log *logrus.Logger, viper *viper.Viper, useCase usecase.IMPPPeriodUseCase, validate *validator.Validate) IMPPPeriodHander {
+func NewMPPPeriodHandler(
+	log *logrus.Logger,
+	viper *viper.Viper,
+	useCase usecase.IMPPPeriodUseCase,
+	validate *validator.Validate,
+	notificationService service.INotificationService,
+	userHelper helper.IUserHelper,
+) IMPPPeriodHander {
 	return &MPPPeriodHandler{
-		Log:      log,
-		Viper:    viper,
-		UseCase:  useCase,
-		Validate: validate,
+		Log:                 log,
+		Viper:               viper,
+		UseCase:             useCase,
+		Validate:            validate,
+		NotificationService: notificationService,
+		UserHelper:          userHelper,
 	}
 }
 
 func MPPPeriodHandlerFactory(log *logrus.Logger, viper *viper.Viper) IMPPPeriodHander {
 	usecase := usecase.MPPPeriodUseCaseFactory(log)
 	validate := config.NewValidator(viper)
-	return NewMPPPeriodHandler(log, viper, usecase, validate)
+	notificationService := service.NotificationServiceFactory(viper, log)
+	userHelper := helper.UserHelperFactory(log)
+	return NewMPPPeriodHandler(log, viper, usecase, validate, notificationService, userHelper)
 }
 
 func (h *MPPPeriodHandler) FindAllPaginated(ctx *gin.Context) {
@@ -117,6 +133,31 @@ func (h *MPPPeriodHandler) Create(ctx *gin.Context) {
 	if err != nil {
 		h.Log.Errorf("[MPPPeriodHandler.Create] " + err.Error())
 		utils.ErrorResponse(ctx, http.StatusInternalServerError, "error", err.Error())
+		return
+	}
+
+	user, err := middleware.GetUser(ctx, h.Log)
+	if err != nil {
+		h.Log.Errorf("Error when getting user: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+	if user == nil {
+		h.Log.Errorf("User not found")
+		utils.ErrorResponse(ctx, 404, "error", "User not found")
+		return
+	}
+	userUUID, err := h.UserHelper.GetUserId(user)
+	if err != nil {
+		h.Log.Errorf("Error when getting user id: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
+		return
+	}
+
+	err = h.NotificationService.CreatePeriodNotification(userUUID.String())
+	if err != nil {
+		h.Log.Errorf("Error when creating notification: %v", err)
+		utils.ErrorResponse(ctx, 500, "error", err.Error())
 		return
 	}
 

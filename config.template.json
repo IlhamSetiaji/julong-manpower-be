@@ -76,5 +76,8 @@
     "key": "${ZITADEL_KEY}",
     "client_id": "${ZITADEL_CLIENT_ID}",
     "redirect_url": "${ZITADEL_REDIRECT_URL}"
+  },
+  "notification": {
+    "url": "https://julong-notification.avolut.com"
   }
 }
